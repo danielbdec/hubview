@@ -15,8 +15,6 @@ interface KanbanColumnProps {
     column: Column;
     onDeleteColumn: (id: string) => void;
     onUpdateTitle: (id: string, title: string) => void;
-    onDeleteColumn: (id: string) => void;
-    onUpdateTitle: (id: string, title: string) => void;
     onRequestAddTask: (columnId: string) => void;
     onDeleteTask: (columnId: string, taskId: string) => void;
     onEditTask: (task: any) => void;

@@ -366,7 +366,7 @@ export default function Kanban() {
                         column={activeColumn}
                         onDeleteColumn={() => { }}
                         onUpdateTitle={() => { }}
-                        onAddTask={() => { }}
+                        onRequestAddTask={() => { }}
                         onDeleteTask={() => { }}
                         onEditTask={() => { }}
                     />}
