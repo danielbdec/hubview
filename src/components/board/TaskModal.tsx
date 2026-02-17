@@ -7,16 +7,9 @@ import { Input } from '@/components/ui/Input';
 import { createPortal } from 'react-dom';
 import { v4 as uuidv4 } from 'uuid';
 
-type ChecklistItem = { id: string; text: string; completed: boolean; };
+import { Task } from '@/store/kanbanStore';
 
-type Task = {
-    id: string;
-    content: string;
-    description?: string;
-    tag: string;
-    priority: 'low' | 'medium' | 'high';
-    checklist?: ChecklistItem[];
-};
+type ChecklistItem = NonNullable<Task['checklist']>[number];
 
 interface TaskModalProps {
     task: Task | null;

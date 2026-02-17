@@ -14,8 +14,26 @@ export type Task = {
 
 export type Column = { id: string; title: string; tasks: Task[] };
 
-interface KanbanState {
+export type Project = {
+    id: string;
+    title: string;
+    description?: string;
     columns: Column[];
+    createdAt: number;
+    updatedAt: number;
+};
+
+interface ProjectState {
+    projects: Project[];
+    activeProjectId: string | null;
+
+    // Project Actions
+    addProject: (title: string, description?: string) => string;
+    updateProject: (id: string, updates: Partial<Project>) => void;
+    deleteProject: (id: string) => void;
+    setActiveProject: (id: string | null) => void;
+
+    // Kanban Actions (scoped to active project)
     addColumn: () => void;
     deleteColumn: (id: string) => void;
     updateColumnTitle: (id: string, title: string) => void;
@@ -24,136 +42,303 @@ interface KanbanState {
     deleteTask: (taskId: string) => void;
     moveColumn: (activeId: string, overId: string) => void;
     moveTask: (activeId: string, overId: string, activeColId: string | null, overColId: string | null) => void;
+
+    // Import/Export (scoped to active project)
     setColumns: (columns: Column[]) => void;
 }
 
-const initialColumns: Column[] = [
+const defaultColumnsTemplate: Column[] = [
     {
         id: 'backlog',
         title: 'BACKLOG',
-        tasks: [
-            { id: uuidv4(), content: 'Implementar Autenticação', description: 'Usar NextAuth com Google Provider', tag: 'Backend', priority: 'high' },
-            { id: uuidv4(), content: 'Auditoria de Design System', tag: 'Design', priority: 'medium' },
-            { id: uuidv4(), content: 'Schema do Banco de Dados', tag: 'Backend', priority: 'high' },
-        ],
+        tasks: [],
     },
     {
         id: 'in-progress',
         title: 'EM PROGRESSO',
-        tasks: [
-            { id: uuidv4(), content: 'Analytics do Dashboard', tag: 'Frontend', priority: 'high' },
-        ],
+        tasks: [],
     },
     {
         id: 'review',
         title: 'CODE REVIEW',
-        tasks: [
-            { id: uuidv4(), content: 'Refatorar API', tag: 'Backend', priority: 'medium' },
-        ],
+        tasks: [],
     },
     {
         id: 'done',
         title: 'CONCLUÍDO',
-        tasks: [
-            { id: uuidv4(), content: 'Configuração do Projeto', tag: 'DevOps', priority: 'low' },
-        ],
+        tasks: [],
     },
 ];
 
-export const useKanbanStore = create<KanbanState>()(
+const initialProject: Project = {
+    id: 'default-project',
+    title: 'Projeto Principal',
+    description: 'Gestão Geral do Hub',
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    columns: [
+        {
+            id: 'backlog',
+            title: 'BACKLOG',
+            tasks: [
+                { id: uuidv4(), content: 'Implementar Autenticação', description: 'Usar NextAuth com Google Provider', tag: 'Backend', priority: 'high' },
+                { id: uuidv4(), content: 'Auditoria de Design', tag: 'Design', priority: 'medium' },
+            ],
+        },
+        {
+            id: 'in-progress',
+            title: 'EM PROGRESSO',
+            tasks: [
+                { id: uuidv4(), content: 'Dashboard Analytics', tag: 'Frontend', priority: 'high' },
+            ],
+        },
+        {
+            id: 'review',
+            title: 'CODE REVIEW',
+            tasks: [],
+        },
+        {
+            id: 'done',
+            title: 'CONCLUÍDO',
+            tasks: [
+                { id: uuidv4(), content: 'Setup Inicial', tag: 'DevOps', priority: 'low' },
+            ],
+        },
+    ]
+};
+
+export const useProjectStore = create<ProjectState>()(
     persist(
         (set) => ({
-            columns: initialColumns,
-            addColumn: () => set((state) => ({
-                columns: [...state.columns, { id: uuidv4(), title: 'NOVA ETAPA', tasks: [] }]
-            })),
-            deleteColumn: (id) => set((state) => ({
-                columns: state.columns.filter((col) => col.id !== id)
-            })),
-            updateColumnTitle: (id, title) => set((state) => ({
-                columns: state.columns.map((col) => col.id === id ? { ...col, title } : col)
-            })),
-            addTask: (columnId, task) => {
+            projects: [initialProject],
+            activeProjectId: 'default-project',
+
+            addProject: (title, description) => {
                 const newId = uuidv4();
-                set((state) => ({
-                    columns: state.columns.map((col) => {
-                        if (col.id === columnId) {
-                            return { ...col, tasks: [...col.tasks, { ...task, id: newId }] };
-                        }
-                        return col;
-                    })
-                }));
+                const newProject: Project = {
+                    id: newId,
+                    title,
+                    description,
+                    columns: JSON.parse(JSON.stringify(defaultColumnsTemplate)),
+                    createdAt: Date.now(),
+                    updatedAt: Date.now(),
+                };
+                set((state) => ({ projects: [...state.projects, newProject], activeProjectId: newId }));
                 return newId;
             },
-            updateTask: (taskId, updates) => set((state) => ({
-                columns: state.columns.map((col) => ({
-                    ...col,
-                    tasks: col.tasks.map((t) => t.id === taskId ? { ...t, ...updates } : t)
-                }))
+
+            updateProject: (id, updates) => set((state) => ({
+                projects: state.projects.map((p) => p.id === id ? { ...p, ...updates, updatedAt: Date.now() } : p)
             })),
-            deleteTask: (taskId) => set((state) => ({
-                columns: state.columns.map((col) => ({
-                    ...col,
-                    tasks: col.tasks.filter((t) => t.id !== taskId)
-                }))
-            })),
-            moveColumn: (activeId, overId) => set((state) => {
-                const activeIndex = state.columns.findIndex((col) => col.id === activeId);
-                const overIndex = state.columns.findIndex((col) => col.id === overId);
-                return { columns: arrayMove(state.columns, activeIndex, overIndex) };
+
+            deleteProject: (id) => set((state) => {
+                const remaining = state.projects.filter(p => p.id !== id);
+                return {
+                    projects: remaining,
+                    activeProjectId: state.activeProjectId === id ? (remaining[0]?.id || null) : state.activeProjectId
+                };
             }),
+
+            setActiveProject: (id) => set({ activeProjectId: id }),
+
+            // --- Kanban Actions ---
+
+            addColumn: () => set((state) => {
+                const { activeProjectId, projects } = state;
+                if (!activeProjectId) return state;
+                return {
+                    projects: projects.map(p => {
+                        if (p.id === activeProjectId) {
+                            return {
+                                ...p,
+                                columns: [...p.columns, { id: uuidv4(), title: 'NOVA ETAPA', tasks: [] }],
+                                updatedAt: Date.now()
+                            };
+                        }
+                        return p;
+                    })
+                };
+            }),
+
+            deleteColumn: (colId) => set((state) => {
+                const { activeProjectId, projects } = state;
+                if (!activeProjectId) return state;
+                return {
+                    projects: projects.map(p => {
+                        if (p.id === activeProjectId) {
+                            return {
+                                ...p,
+                                columns: p.columns.filter(c => c.id !== colId),
+                                updatedAt: Date.now()
+                            };
+                        }
+                        return p;
+                    })
+                };
+            }),
+
+            updateColumnTitle: (colId, title) => set((state) => {
+                const { activeProjectId, projects } = state;
+                if (!activeProjectId) return state;
+                return {
+                    projects: projects.map(p => {
+                        if (p.id === activeProjectId) {
+                            return {
+                                ...p,
+                                columns: p.columns.map(c => c.id === colId ? { ...c, title } : c),
+                                updatedAt: Date.now()
+                            };
+                        }
+                        return p;
+                    })
+                };
+            }),
+
+            addTask: (colId, task) => {
+                const newId = uuidv4();
+                set((state) => {
+                    const { activeProjectId, projects } = state;
+                    if (!activeProjectId) return state;
+                    return {
+                        projects: projects.map(p => {
+                            if (p.id === activeProjectId) {
+                                return {
+                                    ...p,
+                                    columns: p.columns.map(c => {
+                                        if (c.id === colId) {
+                                            return { ...c, tasks: [...c.tasks, { ...task, id: newId }] };
+                                        }
+                                        return c;
+                                    }),
+                                    updatedAt: Date.now()
+                                };
+                            }
+                            return p;
+                        })
+                    };
+                });
+                return newId;
+            },
+
+            updateTask: (taskId, updates) => set((state) => {
+                const { activeProjectId, projects } = state;
+                if (!activeProjectId) return state;
+                return {
+                    projects: projects.map(p => {
+                        if (p.id === activeProjectId) {
+                            return {
+                                ...p,
+                                columns: p.columns.map(c => ({
+                                    ...c,
+                                    tasks: c.tasks.map(t => t.id === taskId ? { ...t, ...updates } : t)
+                                })),
+                                updatedAt: Date.now()
+                            };
+                        }
+                        return p;
+                    })
+                };
+            }),
+
+            deleteTask: (taskId) => set((state) => {
+                const { activeProjectId, projects } = state;
+                if (!activeProjectId) return state;
+                return {
+                    projects: projects.map(p => {
+                        if (p.id === activeProjectId) {
+                            return {
+                                ...p,
+                                columns: p.columns.map(c => ({
+                                    ...c,
+                                    tasks: c.tasks.filter(t => t.id !== taskId)
+                                })),
+                                updatedAt: Date.now()
+                            };
+                        }
+                        return p;
+                    })
+                };
+            }),
+
+            moveColumn: (activeId, overId) => set((state) => {
+                const { activeProjectId, projects } = state;
+                if (!activeProjectId) return state;
+                return {
+                    projects: projects.map(p => {
+                        if (p.id === activeProjectId) {
+                            const activeIndex = p.columns.findIndex((col) => col.id === activeId);
+                            const overIndex = p.columns.findIndex((col) => col.id === overId);
+                            return {
+                                ...p,
+                                columns: arrayMove(p.columns, activeIndex, overIndex),
+                                updatedAt: Date.now()
+                            };
+                        }
+                        return p;
+                    })
+                };
+            }),
+
             moveTask: (activeId, overId, activeColId, overColId) => set((state) => {
-                const activeColumn = state.columns.find(col => col.id === activeColId);
-                const overColumn = state.columns.find(col => col.id === overColId);
+                const activeIdProj = state.activeProjectId;
+                if (!activeIdProj) return state;
 
-                if (!activeColumn || !overColumn) return state;
+                const projectIndex = state.projects.findIndex(p => p.id === activeIdProj);
+                if (projectIndex === -1) return state;
 
-                if (activeColumn.id === overColumn.id) {
+                const project = state.projects[projectIndex];
+
+                // Deep clone columns to safely mutate tasks array
+                const newColumns = project.columns.map(col => ({
+                    ...col,
+                    tasks: [...col.tasks]
+                }));
+
+                const activeColIndex = newColumns.findIndex(c => c.id === activeColId);
+                const overColIndex = newColumns.findIndex(c => c.id === overColId);
+
+                if (activeColIndex === -1 || overColIndex === -1) return state;
+
+                const activeTaskIndex = newColumns[activeColIndex].tasks.findIndex(t => t.id === activeId);
+                const overTaskIndex = newColumns[overColIndex].tasks.findIndex(t => t.id === overId);
+
+                if (activeTaskIndex === -1) return state;
+
+                if (activeColId === overColId) {
                     // Same column reorder
-                    const activeIndex = activeColumn.tasks.findIndex((t) => t.id === activeId);
-                    const overIndex = overColumn.tasks.findIndex((t) => t.id === overId);
-                    if (activeIndex !== overIndex) {
-                        return {
-                            columns: state.columns.map((col) => {
-                                if (col.id === activeColumn.id) {
-                                    return { ...col, tasks: arrayMove(col.tasks, activeIndex, overIndex) };
-                                }
-                                return col;
-                            })
-                        };
+                    if (activeTaskIndex !== overTaskIndex && overTaskIndex !== -1) {
+                        newColumns[activeColIndex].tasks = arrayMove(newColumns[activeColIndex].tasks, activeTaskIndex, overTaskIndex);
                     }
-                    return state;
                 } else {
                     // Different column move
-                    const activeIndex = activeColumn.tasks.findIndex((t) => t.id === activeId);
-                    const overIndex = overColumn.tasks.findIndex((t) => t.id === overId);
-
-                    let newColumns = [...state.columns];
-                    const sourceColIndex = newColumns.findIndex(c => c.id === activeColId);
-                    const destColIndex = newColumns.findIndex(c => c.id === overColId);
-
-                    const [movedTask] = newColumns[sourceColIndex].tasks.splice(activeIndex, 1);
+                    const [movedTask] = newColumns[activeColIndex].tasks.splice(activeTaskIndex, 1);
 
                     if (overId === overColId) {
-                        // Dropped on column header/empty space -> to end
-                        newColumns[destColIndex].tasks.push(movedTask);
+                        // Dropped in empty space of column
+                        newColumns[overColIndex].tasks.push(movedTask);
                     } else {
                         // Dropped on another task
-                        // If overIndex is -1 (shouldn't happen here if logic is right), push to end
-                        if (overIndex >= 0) {
-                            newColumns[destColIndex].tasks.splice(overIndex, 0, movedTask);
-                        } else {
-                            newColumns[destColIndex].tasks.push(movedTask);
-                        }
+                        const targetIndex = overTaskIndex >= 0 ? overTaskIndex : newColumns[overColIndex].tasks.length;
+                        newColumns[overColIndex].tasks.splice(targetIndex, 0, movedTask);
                     }
-
-                    return { columns: newColumns };
                 }
+
+                const newProjects = [...state.projects];
+                newProjects[projectIndex] = { ...project, columns: newColumns, updatedAt: Date.now() };
+
+                return { projects: newProjects };
             }),
-            setColumns: (columns) => set({ columns }),
+
+            setColumns: (columns) => set((state) => {
+                const { activeProjectId, projects } = state;
+                if (!activeProjectId) return state;
+                return {
+                    projects: projects.map(p => p.id === activeProjectId ? { ...p, columns, updatedAt: Date.now() } : p)
+                };
+            }),
         }),
         {
-            name: 'hubview-storage-v1', // Versioned local storage key
+            name: 'hubview-projects-v1', // V2/Project-based storage
         }
     )
 );

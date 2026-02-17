@@ -8,8 +8,7 @@ import { KanbanCard } from '@/components/board/KanbanCard';
 import { useMemo, useState } from 'react';
 import { Input } from '@/components/ui/Input';
 
-type Task = { id: string; content: string; tag: string; priority: 'low' | 'medium' | 'high' };
-type Column = { id: string; title: string; tasks: Task[] };
+import { Task, Column } from '@/store/kanbanStore';
 
 interface KanbanColumnProps {
     column: Column;

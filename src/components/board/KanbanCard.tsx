@@ -11,7 +11,7 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-type Task = { id: string; content: string; tag: string; priority: 'low' | 'medium' | 'high' };
+import { Task } from '@/store/kanbanStore';
 
 interface KanbanCardProps {
     task: Task;

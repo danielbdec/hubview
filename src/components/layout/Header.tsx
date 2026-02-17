@@ -9,13 +9,20 @@ export function Header() {
     const pathname = usePathname();
     const breadcrumbs = pathname.split('/').filter(Boolean);
 
+    const breadnameMap: Record<string, string> = {
+        'projects': 'PROJETOS',
+        'dashboard': 'DASHBOARD',
+        'logs': 'LOGS',
+        'settings': 'CONFIGURAÇÕES'
+    };
+
     return (
         <header className="h-16 flex items-center justify-between px-6 border-b border-white/10 bg-[#050505]/80 backdrop-blur-md sticky top-0 z-40">
             {/* Breadcrumbs / Page Title */}
             <div className="flex items-center gap-2">
                 <span className="text-gray-500 font-mono text-xs uppercase tracking-wider">/</span>
                 <span className="text-white font-bold font-mono uppercase tracking-widest">
-                    {breadcrumbs.length > 0 ? breadcrumbs[breadcrumbs.length - 1] : 'Dashboard'}
+                    {breadcrumbs.length > 0 ? (breadnameMap[breadcrumbs[breadcrumbs.length - 1]] || breadcrumbs[breadcrumbs.length - 1]) : 'DASHBOARD'}
                 </span>
             </div>
 

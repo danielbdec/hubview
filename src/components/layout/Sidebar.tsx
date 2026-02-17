@@ -22,7 +22,7 @@ function cn(...inputs: ClassValue[]) {
 
 const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
-    { icon: KanbanSquare, label: 'Kanban', href: '/kanban' },
+    { icon: KanbanSquare, label: 'Projetos', href: '/projects' },
     { icon: Terminal, label: 'Logs', href: '/logs' },
     { icon: Settings, label: 'Settings', href: '/settings' },
 ];

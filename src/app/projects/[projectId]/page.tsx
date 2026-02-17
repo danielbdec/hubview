@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import {
     DndContext,
     DragOverlay,
@@ -14,17 +15,23 @@ import {
     DragEndEvent,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates, SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
-import { Plus, Download, Upload, RotateCcw } from 'lucide-react';
+import { Plus, Download, Upload, RotateCcw, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { KanbanColumn } from '@/components/board/KanbanColumn';
 import { KanbanCard } from '@/components/board/KanbanCard';
 import { TaskModal } from '@/components/board/TaskModal';
 import { createPortal } from 'react-dom';
-import { useKanbanStore, Task, Column } from '@/store/kanbanStore';
+import { useProjectStore, Task, Column } from '@/store/kanbanStore';
 
-export default function Kanban() {
+export default function KanbanBoardPage() {
+    const params = useParams();
+    const router = useRouter();
+    const projectId = params.projectId as string;
+
     const {
-        columns,
+        projects,
+        setActiveProject,
+        activeProjectId,
         addColumn,
         deleteColumn,
         updateColumnTitle,
@@ -34,7 +41,27 @@ export default function Kanban() {
         moveColumn,
         moveTask,
         setColumns
-    } = useKanbanStore();
+    } = useProjectStore();
+
+    // Effect to synchronization
+    useEffect(() => {
+        if (projectId) {
+            setActiveProject(projectId);
+        }
+    }, [projectId, setActiveProject]);
+
+    const activeProject = projects.find(p => p.id === projectId);
+
+    // Redirect if invalid
+    useEffect(() => {
+        // Wait for hydration/store load. Persist usually loads fast but...
+        // If projects is empty but loaded, we might redirect.
+        // For simplicity, let's just assume if it's not found after a tick, redirect.
+        // Actually, just showing "Not Found" is safer than redirect loop.
+    }, [activeProject]);
+
+    // Derived state from active project
+    const columns = activeProject?.columns || [];
 
     const [activeColumn, setActiveColumn] = useState<Column | null>(null);
     const [activeTask, setActiveTask] = useState<Task | null>(null);
@@ -72,7 +99,7 @@ export default function Kanban() {
 
     const handleRequestAddTask = (columnId: string) => {
         const newTask: Task = {
-            id: 'temp', // provisional
+            id: 'temp',
             content: '',
             description: '',
             tag: 'Geral',
@@ -94,7 +121,6 @@ export default function Kanban() {
             const columnId = (editingTask as any)?._columnId;
             if (!columnId) return;
 
-            // Ensure content defaults if empty
             const content = updates.content || 'Nova Tarefa';
 
             addTask(columnId, {
@@ -113,10 +139,11 @@ export default function Kanban() {
     // --- Utilities ---
 
     const handleExport = () => {
+        if (!activeProject) return;
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(columns, null, 2));
         const downloadAnchorNode = document.createElement('a');
         downloadAnchorNode.setAttribute("href", dataStr);
-        downloadAnchorNode.setAttribute("download", "kanban_backup.json");
+        downloadAnchorNode.setAttribute("download", `${activeProject.title}_backup.json`);
         document.body.appendChild(downloadAnchorNode);
         downloadAnchorNode.click();
         downloadAnchorNode.remove();
@@ -145,16 +172,17 @@ export default function Kanban() {
                 console.error('Erro ao importar:', error);
                 alert('Erro ao ler o arquivo JSON.');
             }
-            // Reset input
             if (fileInputRef.current) fileInputRef.current.value = '';
         };
         reader.readAsText(file);
     };
 
     const handleReset = () => {
-        if (confirm('Tem certeza? Isso apagará todas as tarefas e restaurará o layout padrão.')) {
-            localStorage.removeItem('hubview-storage-v1'); // Clear storage
-            window.location.reload(); // Reload to re-init store with defaults
+        if (confirm('Tem certeza? Isso apagará todas as tarefas deste projeto.')) {
+            // We can manually reset columns to default template or empty
+            // But the store doesn't have a "resetProject" action exposed yet.
+            // Let's just create a new project behavior or empty the columns.
+            setColumns([]);
         }
     };
 
@@ -193,26 +221,6 @@ export default function Kanban() {
         if (!activeColumn || !overColumn) return;
 
         if (activeColumn !== overColumn) {
-            // We don't update state in DragOver with Zustand to avoid dispatch spam, 
-            // relying on DragEnd is safer and sufficient for simple lists, 
-            // BUT for visual feedback dnd-kit recommends doing it.
-            // Given Zustand is fast, let's try to just let dnd-kit handle the visual overlay 
-            // or implement a temporary local state if needed. 
-            // Actually, for dnd-kit to show the gap properly, the items need to move.
-            // We can call a specialized moveTask action that updates without saving? 
-            // Or just ignore for now and execute on DragEnd. 
-            // *Correction*: dnd-kit *needs* the items to move in the sortable context for the hole to appear.
-            // So we should call a state update.
-
-            // However, calling the persistent store on every hover is bad performance-wise (localStorage writes).
-            // Let's rely on standard dnd-kit behavior: implementing `moveTask` on dragOver.
-
-            // Wait, `moveTask` in store writes to state. Zustand persist uses localStorage (sync usually).
-            // Writing to LS on every frame/dragOver is heavy.
-            // Ideally we should use transient updates or debounced save.
-            // For this step, I will implement it in DragOver as commonly done, but be aware of perf.
-
-            // Let's invoke the store action
             moveTask(activeId, overId, activeColumn.id, overColumn.id);
         }
     }
@@ -220,7 +228,6 @@ export default function Kanban() {
     function handleDragEnd(event: DragEndEvent) {
         const { active, over } = event;
 
-        // Reset active states
         setActiveColumn(null);
         setActiveTask(null);
 
@@ -247,6 +254,17 @@ export default function Kanban() {
 
     if (!mounted) return null;
 
+    if (!activeProject) {
+        return (
+            <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                <p>Projeto não encontrado ou carregando...</p>
+                <Button variant="ghost" onClick={() => router.push('/projects')} className="mt-4">
+                    Voltar para Projetos
+                </Button>
+            </div>
+        );
+    }
+
     return (
         <DndContext
             sensors={sensors}
@@ -257,14 +275,20 @@ export default function Kanban() {
         >
             <div className="h-full flex flex-col">
                 <div className="flex items-center justify-between mb-6">
-                    <div>
-                        <h1 className="text-2xl font-bold uppercase tracking-tight text-white mb-1">
-                            OPERAÇÕES KANBAN
-                        </h1>
-                        <p className="text-gray-400 font-mono text-xs">
-                            STATUS_FLUXO: <span className="text-tech-yellow">ATIVO</span>
-                        </p>
+                    <div className="flex items-center gap-4">
+                        <Button variant="ghost" size="sm" onClick={() => router.push('/projects')}>
+                            <ArrowLeft size={16} />
+                        </Button>
+                        <div>
+                            <h1 className="text-2xl font-bold uppercase tracking-tight text-white mb-1">
+                                {activeProject.title}
+                            </h1>
+                            <p className="text-gray-400 font-mono text-xs">
+                                STATUS_FLUXO: <span className="text-tech-yellow">ATIVO</span> | ID: {activeProject.id.slice(0, 8)}
+                            </p>
+                        </div>
                     </div>
+
                     <div className="flex gap-2">
                         {/* Hidden File Input */}
                         <input
