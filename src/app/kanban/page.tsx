@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
     DndContext,
     DragOverlay,
@@ -13,89 +13,44 @@ import {
     DragOverEvent,
     DragEndEvent,
 } from '@dnd-kit/core';
-import { arrayMove, sortableKeyboardCoordinates, SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
-import { Plus } from 'lucide-react';
+import { sortableKeyboardCoordinates, SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
+import { Plus, Download, Upload, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { KanbanColumn } from '@/components/board/KanbanColumn';
 import { KanbanCard } from '@/components/board/KanbanCard';
 import { TaskModal } from '@/components/board/TaskModal';
 import { createPortal } from 'react-dom';
-import { v4 as uuidv4 } from 'uuid';
-
-type Task = {
-    id: string;
-    content: string;
-    description?: string;
-    tag: string;
-    priority: 'low' | 'medium' | 'high';
-    checklist?: { id: string; text: string; completed: boolean; }[];
-};
-type Column = { id: string; title: string; tasks: Task[] };
-
-// Initial Data with Portuguese
-const initialColumns: Column[] = [
-    {
-        id: 'backlog',
-        title: 'BACKLOG',
-        tasks: [
-            { id: '1', content: 'Implementar Autenticação', description: 'Usar NextAuth com Google Provider', tag: 'Backend', priority: 'high' },
-            { id: '2', content: 'Auditoria de Design System', tag: 'Design', priority: 'medium' },
-            { id: '5', content: 'Schema do Banco de Dados', tag: 'Backend', priority: 'high' },
-        ],
-    },
-    {
-        id: 'in-progress',
-        title: 'EM PROGRESSO',
-        tasks: [
-            { id: '3', content: 'Analytics do Dashboard', tag: 'Frontend', priority: 'high' },
-        ],
-    },
-    {
-        id: 'review',
-        title: 'CODE REVIEW',
-        tasks: [
-            { id: '6', content: 'Refatorar API', tag: 'Backend', priority: 'medium' },
-        ],
-    },
-    {
-        id: 'done',
-        title: 'CONCLUÍDO',
-        tasks: [
-            { id: '4', content: 'Configuração do Projeto', tag: 'DevOps', priority: 'low' },
-        ],
-    },
-];
+import { useKanbanStore, Task, Column } from '@/store/kanbanStore';
 
 export default function Kanban() {
-    const [columns, setColumns] = useState<Column[]>(initialColumns);
+    const {
+        columns,
+        addColumn,
+        deleteColumn,
+        updateColumnTitle,
+        addTask,
+        updateTask,
+        deleteTask,
+        moveColumn,
+        moveTask,
+        setColumns
+    } = useKanbanStore();
+
     const [activeColumn, setActiveColumn] = useState<Column | null>(null);
     const [activeTask, setActiveTask] = useState<Task | null>(null);
     const [editingTask, setEditingTask] = useState<Task | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         setMounted(true);
-        const savedColumns = localStorage.getItem('kanban-columns');
-        if (savedColumns) {
-            try {
-                setColumns(JSON.parse(savedColumns));
-            } catch (e) {
-                console.error('Failed to parse columns', e);
-            }
-        }
     }, []);
-
-    useEffect(() => {
-        if (mounted) {
-            localStorage.setItem('kanban-columns', JSON.stringify(columns));
-        }
-    }, [columns, mounted]);
 
     const columnIds = useMemo(() => columns.map((col) => col.id), [columns]);
 
     const sensors = useSensors(
-        useSensor(PointerSensor, { // Use PointerSensor instead of MouseSensor
+        useSensor(PointerSensor, {
             activationConstraint: {
                 distance: 5,
             },
@@ -115,44 +70,16 @@ export default function Kanban() {
 
     // --- Dynamic Actions ---
 
-    const addColumn = () => {
-        const newColumn: Column = {
-            id: uuidv4(),
-            title: 'NOVA ETAPA',
-            tasks: [],
-        };
-        setColumns([...columns, newColumn]);
-    };
-
-    const deleteColumn = (id: string) => {
-        setColumns(columns.filter(col => col.id !== id));
-    };
-
-    const updateColumnTitle = (id: string, title: string) => {
-        setColumns(columns.map(col => col.id === id ? { ...col, title } : col));
-    };
-
     const handleRequestAddTask = (columnId: string) => {
         const newTask: Task = {
-            id: uuidv4(),
+            id: 'temp', // provisional
             content: '',
             description: '',
             tag: 'Geral',
             priority: 'medium',
         };
-        // We'll use a hack or a separate state to track which column this new task belongs to
-        // For simplicity, let's just use editingTask but add a meta property or just handle the save differently
-        // Actually, let's keep it simple: We'll put the columnId in the task logic or state.
-        // A better way: 
         setEditingTask({ ...newTask, _columnId: columnId } as any);
         setIsModalOpen(true);
-    };
-
-    const deleteTask = (taskId: string) => {
-        setColumns(columns.map(col => ({
-            ...col,
-            tasks: col.tasks.filter(t => t.id !== taskId)
-        })));
     };
 
     const openEditModal = (task: Task) => {
@@ -160,41 +87,76 @@ export default function Kanban() {
         setIsModalOpen(true);
     };
 
-    const saveTask = (taskId: string, updates: Partial<Task>) => {
-        const isNew = !columns.some(col => col.tasks.some(t => t.id === taskId));
+    const handleSaveTask = (taskId: string, updates: Partial<Task>) => {
+        const isNew = taskId === 'temp';
 
         if (isNew) {
-            // It's a new task
-            // We need the column ID. We stored it in the editingTask state (as a hack) or we need a cleaner way.
-            // Let's rely on the fact that if it's new, the user *must* have clicked "Add Item".
-            // The task object passed to saveTask will contain the new data.
-            // But wait, TaskModal onSave passes (taskId, updates). 
-
             const columnId = (editingTask as any)?._columnId;
-            if (!columnId) return; // Should not happen if flow is correct
+            if (!columnId) return;
 
-            const newTask = { ...editingTask, ...updates } as Task;
-            // Remove the temporary _columnId
-            delete (newTask as any)._columnId;
             // Ensure content defaults if empty
-            if (!newTask.content) newTask.content = 'Nova Tarefa';
+            const content = updates.content || 'Nova Tarefa';
 
-            setColumns(columns.map(col => {
-                if (col.id === columnId) {
-                    return { ...col, tasks: [...col.tasks, newTask] };
-                }
-                return col;
-            }));
+            addTask(columnId, {
+                content,
+                description: updates.description,
+                tag: updates.tag || 'Geral',
+                priority: updates.priority || 'medium',
+                checklist: updates.checklist
+            });
 
         } else {
-            // Update existing
-            setColumns(columns.map(col => ({
-                ...col,
-                tasks: col.tasks.map(t => t.id === taskId ? { ...t, ...updates } : t)
-            })));
+            updateTask(taskId, updates);
         }
     };
 
+    // --- Utilities ---
+
+    const handleExport = () => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(columns, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "kanban_backup.json");
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    };
+
+    const handleImportClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleImportFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const importedColumns = JSON.parse(e.target?.result as string);
+                if (Array.isArray(importedColumns)) {
+                    if (confirm('Isso substituirá o quadro atual. Deseja continuar?')) {
+                        setColumns(importedColumns);
+                    }
+                } else {
+                    alert('Arquivo inválido. O formato deve ser um array de colunas.');
+                }
+            } catch (error) {
+                console.error('Erro ao importar:', error);
+                alert('Erro ao ler o arquivo JSON.');
+            }
+            // Reset input
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        };
+        reader.readAsText(file);
+    };
+
+    const handleReset = () => {
+        if (confirm('Tem certeza? Isso apagará todas as tarefas e restaurará o layout padrão.')) {
+            localStorage.removeItem('hubview-storage-v1'); // Clear storage
+            window.location.reload(); // Reload to re-init store with defaults
+        }
+    };
 
     // --- Drag and Drop Handlers ---
 
@@ -223,7 +185,6 @@ export default function Kanban() {
         if (activeId === overId) return;
 
         const isActiveTask = active.data.current?.type === 'Task';
-        // If we're dragging a column, we don't do anything in dragOver
         if (!isActiveTask) return;
 
         const activeColumn = findColumn(activeId);
@@ -232,29 +193,27 @@ export default function Kanban() {
         if (!activeColumn || !overColumn) return;
 
         if (activeColumn !== overColumn) {
-            setColumns((prevColumns) => {
-                const activeColIndex = prevColumns.findIndex((col) => col.id === activeColumn.id);
-                const overColIndex = prevColumns.findIndex((col) => col.id === overColumn.id);
+            // We don't update state in DragOver with Zustand to avoid dispatch spam, 
+            // relying on DragEnd is safer and sufficient for simple lists, 
+            // BUT for visual feedback dnd-kit recommends doing it.
+            // Given Zustand is fast, let's try to just let dnd-kit handle the visual overlay 
+            // or implement a temporary local state if needed. 
+            // Actually, for dnd-kit to show the gap properly, the items need to move.
+            // We can call a specialized moveTask action that updates without saving? 
+            // Or just ignore for now and execute on DragEnd. 
+            // *Correction*: dnd-kit *needs* the items to move in the sortable context for the hole to appear.
+            // So we should call a state update.
 
-                // Careful with state updates in React DragOver
-                return prevColumns.map((col, index) => {
-                    if (index === activeColIndex) {
-                        return {
-                            ...col,
-                            tasks: col.tasks.filter((task) => task.id !== activeId),
-                        };
-                    } else if (index === overColIndex) {
-                        const taskToMove = activeTask ? activeTask : activeColumn.tasks.find((t) => t.id === activeId)!;
-                        if (col.tasks.find((t) => t.id === activeId)) return col;
+            // However, calling the persistent store on every hover is bad performance-wise (localStorage writes).
+            // Let's rely on standard dnd-kit behavior: implementing `moveTask` on dragOver.
 
-                        return {
-                            ...col,
-                            tasks: [...col.tasks, taskToMove],
-                        };
-                    }
-                    return col;
-                });
-            });
+            // Wait, `moveTask` in store writes to state. Zustand persist uses localStorage (sync usually).
+            // Writing to LS on every frame/dragOver is heavy.
+            // Ideally we should use transient updates or debounced save.
+            // For this step, I will implement it in DragOver as commonly done, but be aware of perf.
+
+            // Let's invoke the store action
+            moveTask(activeId, overId, activeColumn.id, overColumn.id);
         }
     }
 
@@ -275,36 +234,18 @@ export default function Kanban() {
         const isActiveColumn = active.data.current?.type === 'Column';
 
         if (isActiveColumn) {
-            setColumns((columns) => {
-                const activeIndex = columns.findIndex((col) => col.id === activeId);
-                const overIndex = columns.findIndex((col) => col.id === overId);
-                return arrayMove(columns, activeIndex, overIndex);
-            });
+            moveColumn(activeId, overId);
         } else {
-            // Task Drag End
             const activeColumn = findColumn(activeId);
             const overColumn = findColumn(overId);
 
-            if (activeColumn && overColumn && activeColumn.id === overColumn.id) {
-                const activeIndex = activeColumn.tasks.findIndex((t) => t.id === activeId);
-                const overIndex = overColumn.tasks.findIndex((t) => t.id === overId);
-
-                if (activeIndex !== overIndex) {
-                    setColumns((columns) => {
-                        return columns.map((col) => {
-                            if (col.id === activeColumn.id) {
-                                return {
-                                    ...col,
-                                    tasks: arrayMove(col.tasks, activeIndex, overIndex),
-                                };
-                            }
-                            return col;
-                        });
-                    });
-                }
+            if (activeColumn && overColumn) {
+                moveTask(activeId, overId, activeColumn.id, overColumn.id);
             }
         }
     }
+
+    if (!mounted) return null;
 
     return (
         <DndContext
@@ -325,7 +266,24 @@ export default function Kanban() {
                         </p>
                     </div>
                     <div className="flex gap-2">
-                        <Button variant="secondary" size="sm">Filtrar</Button>
+                        {/* Hidden File Input */}
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleImportFile}
+                            className="hidden"
+                            accept=".json"
+                        />
+                        <Button variant="ghost" size="sm" onClick={handleReset} title="Resetar Board">
+                            <RotateCcw size={16} />
+                        </Button>
+                        <Button variant="secondary" size="sm" onClick={handleExport} title="Exportar JSON">
+                            <Download size={16} />
+                        </Button>
+                        <Button variant="secondary" size="sm" onClick={handleImportClick} title="Importar JSON">
+                            <Upload size={16} />
+                        </Button>
+                        <div className="w-px h-6 bg-white/10 mx-2" />
                         <Button variant="primary" size="sm" onClick={addColumn}>
                             <Plus size={16} className="mr-2" /> Nova Etapa
                         </Button>
@@ -356,11 +314,11 @@ export default function Kanban() {
                 task={editingTask}
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                onSave={saveTask}
+                onSave={handleSaveTask}
                 onDelete={deleteTask}
             />
 
-            {mounted && createPortal(
+            {createPortal(
                 <DragOverlay>
                     {activeColumn && <KanbanColumn
                         column={activeColumn}

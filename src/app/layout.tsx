@@ -22,8 +22,20 @@ export default function RootLayout({
 
           {/* Main Content Area */}
           <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+            {/* Tech Background Image */}
+            <div
+              className="absolute inset-0 z-0"
+              style={{
+                backgroundImage: `url('/bg-tech.png')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                opacity: 0.15,
+                mixBlendMode: 'luminosity'
+              }}
+            />
+
             {/* Tech Grid Background (Faint) */}
-            <div className="absolute inset-0 bg-tech-grid opacity-[0.03] pointer-events-none z-0" />
+            <div className="absolute inset-0 bg-tech-grid opacity-[0.05] pointer-events-none z-0" />
 
             <Header />
 
