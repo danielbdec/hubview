@@ -31,31 +31,47 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
     ];
 
     return (
-        <Card
-            hoverable
+        <div
             onClick={() => router.push(`/project/${project.id}`)}
-            className="h-full border border-gray-200 shadow-sm transition-shadow hover:shadow-md"
-            actions={[
-                <Button type="text" icon={<FolderOpen size={16} />} key="open" onClick={() => router.push(`/project/${project.id}`)}>Abrir</Button>
-            ]}
-            title={
-                <div className="flex justify-between items-center">
-                    <span className="truncate pr-2">{project.title}</span>
+            className="premium-card h-full rounded-2xl p-6 cursor-pointer group relative overflow-hidden flex flex-col justify-between"
+        >
+            {/* Spotlight Effect */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+            <div>
+                <div className="flex justify-between items-start mb-4 relative z-10">
+                    <h3 className="text-xl font-bold text-white group-hover:text-amber-400 transition-colors truncate pr-2 tracking-tight">
+                        {project.title}
+                    </h3>
                     <Dropdown menu={{ items, onClick: handleMenuClick }} trigger={['click']}>
-                        <Button type="text" shape="circle" icon={<MoreVertical size={16} />} onClick={(e) => e.stopPropagation()} />
+                        <button
+                            type="button"
+                            className="text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-white/5 active:scale-95"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <MoreVertical size={18} />
+                        </button>
                     </Dropdown>
                 </div>
-            }
-        >
-            <div className="h-24 overflow-hidden">
-                <Paragraph className="text-gray-500 mb-0" ellipsis={{ rows: 3 }}>
-                    {project.description || 'Sem descrição.'}
-                </Paragraph>
+
+                <div className="h-20 overflow-hidden relative z-10 mb-4">
+                    <p className="text-gray-400 text-sm line-clamp-3 leading-relaxed">
+                        {project.description || 'Sem descrição.'}
+                    </p>
+                </div>
             </div>
-            <div className="mt-4 flex items-center gap-2 text-xs text-gray-400">
-                <span>{project.columnIds.length} Colunas</span>
+
+            <div className="pt-4 border-t border-white/5 flex items-center justify-between text-xs text-gray-500 relative z-10">
+                <div className="flex items-center gap-2">
+                    <span className="bg-white/5 px-2.5 py-1 rounded-md text-gray-400 font-medium">
+                        {project.columnIds.length} Listas
+                    </span>
+                </div>
+                <span className="group-hover:translate-x-1 transition-transform duration-300 text-amber-400/80 group-hover:text-amber-400 font-medium flex items-center gap-1">
+                    Abrir <span className="text-lg">→</span>
+                </span>
             </div>
-        </Card>
+        </div>
     );
 };
 

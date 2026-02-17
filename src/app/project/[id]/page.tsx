@@ -20,6 +20,8 @@ export default function ProjectBoard() {
     const columns = useBoardStore((state) => state.columns);
     const addColumn = useBoardStore((state) => state.addColumn);
     const deleteProject = useBoardStore((state) => state.deleteProject);
+    const moveCard = useBoardStore((state) => state.moveCard);
+    const moveColumn = useBoardStore((state) => state.moveColumn);
 
     const [mounted, setMounted] = useState(false);
     const [isAddingColumn, setIsAddingColumn] = useState(false);
@@ -131,14 +133,14 @@ export default function ProjectBoard() {
         setActiveId(null);
     }
 
-    // Import actions
-    const moveCard = useBoardStore((state) => state.moveCard);
-    const moveColumn = useBoardStore((state) => state.moveColumn);
+
 
     return (
-        <main className="h-screen flex flex-col bg-blue-600 overflow-hidden">
+        <main className="h-screen flex flex-col bg-[#0a192f] overflow-hidden relative">
+            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
+
             {/* Navbar */}
-            <header className="h-14 bg-black/20 backdrop-blur-sm flex items-center px-4 justify-between text-white shrink-0">
+            <header className="h-16 bg-[#112240]/80 backdrop-blur-md border-b border-white/5 flex items-center px-6 justify-between text-white shrink-0 z-10">
                 <div className="flex items-center gap-4">
                     <Button
                         type="text"
@@ -180,31 +182,31 @@ export default function ProjectBoard() {
                         </SortableContext>
 
                         {/* Add Column Button */}
-                        <div className="w-72 flex-shrink-0 ml-2">
+                        <div className="w-80 flex-shrink-0 ml-2">
                             {!isAddingColumn ? (
-                                <Button
-                                    block
-                                    size="large"
-                                    className="bg-white/20 border-none text-white hover:bg-white/30 text-left justify-start !h-auto py-3 font-semibold"
-                                    icon={<Plus size={16} />}
+                                <button
+                                    className="w-full bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 rounded-2xl p-4 flex items-center gap-2 text-gray-400 hover:text-white transition-all duration-200 group h-auto"
                                     onClick={() => setIsAddingColumn(true)}
                                 >
-                                    Adicionar outra lista
-                                </Button>
+                                    <div className="bg-white/10 p-2 rounded-lg group-hover:bg-amber-500/20 group-hover:text-amber-400 transition-colors">
+                                        <Plus size={20} />
+                                    </div>
+                                    <span className="font-semibold text-lg">Adicionar outra lista</span>
+                                </button>
                             ) : (
-                                <div className="bg-gray-100 p-2 rounded-xl border border-gray-200 shadow-sm">
+                                <div className="bg-[#112240]/60 backdrop-blur-xl p-3 rounded-2xl border border-white/10 shadow-xl animate-in fade-in zoom-in-95 duration-200">
                                     <Input
                                         autoFocus
                                         placeholder="Título da lista..."
-                                        className="mb-2"
+                                        className="mb-3 !bg-black/20 !border-white/10 !text-white placeholder:text-gray-500 focus:!border-amber-500/50 focus:!shadow-none h-10 rounded-lg"
                                         value={newColumnTitle}
                                         onChange={(e) => setNewColumnTitle(e.target.value)}
                                         onPressEnter={handleAddColumn}
                                         maxLength={50}
                                     />
                                     <div className="flex items-center gap-2">
-                                        <Button type="primary" onClick={handleAddColumn}>Adicionar lista</Button>
-                                        <Button type="text" size="small" onClick={() => setIsAddingColumn(false)}>X</Button>
+                                        <Button type="primary" onClick={handleAddColumn} className="bg-amber-500 hover:bg-amber-400 text-black font-bold border-none shadow-amber-500/20 shadow-lg">Adicionar lista</Button>
+                                        <Button type="text" size="small" onClick={() => setIsAddingColumn(false)} className="text-gray-400 hover:text-white">X</Button>
                                     </div>
                                 </div>
                             )}
