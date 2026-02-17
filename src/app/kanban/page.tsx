@@ -76,7 +76,21 @@ export default function Kanban() {
 
     useEffect(() => {
         setMounted(true);
+        const savedColumns = localStorage.getItem('kanban-columns');
+        if (savedColumns) {
+            try {
+                setColumns(JSON.parse(savedColumns));
+            } catch (e) {
+                console.error('Failed to parse columns', e);
+            }
+        }
     }, []);
+
+    useEffect(() => {
+        if (mounted) {
+            localStorage.setItem('kanban-columns', JSON.stringify(columns));
+        }
+    }, [columns, mounted]);
 
     const columnIds = useMemo(() => columns.map((col) => col.id), [columns]);
 
