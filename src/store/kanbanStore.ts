@@ -335,12 +335,12 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             }
 
             // 3. Map to Store Structure
-            const newColumns: Column[] = (dbColumns as { id: string, title: string, color: string, position: number, isDone?: boolean }[]).map(c => ({
+            const newColumns: Column[] = (dbColumns as { id: string, title: string, color: string, position: number, completed?: string }[]).map(c => ({
                 id: c.id,
                 title: c.title,
                 color: c.color,
                 position: c.position,
-                isDone: !!c.isDone,
+                isDone: c.completed === 'Sim',
                 tasks: [],
                 syncStatus: 'synced' as const
             })).sort((a, b) => (a.position || 0) - (b.position || 0));
@@ -616,7 +616,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         }));
 
         try {
-            await fetch('/api/columns/update', {
+            await fetch('/api/columns/completed', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id, isDone: newIsDone })

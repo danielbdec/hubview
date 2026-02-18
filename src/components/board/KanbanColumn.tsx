@@ -235,28 +235,41 @@ export function KanbanColumn({
 
                                     <div className="h-px bg-[var(--card-border)]" />
 
-                                    {/* Is Done Toggle */}
+                                    {/* Is Done Toggle - Redesigned */}
                                     <div
-                                        className="flex items-start gap-3 p-2 rounded-md hover:bg-[var(--background)] cursor-pointer transition-colors group"
+                                        className={cn(
+                                            "flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 border group active:scale-95 select-none",
+                                            column.isDone
+                                                ? "bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/15"
+                                                : "bg-[var(--background)] border-[var(--card-border)] hover:border-[var(--foreground)]/30 hover:shadow-sm"
+                                        )}
                                         onClick={() => {
-                                            onToggleDone(column.id);
-                                            // Don't close to allow toggling back
+                                            if (column.syncStatus !== 'syncing') {
+                                                onToggleDone(column.id);
+                                            }
                                         }}
                                     >
                                         <div className={cn(
-                                            "mt-0.5 w-4 h-4 rounded border flex items-center justify-center transition-colors",
-                                            column.isDone
-                                                ? "bg-emerald-500 border-emerald-500 text-white"
-                                                : "border-[var(--muted-foreground)] group-hover:border-[var(--foreground)]"
+                                            "w-10 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out flex-shrink-0",
+                                            column.isDone ? "bg-emerald-500" : "bg-[var(--muted-foreground)]/30 group-hover:bg-[var(--muted-foreground)]/50"
                                         )}>
-                                            {column.isDone && <Check size={10} strokeWidth={3} />}
+                                            <div className={cn(
+                                                "bg-white w-4 h-4 rounded-full shadow-sm transform transition-transform duration-200 ease-in-out",
+                                                column.isDone ? "translate-x-4" : "translate-x-0"
+                                            )} />
                                         </div>
-                                        <div>
-                                            <p className="text-sm font-medium text-[var(--foreground)]">Concluir Tarefas</p>
-                                            <p className="text-[10px] text-[var(--muted-foreground)] leading-tight mt-0.5">
-                                                Tarefas nesta coluna serão contabilizadas como 100% concluídas.
+                                        <div className="flex-1">
+                                            <p className={cn(
+                                                "text-sm font-bold transition-colors",
+                                                column.isDone ? "text-emerald-500" : "text-[var(--foreground)]"
+                                            )}>
+                                                Concluir Tarefas
+                                            </p>
+                                            <p className="text-[10px] text-[var(--muted-foreground)] leading-tight mt-0.5 font-medium opacity-80">
+                                                Marca tarefas como 100%
                                             </p>
                                         </div>
+                                        {column.isDone && <CheckCircle2 size={14} className="text-emerald-500 animate-in zoom-in spin-in-90 duration-300" />}
                                     </div>
 
                                     <div className="h-px bg-[var(--card-border)]" />
