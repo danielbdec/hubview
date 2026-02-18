@@ -134,7 +134,13 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
                 }
                 try {
                     const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-                    return Array.isArray(parsed) ? parsed : JSON.parse(JSON.stringify(defaultColumnsTemplate));
+                    const columns = Array.isArray(parsed) ? parsed : JSON.parse(JSON.stringify(defaultColumnsTemplate));
+
+                    // Map 'completed' (Sim/Não) to isDone (boolean)
+                    return columns.map((c: any) => ({
+                        ...c,
+                        isDone: c.isDone || c.completed === 'Sim'
+                    }));
                 } catch {
                     return JSON.parse(JSON.stringify(defaultColumnsTemplate));
                 }
