@@ -24,11 +24,23 @@ interface KanbanColumnProps {
     onEditTask: (task: any) => void;
 }
 
+const COLORS = [
+    '#ef4444', // Red
+    '#eab308', // Yellow
+    '#22c55e', // Green
+    '#3b82f6', // Blue
+    '#a855f7', // Purple
+    '#f97316', // Orange
+    '#06b6d4', // Cyan
+    '#ec4899', // Pink
+];
+
 export function KanbanColumn({ column, onDeleteColumn, onUpdateTitle, onUpdateColor, onRequestAddTask, onDeleteTask, onEditTask }: KanbanColumnProps) {
     const taskIds = useMemo(() => column.tasks.map((task) => task.id), [column.tasks]);
 
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [titleInput, setTitleInput] = useState(column.title);
+    const [showColorPicker, setShowColorPicker] = useState(false);
 
     const columnColor = column.color || 'var(--primary)';
 
@@ -67,12 +79,16 @@ export function KanbanColumn({ column, onDeleteColumn, onUpdateTitle, onUpdateCo
         onDeleteColumn(column.id);
     };
 
-    const handleColorClick = () => {
-        if (!onUpdateColor) return;
-        const colors = ['#ef4444', '#eab308', '#22c55e', '#3b82f6', '#a855f7', '#f97316', '#06b6d4', '#ec4899'];
-        const currentIndex = colors.findIndex(c => c.toLowerCase() === (column.color || '').toLowerCase());
-        const nextColor = colors[(currentIndex + 1) % colors.length];
-        onUpdateColor(column.id, nextColor);
+    const handleColorClick = (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent drag/other events
+        setShowColorPicker(!showColorPicker);
+    };
+
+    const handleColorSelect = (color: string) => {
+        if (onUpdateColor) {
+            onUpdateColor(column.id, color);
+        }
+        setShowColorPicker(false);
     };
 
     return (
@@ -80,7 +96,7 @@ export function KanbanColumn({ column, onDeleteColumn, onUpdateTitle, onUpdateCo
             ref={setNodeRef}
             style={style}
             className={cn(
-                "w-80 flex-shrink-0 flex flex-col rounded-sm border transition-colors",
+                "w-80 flex-shrink-0 flex flex-col rounded-sm border transition-colors relative",
                 "bg-[var(--column-bg)] border-[var(--card-border)]",
                 isDragging && "opacity-50 border-[var(--col-color)] border-dashed"
             )}
@@ -89,15 +105,47 @@ export function KanbanColumn({ column, onDeleteColumn, onUpdateTitle, onUpdateCo
             <div
                 {...attributes}
                 {...listeners}
-                className="p-3 flex items-center justify-between cursor-grab active:cursor-grabbing border-b border-[var(--card-border)] bg-[var(--card-hover)] group/header"
+                className="p-3 flex items-center justify-between cursor-grab active:cursor-grabbing border-b border-[var(--card-border)] bg-[var(--card-hover)] group/header relative"
             >
-                <div className="flex items-center gap-2 flex-1">
+                <div className="flex items-center gap-2 flex-1 relative">
                     <div
-                        className="w-3 h-3 rounded-full shadow-[0_0_8px_-2px_var(--col-color)] cursor-pointer hover:scale-110 transition-transform"
+                        className="w-3 h-3 rounded-full shadow-[0_0_8px_-2px_var(--col-color)] cursor-pointer hover:scale-125 transition-transform"
                         style={{ backgroundColor: 'var(--col-color)' }}
                         onClick={handleColorClick}
-                        title="Clique para alterar a cor"
+                        title="Alterar cor da coluna"
                     />
+
+                    {/* Color Picker Popover */}
+                    {showColorPicker && (
+                        <>
+                            <div
+                                className="fixed inset-0 z-40"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowColorPicker(false);
+                                }}
+                            />
+                            <div
+                                className="absolute top-6 left-0 z-50 p-2 bg-[var(--card)] border border-[var(--card-border)] rounded shadow-xl grid grid-cols-4 gap-1 w-32 animate-in fade-in zoom-in-95 duration-200"
+                                onClick={(e) => e.stopPropagation()} // Prevent drag
+                                onPointerDown={(e) => e.stopPropagation()} // Prevent drag start
+                            >
+                                {COLORS.map((color) => (
+                                    <button
+                                        key={color}
+                                        onClick={() => handleColorSelect(color)}
+                                        className={cn(
+                                            "w-6 h-6 rounded-full border border-transparent hover:scale-110 transition-transform",
+                                            columnColor === color && "ring-2 ring-white ring-offset-1 ring-offset-black"
+                                        )}
+                                        style={{ backgroundColor: color }}
+                                        title={color}
+                                    />
+                                ))}
+                            </div>
+                        </>
+                    )}
+
                     {isEditingTitle ? (
                         <input
                             value={titleInput}
