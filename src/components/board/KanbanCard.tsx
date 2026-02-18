@@ -68,6 +68,11 @@ export function KanbanCard({ task, isOverlay, onEdit, onDelete }: KanbanCardProp
                     task.priority === 'high' ? 'border-l-[3px] border-l-red-500/80' :
                         task.priority === 'medium' ? 'border-l-[3px] border-l-yellow-500/80' :
                             'border-l-[3px] border-l-emerald-500/80',
+                    // Sync Status Indicator (Border Right)
+                    task.syncStatus === 'syncing' && "border-r-[3px] border-r-amber-400 animate-pulse",
+                    task.syncStatus === 'error' && "border-r-[3px] border-r-red-500",
+                    // task.syncStatus === 'synced' && "border-r-[3px] border-r-transparent", // Default
+
                     isOverlay && "border-[var(--primary)] shadow-[0_0_20px_-5px_var(--primary)] scale-105 rotate-2 z-50",
                     !isOverlay && "hover:-translate-y-1"
                 )}

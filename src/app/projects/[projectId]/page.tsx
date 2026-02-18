@@ -15,7 +15,7 @@ import {
     DragEndEvent,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates, SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
-import { Plus, Download, Upload, RotateCcw, ArrowLeft, LayoutGrid } from 'lucide-react';
+import { Plus, Download, Upload, RotateCcw, ArrowLeft, LayoutGrid, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { KanbanColumn } from '@/components/board/KanbanColumn';
 import { KanbanCard } from '@/components/board/KanbanCard';
@@ -41,15 +41,18 @@ export default function KanbanBoardPage() {
         deleteTask,
         moveColumn,
         moveTask,
-        setColumns
+        setColumns,
+        fetchBoardData,
+        isLoadingBoard
     } = useProjectStore();
 
     // Effect to synchronization
     useEffect(() => {
         if (projectId) {
             setActiveProject(projectId);
+            fetchBoardData(projectId);
         }
-    }, [projectId, setActiveProject]);
+    }, [projectId, setActiveProject, fetchBoardData]);
 
     const activeProject = projects.find(p => p.id === projectId);
 
@@ -309,13 +312,18 @@ export default function KanbanBoardPage() {
                             <Upload size={16} />
                         </Button>
                         <div className="w-px h-6 bg-[var(--card-border)] mx-2" />
-                        <Button variant="primary" size="sm" onClick={addColumn}>
+                        <Button variant="primary" size="sm" onClick={addColumn} disabled={isLoadingBoard}>
                             <Plus size={16} className="mr-2" /> Novo Painel
                         </Button>
                     </div>
                 </div>
 
-                {columns.length === 0 ? (
+                {isLoadingBoard ? (
+                    <div className="flex-1 flex flex-col items-center justify-center">
+                        <Loader2 className="animate-spin text-[var(--primary)] mb-4" size={48} />
+                        <p className="text-[var(--muted-foreground)] font-mono text-sm animate-pulse">Carregando painéis...</p>
+                    </div>
+                ) : columns.length === 0 ? (
                     <div className="flex-1 flex items-center justify-center">
                         <div className="text-center max-w-md">
                             <div className="mx-auto w-16 h-16 rounded-full bg-[var(--card)] border border-[var(--card-border)] flex items-center justify-center mb-6">

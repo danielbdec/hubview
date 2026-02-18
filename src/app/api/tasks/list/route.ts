@@ -1,24 +1,25 @@
+
 import { NextResponse } from 'next/server';
 
 const N8N_BASE = process.env.N8N_API_URL;
 const API_KEY = process.env.N8N_API_KEY;
 
-export async function POST() {
+export async function POST(request: Request) {
     if (!N8N_BASE) {
-        return NextResponse.json(
-            { error: 'N8N_API_URL não configurada' },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: 'N8N_API_URL não configurada' }, { status: 500 });
     }
 
     try {
-        const response = await fetch(`${N8N_BASE}/hubview-projeto-consulta`, {
+        const body = await request.json();
+
+        // Webhook: hubview-tasks-list
+        const response = await fetch(`${N8N_BASE}/hubview-tasks-list`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
             },
-            body: JSON.stringify({}),
+            body: JSON.stringify(body),
         });
 
         if (!response.ok) {
@@ -28,10 +29,7 @@ export async function POST() {
         const data = await response.json();
         return NextResponse.json(data);
     } catch (error) {
-        console.error('Erro ao buscar projetos:', error);
-        return NextResponse.json(
-            { error: 'Falha ao buscar projetos' },
-            { status: 502 }
-        );
+        console.error('Erro ao listar tarefas:', error);
+        return NextResponse.json({ error: 'Falha ao listar tarefas' }, { status: 502 });
     }
 }

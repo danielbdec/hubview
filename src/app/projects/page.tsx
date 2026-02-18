@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Plus, MoreVertical, FolderOpen, LayoutGrid, Edit3, Power, Archive, RefreshCw } from 'lucide-react';
+import { Plus, MoreVertical, FolderOpen, LayoutGrid, Edit3, Power, Archive, RefreshCw, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useProjectStore, Project } from '@/store/kanbanStore';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,7 +15,7 @@ type TabFilter = 'active' | 'inactive';
 
 export default function ProjectsPage() {
     const router = useRouter();
-    const { projects, addProject, updateProjectAPI, inactivateProject, fetchProjects } = useProjectStore();
+    const { projects, addProject, updateProjectAPI, inactivateProject, fetchProjects, isLoadingProjects } = useProjectStore();
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [newProjectTitle, setNewProjectTitle] = useState('');
     const [newProjectDesc, setNewProjectDesc] = useState('');
@@ -203,13 +203,13 @@ export default function ProjectsPage() {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={handleRefresh}
-                        disabled={isRefreshing}
+                        disabled={isRefreshing || isLoadingProjects}
                         className="p-2.5 border border-[var(--card-border)] bg-[var(--card)] hover:bg-[var(--card-hover)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all duration-200 disabled:opacity-50"
                         title="Atualizar lista"
                     >
                         <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
                     </button>
-                    <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
+                    <Button variant="primary" onClick={() => setIsCreateModalOpen(true)} disabled={isLoadingProjects}>
                         <Plus size={18} className="mr-2" /> Novo Projeto
                     </Button>
                 </div>
@@ -282,7 +282,12 @@ export default function ProjectsPage() {
                 </button>
             </div>
 
-            {filteredProjects.length === 0 ? (
+            {isLoadingProjects ? (
+                <div className="flex flex-col items-center justify-center py-32">
+                    <Loader2 className="animate-spin text-[var(--primary)] mb-4" size={48} />
+                    <p className="text-[var(--muted-foreground)] font-mono text-sm animate-pulse">Carregando projetos...</p>
+                </div>
+            ) : filteredProjects.length === 0 ? (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}

@@ -164,6 +164,12 @@ export function KanbanColumn({ column, onDeleteColumn, onUpdateTitle, onUpdateCo
                         </h3>
                     )}
                     <span className="text-[10px] text-[var(--muted-foreground)] font-mono">({column.tasks.length})</span>
+                    {column.syncStatus === 'syncing' && (
+                        <span className="ml-2 animate-spin h-3 w-3 border-2 border-[var(--primary)] border-t-transparent rounded-full" title="Sincronizando..." />
+                    )}
+                    {column.syncStatus === 'error' && (
+                        <span className="ml-2 h-2 w-2 bg-red-500 rounded-full" title="Erro na sincronização" />
+                    )}
                 </div>
 
                 <div className="flex items-center opacity-0 group-hover/header:opacity-100 transition-opacity">
