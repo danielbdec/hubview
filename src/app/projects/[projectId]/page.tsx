@@ -15,7 +15,7 @@ import {
     DragEndEvent,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates, SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
-import { Plus, Download, Upload, RotateCcw, ArrowLeft } from 'lucide-react';
+import { Plus, Download, Upload, RotateCcw, ArrowLeft, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { KanbanColumn } from '@/components/board/KanbanColumn';
 import { KanbanCard } from '@/components/board/KanbanCard';
@@ -310,30 +310,50 @@ export default function KanbanBoardPage() {
                         </Button>
                         <div className="w-px h-6 bg-[var(--card-border)] mx-2" />
                         <Button variant="primary" size="sm" onClick={addColumn}>
-                            <Plus size={16} className="mr-2" /> Nova Etapa
+                            <Plus size={16} className="mr-2" /> Novo Painel
                         </Button>
                     </div>
                 </div>
 
-                {/* Columns Container */}
-                <div className="flex-1 overflow-x-auto pb-4">
-                    <div className="flex gap-6 h-full min-w-[1000px]">
-                        <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
-                            {columns.map((col) => (
-                                <KanbanColumn
-                                    key={col.id}
-                                    column={col}
-                                    onDeleteColumn={deleteColumn}
-                                    onUpdateTitle={updateColumnTitle}
-                                    onUpdateColor={updateColumnColor}
-                                    onRequestAddTask={handleRequestAddTask}
-                                    onDeleteTask={(colId, taskId) => deleteTask(taskId)}
-                                    onEditTask={openEditModal}
-                                />
-                            ))}
-                        </SortableContext>
+                {columns.length === 0 ? (
+                    <div className="flex-1 flex items-center justify-center">
+                        <div className="text-center max-w-md">
+                            <div className="mx-auto w-16 h-16 rounded-full bg-[var(--card)] border border-[var(--card-border)] flex items-center justify-center mb-6">
+                                <LayoutGrid size={28} className="text-[var(--muted-foreground)]" />
+                            </div>
+                            <h2 className="text-xl font-bold uppercase tracking-wider text-[var(--foreground)] mb-3">
+                                Nenhum Painel Criado
+                            </h2>
+                            <p className="text-[var(--muted-foreground)] font-mono text-sm leading-relaxed mb-8">
+                                Este projeto ainda não possui painéis. Clique em{' '}
+                                <span className="text-[var(--primary)] font-bold">+ Novo Painel</span>{' '}
+                                para começar a organizar suas tarefas.
+                            </p>
+                            <Button variant="primary" onClick={addColumn}>
+                                <Plus size={18} className="mr-2" /> Novo Painel
+                            </Button>
+                        </div>
                     </div>
-                </div>
+                ) : (
+                    <div className="flex-1 overflow-x-auto pb-4">
+                        <div className="flex gap-6 h-full min-w-[1000px]">
+                            <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
+                                {columns.map((col) => (
+                                    <KanbanColumn
+                                        key={col.id}
+                                        column={col}
+                                        onDeleteColumn={deleteColumn}
+                                        onUpdateTitle={updateColumnTitle}
+                                        onUpdateColor={updateColumnColor}
+                                        onRequestAddTask={handleRequestAddTask}
+                                        onDeleteTask={(colId, taskId) => deleteTask(taskId)}
+                                        onEditTask={openEditModal}
+                                    />
+                                ))}
+                            </SortableContext>
+                        </div>
+                    </div>
+                )}
             </div>
 
             <TaskModal
