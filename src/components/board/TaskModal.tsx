@@ -303,11 +303,12 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                         <select
                             value={formData.priority}
                             onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
-                            className="w-full h-10 bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--foreground)] px-3 text-sm focus:outline-none focus:border-[var(--primary)] transition-colors appearance-none rounded-none"
+                            className="w-full h-10 bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--foreground)] px-3 text-sm focus:outline-none focus:border-[var(--primary)] transition-colors rounded-none [color-scheme:dark]"
+                            style={{ colorScheme: 'dark' }}
                         >
-                            <option value="low">BAIXA</option>
-                            <option value="medium">MÉDIA</option>
-                            <option value="high">ALTA</option>
+                            <option value="low" className="bg-[#1a1a2e] text-white">BAIXA</option>
+                            <option value="medium" className="bg-[#1a1a2e] text-white">MÉDIA</option>
+                            <option value="high" className="bg-[#1a1a2e] text-white">ALTA</option>
                         </select>
                     </div>
 

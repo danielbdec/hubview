@@ -43,12 +43,16 @@ export type Project = {
     syncStatus?: 'syncing' | 'synced' | 'error';
 };
 
+export type TaskCounts = Record<string, { total: number; byColumn: Record<string, number>; byPriority: Record<string, number> }>;
+
 interface ProjectState {
     projects: Project[];
     activeProjectId: string | null;
+    taskCounts: TaskCounts;
 
     // Project Actions
     fetchProjects: () => Promise<void>;
+    fetchTaskCounts: () => Promise<void>;
     addProject: (title: string, description?: string) => Promise<string>;
     updateProject: (id: string, updates: Partial<Project>) => void;
     updateProjectAPI: (id: string, updates: Partial<Project>) => Promise<void>;
@@ -110,6 +114,7 @@ const defaultColumnsTemplate: Column[] = [
 export const useProjectStore = create<ProjectState>((set, get) => ({
     projects: [],
     activeProjectId: null,
+    taskCounts: {},
     isLoadingProjects: false,
     isLoadingBoard: false,
 
@@ -121,9 +126,6 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
             const data = await response.json();
 
-            // Map API response to Project structure
-            // Assuming API returns array of projects matching Project type or close to it
-            // Adjust mapping based on actual API response structure if needed
             const parseColumns = (raw: unknown): Column[] => {
                 if (!raw || raw === 'undefined' || raw === 'null') {
                     return JSON.parse(JSON.stringify(defaultColumnsTemplate));
@@ -154,11 +156,26 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
                 set({ activeProjectId: loadedProjects[0].id });
             }
 
+            // Fetch task counts in parallel
+            get().fetchTaskCounts();
+
         } catch (error) {
             console.error('Error fetching projects:', error);
-            // Optionally set functionality to show error state in UI
         } finally {
             set({ isLoadingProjects: false });
+        }
+    },
+
+    fetchTaskCounts: async () => {
+        try {
+            const response = await fetch('/api/tasks/count', { method: 'POST' });
+            if (!response.ok) return;
+            const counts = await response.json();
+            if (counts && !counts.error) {
+                set({ taskCounts: counts });
+            }
+        } catch (error) {
+            console.error('Error fetching task counts:', error);
         }
     },
 
@@ -316,7 +333,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             }
 
             // 3. Map to Store Structure
-            const newColumns: Column[] = dbColumns.map((c: any) => ({
+            const newColumns: Column[] = (dbColumns as { id: string, title: string, color: string, position: number }[]).map(c => ({
                 id: c.id,
                 title: c.title,
                 color: c.color,
@@ -326,7 +343,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             })).sort((a, b) => (a.position || 0) - (b.position || 0));
 
             // Distribute Tasks to Columns
-            dbTasks.forEach((t: any) => {
+            (dbTasks as any[]).forEach((t) => {
                 const column = newColumns.find(c => c.id === t.columnId); // columnId (CamelCase)
                 if (column) {
                     column.tasks.push({

@@ -96,7 +96,7 @@ export function KanbanColumn({ column, onDeleteColumn, onUpdateTitle, onUpdateCo
             ref={setNodeRef}
             style={style}
             className={cn(
-                "w-80 flex-shrink-0 flex flex-col rounded-sm border transition-colors relative",
+                "w-80 flex-shrink-0 flex flex-col rounded-sm border transition-colors relative h-full max-h-full",
                 "bg-[var(--column-bg)] border-[var(--card-border)]",
                 isDragging && "opacity-50 border-[var(--col-color)] border-dashed"
             )}
@@ -119,14 +119,14 @@ export function KanbanColumn({ column, onDeleteColumn, onUpdateTitle, onUpdateCo
                     {showColorPicker && (
                         <>
                             <div
-                                className="fixed inset-0 z-40"
+                                className="fixed inset-0 z-[60]"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setShowColorPicker(false);
                                 }}
                             />
                             <div
-                                className="absolute top-6 left-0 z-50 p-2 bg-[var(--card)] border border-[var(--card-border)] rounded shadow-xl grid grid-cols-4 gap-1 w-32 animate-in fade-in zoom-in-95 duration-200"
+                                className="absolute top-6 left-0 z-[70] p-2 bg-[var(--card)] border border-[var(--card-border)] rounded shadow-xl grid grid-cols-4 gap-1 w-32 animate-in fade-in zoom-in-95 duration-200"
                                 onClick={(e) => e.stopPropagation()} // Prevent drag
                                 onPointerDown={(e) => e.stopPropagation()} // Prevent drag start
                             >
@@ -152,8 +152,9 @@ export function KanbanColumn({ column, onDeleteColumn, onUpdateTitle, onUpdateCo
                             onChange={(e) => setTitleInput(e.target.value)}
                             onBlur={handleTitleSubmit}
                             onKeyDown={(e) => e.key === 'Enter' && handleTitleSubmit()}
-                            className="bg-transparent text-sm font-bold font-mono text-[var(--foreground)] focus:outline-none w-full uppercase tracking-wider"
+                            className="bg-[var(--card-hover)] text-sm font-bold font-mono text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--col-color)] w-full uppercase tracking-wider px-1.5 py-0.5 -ml-1.5 relative z-10"
                             autoFocus
+                            onFocus={(e) => e.target.select()}
                         />
                     ) : (
                         <h3
@@ -184,7 +185,7 @@ export function KanbanColumn({ column, onDeleteColumn, onUpdateTitle, onUpdateCo
 
             {/* Tasks Container */}
             <div className={cn(
-                "flex-1 p-2 overflow-y-auto min-h-[150px] space-y-2 scrollbar-thumb-[var(--muted-foreground)] scrollbar-track-[var(--card)]",
+                "flex-1 p-2 overflow-y-auto min-h-0 space-y-2 scrollbar-thumb-[var(--muted-foreground)] scrollbar-track-[var(--card)]",
                 column.tasks.length === 0 && "flex items-center justify-center border-2 border-dashed border-[var(--card-border)]/50 rounded-sm m-2 bg-[var(--card-hover)]/30"
             )}>
                 {column.tasks.length === 0 && (

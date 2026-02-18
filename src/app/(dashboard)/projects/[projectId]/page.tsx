@@ -344,7 +344,7 @@ export default function KanbanBoardPage() {
                     </div>
                 ) : (
                     <div className="flex-1 overflow-x-auto pb-4">
-                        <div className="flex gap-6 h-full min-w-[1000px]">
+                        <div className="flex gap-6 h-full items-stretch min-w-[1000px]">
                             <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
                                 {columns.map((col) => (
                                     <KanbanColumn

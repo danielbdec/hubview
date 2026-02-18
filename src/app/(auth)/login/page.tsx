@@ -209,7 +209,7 @@ export default function LoginPage() {
     useEffect(() => {
         const user = localStorage.getItem('hubview_user');
         if (user) {
-            router.push('/projects');
+            router.push('/');
         }
     }, [router]);
 
@@ -241,7 +241,7 @@ export default function LoginPage() {
 
             // Redirect after animation
             setTimeout(() => {
-                router.push('/projects');
+                router.push('/');
             }, 1200);
         } catch {
             setError('Erro de conexão. Tente novamente.');

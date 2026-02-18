@@ -15,7 +15,7 @@ type TabFilter = 'active' | 'inactive';
 
 export default function ProjectsPage() {
     const router = useRouter();
-    const { projects, addProject, updateProjectAPI, inactivateProject, fetchProjects, isLoadingProjects } = useProjectStore();
+    const { projects, addProject, updateProjectAPI, inactivateProject, fetchProjects, fetchTaskCounts, taskCounts, isLoadingProjects } = useProjectStore();
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [newProjectTitle, setNewProjectTitle] = useState('');
     const [newProjectDesc, setNewProjectDesc] = useState('');
@@ -319,10 +319,15 @@ export default function ProjectsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <AnimatePresence>
                         {filteredProjects.map((project) => {
-                            const totalTasks = project.columns.reduce((acc, col) => acc + col.tasks.length, 0);
-                            const completedTasks = project.columns.find(c => c.id === 'done')?.tasks.length || 0;
-                            const inProgressTasks = (project.columns.find(c => c.id === 'in-progress')?.tasks.length || 0) +
-                                (project.columns.find(c => c.id === 'review')?.tasks.length || 0);
+                            const counts = taskCounts[project.id];
+                            const totalTasks = counts?.total || 0;
+                            const highPriority = counts?.byPriority?.high || 0;
+                            // Sum all columns except first (backlog) for inProgress, last column for completed
+                            const columnIds = Object.keys(counts?.byColumn || {});
+                            const completedTasks = columnIds.length > 0
+                                ? counts?.byColumn[columnIds[columnIds.length - 1]] || 0
+                                : 0;
+                            const inProgressTasks = totalTasks - completedTasks - (columnIds.length > 0 ? (counts?.byColumn[columnIds[0]] || 0) : 0);
 
                             const progress = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
 

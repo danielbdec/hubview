@@ -129,9 +129,9 @@ export function KanbanCard({ task, isOverlay, onEdit, onDelete }: KanbanCardProp
                     {/* Tags */}
                     {task.tags && task.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1.5">
-                            {task.tags.map(tag => (
+                            {task.tags.map((tag, idx) => (
                                 <span
-                                    key={tag.id}
+                                    key={`${tag.id}-${idx}`}
                                     className="text-[9px] font-bold px-1.5 py-0.5 rounded-sm text-white shadow-sm"
                                     style={{ backgroundColor: tag.color }}
                                 >
