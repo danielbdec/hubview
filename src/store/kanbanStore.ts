@@ -546,6 +546,56 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         }
     },
 
+    updateColumnColor: async (colId, color) => {
+        set((state) => ({
+            projects: state.projects.map(p => {
+                if (p.id === state.activeProjectId) {
+                    return {
+                        ...p,
+                        columns: p.columns.map(c => c.id === colId ? { ...c, color, syncStatus: 'syncing' } : c),
+                        updatedAt: Date.now()
+                    };
+                }
+                return p;
+            })
+        }));
+
+        try {
+            const response = await fetch('/api/columns/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: colId, color })
+            });
+
+            if (!response.ok) throw new Error('Failed to update column color');
+
+            set((state) => ({
+                projects: state.projects.map(p => {
+                    if (p.id === state.activeProjectId) {
+                        return {
+                            ...p,
+                            columns: p.columns.map(c => c.id === colId ? { ...c, syncStatus: 'synced' } : c)
+                        };
+                    }
+                    return p;
+                })
+            }));
+        } catch (error) {
+            console.error('Error update column color:', error);
+            set((state) => ({
+                projects: state.projects.map(p => {
+                    if (p.id === state.activeProjectId) {
+                        return {
+                            ...p,
+                            columns: p.columns.map(c => c.id === colId ? { ...c, syncStatus: 'error' } : c)
+                        };
+                    }
+                    return p;
+                })
+            }));
+        }
+    },
+
     toggleColumnDone: async (id) => {
         const activeProject = get().projects.find(p => p.id === get().activeProjectId);
         if (!activeProject) return;
