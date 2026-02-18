@@ -30,7 +30,7 @@ export function Header() {
             {/* Actions */}
             <div className="flex items-center gap-4">
                 <div className="w-64 hidden md:block">
-                    <Input placeholder="SEARCH_COMMAND..." className="h-8 text-xs bg-[var(--input-bg)] border-[var(--input-border)] text-[var(--foreground)]" />
+                    <Input placeholder="PESQUISAR..." className="h-8 text-xs bg-[var(--input-bg)] border-[var(--input-border)] text-[var(--foreground)]" />
                 </div>
 
                 <div className="flex items-center gap-2 border-l border-[var(--header-border)] pl-4">

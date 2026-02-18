@@ -49,15 +49,15 @@ export default function Home() {
 
   // Derived metrics for display
   const metrics = [
-    { label: 'Total Projects', value: mounted ? stats.totalProjects.toString() : '-', trend: 'Active', icon: TrendingUp, color: 'text-tech-green' },
-    { label: 'Active Tasks', value: mounted ? stats.activeTasks.toString() : '-', trend: 'In Progress', icon: CheckCircle, color: 'text-tech-yellow' },
-    { label: 'High Priority', value: mounted ? stats.highPriority.toString() : '-', trend: 'Critical', icon: AlertCircle, color: 'text-tech-red' },
-    { label: 'Completed', value: mounted ? stats.completedTasks.toString() : '-', trend: 'All Time', icon: Users, color: 'text-blue-400' },
+    { label: 'Total de Projetos', value: mounted ? stats.totalProjects.toString() : '-', trend: 'Ativos', icon: TrendingUp, color: 'text-tech-green' },
+    { label: 'Tarefas Ativas', value: mounted ? stats.activeTasks.toString() : '-', trend: 'Em Andamento', icon: CheckCircle, color: 'text-tech-yellow' },
+    { label: 'Alta Prioridade', value: mounted ? stats.highPriority.toString() : '-', trend: 'Crítico', icon: AlertCircle, color: 'text-tech-red' },
+    { label: 'Concluídas', value: mounted ? stats.completedTasks.toString() : '-', trend: 'Total', icon: Users, color: 'text-blue-400' },
   ];
 
   const recentActivity = [
-    { id: 1, user: 'Dev Team', action: 'system check', target: 'Optimization', time: 'Just now' },
-    { id: 2, user: 'System', action: 'backup', target: 'Auto-Save', time: '10m ago' },
+    { id: 1, user: 'Equipe Dev', action: 'verificação do sistema', target: 'Otimização', time: 'Agora' },
+    { id: 2, user: 'Sistema', action: 'backup automático', target: 'Salvamento', time: '10min atrás' },
   ];
 
   return (
@@ -66,15 +66,15 @@ export default function Home() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold uppercase tracking-tight text-[var(--foreground)] mb-1">
-            Command Center
+            Central de Comando
           </h1>
           <p className="text-[var(--muted-foreground)] font-mono text-sm">
-            SYSTEM_STATUS: <span className="text-tech-green">OPTIMAL</span>
+            STATUS_SISTEMA: <span className="text-tech-green">OPERACIONAL</span>
           </p>
         </div>
         <div className="flex gap-3">
           <Link href="/projects">
-            <Button variant="primary" size="md">Manage Projects</Button>
+            <Button variant="primary" size="md">Gerenciar Projetos</Button>
           </Link>
         </div>
       </div>
@@ -116,12 +116,12 @@ export default function Home() {
         <div className="lg:col-span-2 space-y-6">
           <Card variant="outline" className="h-[400px] flex items-center justify-center relative">
             <div className="absolute top-4 left-4">
-              <h3 className="text-sm font-bold uppercase text-gray-400">Project Velocity</h3>
+              <h3 className="text-sm font-bold uppercase text-gray-400">Velocidade dos Projetos</h3>
             </div>
             <div className="text-center">
               {/* Fallback for chart */}
               <p className="text-gray-600 font-mono text-xs mb-2">
-                [VISUALIZATION_MODULE_LOADING...]
+                [MÓDULO_VISUALIZAÇÃO_CARREGANDO...]
               </p>
               <div className="w-64 h-1 bg-white/10 overflow-hidden mx-auto">
                 <div className="h-full bg-tech-green w-1/3 animate-[shimmer_2s_infinite]" />
@@ -135,7 +135,7 @@ export default function Home() {
           {/* Activity Feed */}
           <Card variant="glass" className="h-[400px]">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-sm font-bold uppercase text-white">Live Stream</h3>
+              <h3 className="text-sm font-bold uppercase text-white">Atividades Recentes</h3>
               <MoreHorizontal size={16} className="text-gray-500 hover:text-white cursor-pointer" />
             </div>
 

@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import Image from 'next/image';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     LayoutDashboard,
@@ -10,8 +11,7 @@ import {
     Settings,
     Menu,
     ChevronLeft,
-    Terminal,
-    Cpu
+    LogOut
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -23,13 +23,19 @@ function cn(...inputs: ClassValue[]) {
 const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
     { icon: KanbanSquare, label: 'Projetos', href: '/projects' },
-    { icon: Terminal, label: 'Logs', href: '/logs' },
-    { icon: Settings, label: 'Settings', href: '/settings' },
+    { icon: Settings, label: 'Configurações', href: '/settings' },
 ];
 
 export function Sidebar() {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const pathname = usePathname();
+    const router = useRouter();
+
+    const handleLogout = () => {
+        localStorage.removeItem('hubview_user');
+        document.cookie = 'hubview_auth=; path=/; max-age=0';
+        router.push('/login');
+    };
 
     return (
         <motion.aside
@@ -41,15 +47,24 @@ export function Sidebar() {
             {/* Brand Header */}
             <div className="h-16 flex items-center justify-between px-6 border-b border-[var(--sidebar-border)]">
                 <AnimatePresence mode="wait">
-                    {!isCollapsed && (
+                    {!isCollapsed ? (
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2.5"
                         >
-                            <Cpu className="text-[var(--primary)] w-5 h-5" />
-                            <span className="font-mono font-bold tracking-wider text-[var(--foreground)]">UNINOVA</span>
+                            <Image src="/logo-uninova.png" alt="HubView" width={24} height={24} className="shrink-0" />
+                            <span className="font-mono font-bold tracking-wider text-[var(--foreground)]">HUBVIEW</span>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="flex items-center justify-center"
+                        >
+                            <Image src="/logo-uninova.png" alt="HubView" width={22} height={22} />
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -110,11 +125,35 @@ export function Sidebar() {
                 })}
             </nav>
 
-            {/* Footer Info */}
-            <div className="p-4 border-t border-[var(--sidebar-border)]">
+            {/* Footer */}
+            <div className="p-3 border-t border-[var(--sidebar-border)] space-y-2">
+                {/* Logout Button */}
+                <button
+                    onClick={handleLogout}
+                    className={cn(
+                        'w-full group flex items-center gap-3 px-3 py-2.5 rounded-none transition-all duration-200 text-[var(--muted-foreground)] hover:text-red-400 hover:bg-red-500/5',
+                        isCollapsed && 'justify-center'
+                    )}
+                >
+                    <LogOut size={18} />
+                    <AnimatePresence>
+                        {!isCollapsed && (
+                            <motion.span
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -10 }}
+                                className="font-mono text-xs tracking-wide"
+                            >
+                                Sair
+                            </motion.span>
+                        )}
+                    </AnimatePresence>
+                </button>
+
+                {/* System Status */}
                 <div className={cn("text-[10px] text-[var(--muted-foreground)] font-mono flex items-center gap-2", isCollapsed && "justify-center")}>
                     <div className="w-2 h-2 rounded-full bg-[var(--primary)] animate-pulse" />
-                    {!isCollapsed && <span>SYSTEM ONLINE</span>}
+                    {!isCollapsed && <span>SISTEMA ONLINE</span>}
                 </div>
             </div>
         </motion.aside>
