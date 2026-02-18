@@ -276,15 +276,15 @@ export default function KanbanBoardPage() {
             <div className="h-full flex flex-col">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-4">
-                        <Button variant="ghost" size="sm" onClick={() => router.push('/projects')}>
+                        <Button variant="ghost" size="sm" onClick={() => router.push('/projects')} className="text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
                             <ArrowLeft size={16} />
                         </Button>
                         <div>
-                            <h1 className="text-2xl font-bold uppercase tracking-tight text-white mb-1">
+                            <h1 className="text-2xl font-bold uppercase tracking-tight text-[var(--foreground)] mb-1">
                                 {activeProject.title}
                             </h1>
-                            <p className="text-gray-400 font-mono text-xs">
-                                STATUS_FLUXO: <span className="text-tech-yellow">ATIVO</span> | ID: {activeProject.id.slice(0, 8)}
+                            <p className="text-[var(--muted-foreground)] font-mono text-xs">
+                                STATUS_FLUXO: <span className="text-yellow-500">ATIVO</span> | ID: {activeProject.id.slice(0, 8)}
                             </p>
                         </div>
                     </div>
@@ -298,16 +298,16 @@ export default function KanbanBoardPage() {
                             className="hidden"
                             accept=".json"
                         />
-                        <Button variant="ghost" size="sm" onClick={handleReset} title="Resetar Board">
+                        <Button variant="ghost" size="sm" onClick={handleReset} title="Resetar Board" className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)]">
                             <RotateCcw size={16} />
                         </Button>
-                        <Button variant="secondary" size="sm" onClick={handleExport} title="Exportar JSON">
+                        <Button variant="secondary" size="sm" onClick={handleExport} title="Exportar JSON" className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] border border-[var(--card-border)] bg-[var(--card)] hover:bg-[var(--card-hover)]">
                             <Download size={16} />
                         </Button>
-                        <Button variant="secondary" size="sm" onClick={handleImportClick} title="Importar JSON">
+                        <Button variant="secondary" size="sm" onClick={handleImportClick} title="Importar JSON" className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] border border-[var(--card-border)] bg-[var(--card)] hover:bg-[var(--card-hover)]">
                             <Upload size={16} />
                         </Button>
-                        <div className="w-px h-6 bg-white/10 mx-2" />
+                        <div className="w-px h-6 bg-[var(--card-border)] mx-2" />
                         <Button variant="primary" size="sm" onClick={addColumn}>
                             <Plus size={16} className="mr-2" /> Nova Etapa
                         </Button>

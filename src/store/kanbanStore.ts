@@ -3,12 +3,21 @@ import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { arrayMove } from '@dnd-kit/sortable';
 
+export type Tag = {
+    id: string;
+    name: string;
+    color: string;
+};
+
 export type Task = {
     id: string;
     content: string;
     description?: string;
-    tag: string;
+    tags: Tag[];
     priority: 'low' | 'medium' | 'high';
+    assignee?: string;
+    startDate?: string;
+    endDate?: string;
     checklist?: { id: string; text: string; completed: boolean; }[];
 };
 
@@ -81,15 +90,33 @@ const initialProject: Project = {
             id: 'backlog',
             title: 'BACKLOG',
             tasks: [
-                { id: uuidv4(), content: 'Implementar Autenticação', description: 'Usar NextAuth com Google Provider', tag: 'Backend', priority: 'high' },
-                { id: uuidv4(), content: 'Auditoria de Design', tag: 'Design', priority: 'medium' },
+                {
+                    id: uuidv4(),
+                    content: 'Implementar Autenticação',
+                    description: 'Usar NextAuth com Google Provider',
+                    tags: [{ id: 't1', name: 'Backend', color: '#ef4444' }],
+                    priority: 'high',
+                    startDate: '2023-11-01',
+                    endDate: '2023-11-15'
+                },
+                {
+                    id: uuidv4(),
+                    content: 'Auditoria de Design',
+                    tags: [{ id: 't2', name: 'Design', color: '#a855f7' }],
+                    priority: 'medium'
+                },
             ],
         },
         {
             id: 'in-progress',
             title: 'EM PROGRESSO',
             tasks: [
-                { id: uuidv4(), content: 'Dashboard Analytics', tag: 'Frontend', priority: 'high' },
+                {
+                    id: uuidv4(),
+                    content: 'Dashboard Analytics',
+                    tags: [{ id: 't3', name: 'Frontend', color: '#3b82f6' }],
+                    priority: 'high'
+                },
             ],
         },
         {
@@ -101,7 +128,12 @@ const initialProject: Project = {
             id: 'done',
             title: 'CONCLUÍDO',
             tasks: [
-                { id: uuidv4(), content: 'Setup Inicial', tag: 'DevOps', priority: 'low' },
+                {
+                    id: uuidv4(),
+                    content: 'Setup Inicial',
+                    tags: [{ id: 't4', name: 'DevOps', color: '#10b981' }],
+                    priority: 'low'
+                },
             ],
         },
     ]

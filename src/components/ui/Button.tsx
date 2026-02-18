@@ -18,13 +18,13 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             <button
                 ref={ref}
                 className={cn(
-                    'relative inline-flex items-center justify-center font-mono font-bold uppercase transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-tech-green focus:ring-offset-2 focus:ring-offset-black disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]',
+                    'relative inline-flex items-center justify-center font-mono font-bold uppercase transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2 focus:ring-offset-[var(--background)] disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]',
                     'before:absolute before:inset-0 before:z-[-1] before:transition-transform before:duration-200',
                     {
-                        'bg-tech-green text-black hover:bg-tech-green/90': variant === 'primary',
-                        'bg-transparent border border-tech-border text-tech-green hover:bg-white/5': variant === 'secondary',
-                        'bg-transparent text-gray-400 hover:text-white hover:bg-white/5': variant === 'ghost',
-                        'bg-tech-red/10 text-tech-red border border-tech-red/50 hover:bg-tech-red/20': variant === 'danger',
+                        'bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90': variant === 'primary',
+                        'bg-transparent border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)]/10': variant === 'secondary',
+                        'bg-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)]': variant === 'ghost',
+                        'bg-red-500/10 text-red-500 border border-red-500/50 hover:bg-red-500/20': variant === 'danger',
                         'h-8 px-4 text-xs': size === 'sm',
                         'h-10 px-6 text-sm': size === 'md',
                         'h-12 px-8 text-base': size === 'lg',
@@ -32,7 +32,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                     // Tech specific styles: Sharp corners
                     'rounded-none',
                     // Glitch effect on hover for primary
-                    variant === 'primary' && 'hover:shadow-[2px_2px_0px_rgba(255,255,255,0.2)]',
+                    variant === 'primary' && 'hover:shadow-[2px_2px_0px_rgba(var(--foreground),0.2)]',
                     className
                 )}
                 disabled={isLoading}

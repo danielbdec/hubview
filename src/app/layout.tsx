@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
+import { ThemeProvider } from '@/components/ui/ThemeProvider';
 
 export const metadata: Metadata = {
   title: "Uninova Hub | Tech-Noir Dashboard",
@@ -15,35 +16,32 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className="font-sans antialiased bg-[#050505] text-white overflow-hidden">
-        <div className="flex h-screen w-screen overflow-hidden">
-          {/* Sidebar */}
-          <Sidebar />
+      <body className="font-sans antialiased overflow-hidden">
+        <ThemeProvider defaultTheme="dark">
+          <div className="flex h-screen bg-[var(--background)] text-[var(--foreground)]">
+            <Sidebar />
 
-          {/* Main Content Area */}
-          <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-            {/* Tech Background Image */}
-            <div
-              className="absolute inset-0 z-0"
-              style={{
-                backgroundImage: `url('/bg-tech.png')`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                opacity: 0.15,
-                mixBlendMode: 'luminosity'
-              }}
-            />
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+              {/* Tech Background Image */}
+              <div
+                className="absolute inset-0 z-0 bg-cover bg-center opacity-15 mix-blend-luminosity pointer-events-none"
+                style={{
+                  backgroundImage: `url('/bg-tech.png')`,
+                }}
+              />
 
-            {/* Tech Grid Background (Faint) */}
-            <div className="absolute inset-0 bg-tech-grid opacity-[0.05] pointer-events-none z-0" />
+              {/* Tech Grid Background (Faint) */}
+              <div className="absolute inset-0 bg-tech-grid opacity-[0.05] pointer-events-none z-0" />
 
-            <Header />
+              <Header />
 
-            <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 relative z-10 scrollbar-hide">
-              {children}
-            </main>
+              <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 relative z-10 scrollbar-hide">
+                {children}
+              </main>
+            </div>
           </div>
-        </div>
+        </ThemeProvider>
       </body>
     </html>
   );

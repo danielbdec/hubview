@@ -36,10 +36,10 @@ export function Sidebar() {
             initial={{ width: 240 }}
             animate={{ width: isCollapsed ? 80 : 240 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="relative h-screen bg-[#050505] border-r border-white/10 flex flex-col z-50"
+            className="relative h-screen bg-[var(--sidebar)] border-r border-[var(--sidebar-border)] flex flex-col z-50 text-[var(--foreground)]"
         >
             {/* Brand Header */}
-            <div className="h-16 flex items-center justify-between px-6 border-b border-white/10">
+            <div className="h-16 flex items-center justify-between px-6 border-b border-[var(--sidebar-border)]">
                 <AnimatePresence mode="wait">
                     {!isCollapsed && (
                         <motion.div
@@ -48,15 +48,15 @@ export function Sidebar() {
                             exit={{ opacity: 0 }}
                             className="flex items-center gap-2"
                         >
-                            <Cpu className="text-tech-green w-5 h-5" />
-                            <span className="font-mono font-bold tracking-wider text-white">UNINOVA</span>
+                            <Cpu className="text-[var(--primary)] w-5 h-5" />
+                            <span className="font-mono font-bold tracking-wider text-[var(--foreground)]">UNINOVA</span>
                         </motion.div>
                     )}
                 </AnimatePresence>
 
                 <button
                     onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="p-1 hover:bg-white/5 rounded-none text-gray-400 hover:text-white transition-colors"
+                    className="p-1 hover:bg-[var(--card-hover)] rounded-none text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
                 >
                     {isCollapsed ? <Menu size={20} /> : <ChevronLeft size={20} />}
                 </button>
@@ -73,21 +73,21 @@ export function Sidebar() {
                             className={cn(
                                 'group flex items-center gap-3 px-3 py-3 rounded-none transition-all duration-200 relative overflow-hidden',
                                 isActive
-                                    ? 'text-tech-green bg-white/5'
-                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                    ? 'text-[var(--sidebar-menu-active)] bg-[var(--card-hover)]'
+                                    : 'text-[var(--sidebar-menu-inactive)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)]'
                             )}
                         >
                             {/* Active Indicator Line */}
                             {isActive && (
                                 <motion.div
                                     layoutId="active-nav"
-                                    className="absolute left-0 top-0 bottom-0 w-[2px] bg-tech-green"
+                                    className="absolute left-0 top-0 bottom-0 w-[2px] bg-[var(--primary)]"
                                 />
                             )}
 
                             <item.icon
                                 size={20}
-                                className={cn('transition-colors', isActive && 'text-tech-green')}
+                                className={cn('transition-colors', isActive && 'text-[var(--primary)]')}
                             />
 
                             <AnimatePresence>
@@ -104,16 +104,16 @@ export function Sidebar() {
                             </AnimatePresence>
 
                             {/* Hover glitch effect line */}
-                            <div className="absolute bottom-0 left-0 w-full h-[1px] bg-white/10 scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500" />
+                            <div className="absolute bottom-0 left-0 w-full h-[1px] bg-[var(--sidebar-border)] scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500" />
                         </Link>
                     );
                 })}
             </nav>
 
             {/* Footer Info */}
-            <div className="p-4 border-t border-white/10">
-                <div className={cn("text-[10px] text-gray-600 font-mono flex items-center gap-2", isCollapsed && "justify-center")}>
-                    <div className="w-2 h-2 rounded-full bg-tech-green animate-pulse" />
+            <div className="p-4 border-t border-[var(--sidebar-border)]">
+                <div className={cn("text-[10px] text-[var(--muted-foreground)] font-mono flex items-center gap-2", isCollapsed && "justify-center")}>
+                    <div className="w-2 h-2 rounded-full bg-[var(--primary)] animate-pulse" />
                     {!isCollapsed && <span>SYSTEM ONLINE</span>}
                 </div>
             </div>
