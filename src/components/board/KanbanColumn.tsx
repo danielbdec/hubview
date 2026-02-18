@@ -3,9 +3,10 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, MoreHorizontal, Check, Palette, CheckCircle2 } from 'lucide-react';
 import { KanbanCard } from '@/components/board/KanbanCard';
-import { useMemo, useState } from 'react';
+import ConfirmModal from '@/components/ui/ConfirmModal';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { Task, Column } from '@/store/kanbanStore';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -14,7 +15,7 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-interface KanbanColumnProps {
+export interface KanbanColumnProps {
     column: Column;
     onDeleteColumn: (id: string) => void;
     onUpdateTitle: (id: string, title: string) => void;
@@ -22,6 +23,7 @@ interface KanbanColumnProps {
     onRequestAddTask: (columnId: string) => void;
     onDeleteTask: (columnId: string, taskId: string) => void;
     onEditTask: (task: any) => void;
+    onToggleDone: (id: string) => void;
 }
 
 const COLORS = [
@@ -35,14 +37,41 @@ const COLORS = [
     '#ec4899', // Pink
 ];
 
-export function KanbanColumn({ column, onDeleteColumn, onUpdateTitle, onUpdateColor, onRequestAddTask, onDeleteTask, onEditTask }: KanbanColumnProps) {
+export function KanbanColumn({
+    column,
+    onDeleteColumn,
+    onUpdateTitle,
+    onUpdateColor,
+    onRequestAddTask,
+    onDeleteTask,
+    onEditTask,
+    onToggleDone
+}: KanbanColumnProps) {
     const taskIds = useMemo(() => column.tasks.map((task) => task.id), [column.tasks]);
 
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [titleInput, setTitleInput] = useState(column.title);
-    const [showColorPicker, setShowColorPicker] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
+    const [showDeleteColumnConfirm, setShowDeleteColumnConfirm] = useState(false);
+    const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+    const settingsRef = useRef<HTMLDivElement>(null);
 
     const columnColor = column.color || 'var(--primary)';
+
+    // Close settings when clicking outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
+                setShowSettings(false);
+            }
+        }
+        if (showSettings) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showSettings]);
 
     const {
         setNodeRef,
@@ -76,19 +105,25 @@ export function KanbanColumn({ column, onDeleteColumn, onUpdateTitle, onUpdateCo
     };
 
     const handleDelete = () => {
-        onDeleteColumn(column.id);
+        setShowDeleteColumnConfirm(true);
     };
 
-    const handleColorClick = (e: React.MouseEvent) => {
-        e.stopPropagation(); // Prevent drag/other events
-        setShowColorPicker(!showColorPicker);
+    const confirmDeleteColumn = () => {
+        onDeleteColumn(column.id);
+        setShowDeleteColumnConfirm(false);
+    };
+
+    const confirmDeleteTask = () => {
+        if (taskToDelete) {
+            onDeleteTask(column.id, taskToDelete);
+            setTaskToDelete(null);
+        }
     };
 
     const handleColorSelect = (color: string) => {
         if (onUpdateColor) {
             onUpdateColor(column.id, color);
         }
-        setShowColorPicker(false);
     };
 
     return (
@@ -96,54 +131,27 @@ export function KanbanColumn({ column, onDeleteColumn, onUpdateTitle, onUpdateCo
             ref={setNodeRef}
             style={style}
             className={cn(
-                "w-80 flex-shrink-0 flex flex-col rounded-sm border transition-colors relative h-full max-h-full",
+                "w-80 flex-shrink-0 flex flex-col rounded-md border transition-all relative h-full max-h-full shadow-sm",
                 "bg-[var(--column-bg)] border-[var(--card-border)]",
-                isDragging && "opacity-50 border-[var(--col-color)] border-dashed"
+                column.isDone && "bg-emerald-500/5 border-emerald-500/20",
+                isDragging && "opacity-50 border-[var(--col-color)] border-dashed ring-2 ring-[var(--col-color)] ring-opacity-50"
             )}
         >
+            {/* Color Line Indicator */}
+            <div className="h-1 w-full rounded-t-md" style={{ backgroundColor: columnColor }} />
+
             {/* Header */}
             <div
                 {...attributes}
                 {...listeners}
-                className="p-3 flex items-center justify-between cursor-grab active:cursor-grabbing border-b border-[var(--card-border)] bg-[var(--card-hover)] group/header relative"
+                className={cn(
+                    "p-3 flex items-center justify-between cursor-grab active:cursor-grabbing border-b border-[var(--card-border)] bg-[var(--card-hover)] group/header relative",
+                    column.isDone && "bg-emerald-500/10"
+                )}
             >
-                <div className="flex items-center gap-2 flex-1 relative">
-                    <div
-                        className="w-3 h-3 rounded-full shadow-[0_0_8px_-2px_var(--col-color)] cursor-pointer hover:scale-125 transition-transform"
-                        style={{ backgroundColor: 'var(--col-color)' }}
-                        onClick={handleColorClick}
-                        title="Alterar cor da coluna"
-                    />
-
-                    {/* Color Picker Popover */}
-                    {showColorPicker && (
-                        <>
-                            <div
-                                className="fixed inset-0 z-[60]"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowColorPicker(false);
-                                }}
-                            />
-                            <div
-                                className="absolute top-6 left-0 z-[70] p-2 bg-[var(--card)] border border-[var(--card-border)] rounded shadow-xl grid grid-cols-4 gap-1 w-32 animate-in fade-in zoom-in-95 duration-200"
-                                onClick={(e) => e.stopPropagation()} // Prevent drag
-                                onPointerDown={(e) => e.stopPropagation()} // Prevent drag start
-                            >
-                                {COLORS.map((color) => (
-                                    <button
-                                        key={color}
-                                        onClick={() => handleColorSelect(color)}
-                                        className={cn(
-                                            "w-6 h-6 rounded-full border border-transparent hover:scale-110 transition-transform",
-                                            columnColor === color && "ring-2 ring-white ring-offset-1 ring-offset-black"
-                                        )}
-                                        style={{ backgroundColor: color }}
-                                        title={color}
-                                    />
-                                ))}
-                            </div>
-                        </>
+                <div className="flex items-center gap-2 flex-1 relative min-w-0">
+                    {column.isDone && (
+                        <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />
                     )}
 
                     {isEditingTitle ? (
@@ -152,40 +160,128 @@ export function KanbanColumn({ column, onDeleteColumn, onUpdateTitle, onUpdateCo
                             onChange={(e) => setTitleInput(e.target.value)}
                             onBlur={handleTitleSubmit}
                             onKeyDown={(e) => e.key === 'Enter' && handleTitleSubmit()}
-                            className="bg-[var(--card-hover)] text-sm font-bold font-mono text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--col-color)] w-full uppercase tracking-wider px-1.5 py-0.5 -ml-1.5 relative z-10"
+                            className="bg-[var(--background)] text-sm font-bold font-mono text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--col-color)] w-full uppercase tracking-wider px-2 py-1 rounded"
                             autoFocus
                             onFocus={(e) => e.target.select()}
                         />
                     ) : (
-                        <h3
-                            onClick={() => setIsEditingTitle(true)}
-                            className="text-sm font-bold font-mono text-[var(--foreground)] uppercase tracking-wider truncate cursor-text hover:text-[var(--col-color)] transition-colors"
-                        >
-                            {column.title}
-                        </h3>
-                    )}
-                    <span className="text-[10px] text-[var(--muted-foreground)] font-mono">({column.tasks.length})</span>
-                    {column.syncStatus === 'syncing' && (
-                        <span className="ml-2 animate-spin h-3 w-3 border-2 border-[var(--primary)] border-t-transparent rounded-full" title="Sincronizando..." />
-                    )}
-                    {column.syncStatus === 'error' && (
-                        <span className="ml-2 h-2 w-2 bg-red-500 rounded-full" title="Erro na sincronização" />
+                        <div className="flex items-center gap-2 overflow-hidden">
+                            <h3
+                                onClick={() => setIsEditingTitle(true)}
+                                className={cn(
+                                    "text-sm font-bold font-mono text-[var(--foreground)] uppercase tracking-wider truncate cursor-text hover:text-[var(--col-color)] transition-colors",
+                                    column.isDone && "text-emerald-600 dark:text-emerald-400"
+                                )}
+                                title={column.title}
+                            >
+                                {column.title}
+                            </h3>
+                            <span className="text-[10px] text-[var(--muted-foreground)] font-mono bg-[var(--background)] px-1.5 py-0.5 rounded-full border border-[var(--card-border)]">
+                                {column.tasks.length}
+                            </span>
+                        </div>
                     )}
                 </div>
 
-                <div className="flex items-center opacity-0 group-hover/header:opacity-100 transition-opacity">
-                    <button
-                        onClick={handleDelete}
-                        className="text-[var(--muted-foreground)] hover:text-red-500 p-1 rounded hover:bg-red-500/10 transition-colors"
-                    >
-                        <Trash2 size={14} />
-                    </button>
+                <div className="flex items-center gap-1 pl-2">
+                    {column.syncStatus === 'syncing' && (
+                        <span className="animate-spin h-3 w-3 border-2 border-[var(--primary)] border-t-transparent rounded-full mr-1" title="Sincronizando..." />
+                    )}
+
+                    {/* Settings Menu Button */}
+                    <div className="relative" ref={settingsRef}>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setShowSettings(!showSettings);
+                            }}
+                            className={cn(
+                                "p-1.5 rounded-md text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--background)] transition-colors",
+                                showSettings && "bg-[var(--background)] text-[var(--foreground)] ring-1 ring-[var(--card-border)]"
+                            )}
+                        >
+                            <MoreHorizontal size={16} />
+                        </button>
+
+                        {/* Settings Popover */}
+                        {showSettings && (
+                            <div
+                                className="absolute right-0 top-full mt-1 w-56 z-[70] p-3 bg-[var(--card)] border border-[var(--card-border)] rounded-lg shadow-xl animate-in fade-in zoom-in-95 duration-200"
+                                onClick={(e) => e.stopPropagation()}
+                                onPointerDown={(e) => e.stopPropagation()}
+                            >
+                                <div className="space-y-4">
+                                    {/* Colors */}
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-2 text-[var(--muted-foreground)]">
+                                            <Palette size={12} />
+                                            <span className="text-[10px] font-bold uppercase tracking-wider">Cor da Coluna</span>
+                                        </div>
+                                        <div className="grid grid-cols-4 gap-2">
+                                            {COLORS.map((color) => (
+                                                <button
+                                                    key={color}
+                                                    onClick={() => handleColorSelect(color)}
+                                                    className={cn(
+                                                        "w-full aspect-square rounded-md border transition-all hover:scale-110",
+                                                        columnColor === color ? "border-[var(--foreground)] ring-2 ring-[var(--foreground)] ring-opacity-20" : "border-transparent"
+                                                    )}
+                                                    style={{ backgroundColor: color }}
+                                                    title={color}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="h-px bg-[var(--card-border)]" />
+
+                                    {/* Is Done Toggle */}
+                                    <div
+                                        className="flex items-start gap-3 p-2 rounded-md hover:bg-[var(--background)] cursor-pointer transition-colors group"
+                                        onClick={() => {
+                                            onToggleDone(column.id);
+                                            // Don't close to allow toggling back
+                                        }}
+                                    >
+                                        <div className={cn(
+                                            "mt-0.5 w-4 h-4 rounded border flex items-center justify-center transition-colors",
+                                            column.isDone
+                                                ? "bg-emerald-500 border-emerald-500 text-white"
+                                                : "border-[var(--muted-foreground)] group-hover:border-[var(--foreground)]"
+                                        )}>
+                                            {column.isDone && <Check size={10} strokeWidth={3} />}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-[var(--foreground)]">Concluir Tarefas</p>
+                                            <p className="text-[10px] text-[var(--muted-foreground)] leading-tight mt-0.5">
+                                                Tarefas nesta coluna serão contabilizadas como 100% concluídas.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="h-px bg-[var(--card-border)]" />
+
+                                    {/* Delete */}
+                                    <button
+                                        onClick={() => {
+                                            setShowSettings(false);
+                                            handleDelete();
+                                        }}
+                                        className="w-full flex items-center gap-2 p-2 rounded-md text-red-500 hover:bg-red-500/10 transition-colors text-sm font-medium"
+                                    >
+                                        <Trash2 size={14} />
+                                        <span>Excluir Coluna</span>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
             {/* Tasks Container */}
             <div className={cn(
-                "flex-1 p-2 overflow-y-auto min-h-0 space-y-2 scrollbar-thumb-[var(--muted-foreground)] scrollbar-track-[var(--card)]",
+                "flex-1 p-2 overflow-y-auto min-h-0 space-y-2 scrollbar-thin scrollbar-thumb-[var(--muted-foreground)]/20 scrollbar-track-transparent",
                 column.tasks.length === 0 && "flex items-center justify-center border-2 border-dashed border-[var(--card-border)]/50 rounded-sm m-2 bg-[var(--card-hover)]/30"
             )}>
                 {column.tasks.length === 0 && (
@@ -198,7 +294,7 @@ export function KanbanColumn({ column, onDeleteColumn, onUpdateTitle, onUpdateCo
                         <KanbanCard
                             key={task.id}
                             task={task}
-                            onDelete={(taskId) => onDeleteTask(column.id, taskId)}
+                            onDelete={(taskId) => setTaskToDelete(taskId)}
                             onEdit={onEditTask}
                         />
                     ))}
@@ -206,14 +302,34 @@ export function KanbanColumn({ column, onDeleteColumn, onUpdateTitle, onUpdateCo
             </div>
 
             {/* Footer */}
-            <div className="p-2 border-t border-[var(--card-border)]">
+            <div className="p-2 border-t border-[var(--card-border)] bg-[var(--card)]">
                 <button
                     onClick={() => onRequestAddTask(column.id)}
-                    className="w-full py-2.5 border-[1px] border-[var(--col-color)] text-[var(--col-color)] font-bold bg-[var(--col-color)]/10 text-xs font-mono transition-all hover:bg-[var(--col-color)] hover:text-[var(--background)] uppercase tracking-wider flex items-center justify-center gap-2 mt-1 rounded-sm shadow-[0_0_10px_-5px_var(--col-color)]"
+                    className="w-full py-2 border-[1px] border-[var(--col-color)] text-[var(--col-color)] font-bold bg-[var(--col-color)]/5 hover:bg-[var(--col-color)] hover:text-white transition-all text-xs font-mono uppercase tracking-wider flex items-center justify-center gap-2 rounded shadow-sm"
                 >
-                    <Plus size={14} strokeWidth={3} /> ADICIONAR ITEM
+                    <Plus size={14} strokeWidth={3} /> Nova Tarefa
                 </button>
             </div>
+            {/* Modals */}
+            <ConfirmModal
+                isOpen={showDeleteColumnConfirm}
+                title="Excluir Coluna"
+                message="Tem certeza que deseja excluir esta coluna e todas as suas tarefas? Esta ação não pode ser desfeita."
+                confirmLabel="Excluir"
+                variant="danger"
+                onConfirm={confirmDeleteColumn}
+                onCancel={() => setShowDeleteColumnConfirm(false)}
+            />
+
+            <ConfirmModal
+                isOpen={!!taskToDelete}
+                title="Excluir Tarefa"
+                message="Tem certeza que deseja excluir esta tarefa? Esta ação não pode ser desfeita."
+                confirmLabel="Excluir"
+                variant="danger"
+                onConfirm={confirmDeleteTask}
+                onCancel={() => setTaskToDelete(null)}
+            />
         </div>
     );
 }

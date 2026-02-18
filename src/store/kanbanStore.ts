@@ -28,6 +28,7 @@ export type Column = {
     title: string;
     tasks: Task[];
     color?: string;
+    isDone?: boolean;
     syncStatus?: 'syncing' | 'synced' | 'error';
     position?: number; // Para ordenação
 };
@@ -70,6 +71,7 @@ interface ProjectState {
     deleteColumn: (id: string) => Promise<void>;
     updateColumnTitle: (id: string, title: string) => Promise<void>;
     updateColumnColor: (id: string, color: string) => Promise<void>;
+    toggleColumnDone: (id: string) => Promise<void>;
     addTask: (columnId: string, task: Omit<Task, 'id'>) => Promise<string>;
     updateTask: (taskId: string, updates: Partial<Task>) => Promise<void>;
     deleteTask: (taskId: string) => Promise<void>;
@@ -333,11 +335,12 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             }
 
             // 3. Map to Store Structure
-            const newColumns: Column[] = (dbColumns as { id: string, title: string, color: string, position: number }[]).map(c => ({
+            const newColumns: Column[] = (dbColumns as { id: string, title: string, color: string, position: number, isDone?: boolean }[]).map(c => ({
                 id: c.id,
                 title: c.title,
                 color: c.color,
                 position: c.position,
+                isDone: !!c.isDone,
                 tasks: [],
                 syncStatus: 'synced' as const
             })).sort((a, b) => (a.position || 0) - (b.position || 0));
@@ -543,51 +546,55 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         }
     },
 
-    updateColumnColor: async (colId, color) => {
-        set((state) => ({
+    toggleColumnDone: async (id) => {
+        const activeProject = get().projects.find(p => p.id === get().activeProjectId);
+        if (!activeProject) return;
+
+        const column = activeProject.columns.find(c => c.id === id);
+        if (!column) return;
+
+        const newIsDone = !column.isDone;
+
+        set(state => ({
             projects: state.projects.map(p => {
-                if (p.id === state.activeProjectId) {
-                    return {
-                        ...p,
-                        columns: p.columns.map(c => c.id === colId ? { ...c, color, syncStatus: 'syncing' } : c),
-                        updatedAt: Date.now()
-                    };
-                }
-                return p;
+                if (p.id !== get().activeProjectId) return p;
+                return {
+                    ...p,
+                    columns: p.columns.map(c => c.id === id ? { ...c, isDone: newIsDone, syncStatus: 'syncing' } : c)
+                };
             })
         }));
 
         try {
-            const response = await fetch('/api/columns/update', {
+            await fetch('/api/columns/update', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: colId, color })
+                body: JSON.stringify({ id, isDone: newIsDone })
             });
 
-            if (!response.ok) throw new Error('Failed to update column color');
-
-            set((state) => ({
+            set(state => ({
                 projects: state.projects.map(p => {
-                    if (p.id === state.activeProjectId) {
-                        return {
-                            ...p,
-                            columns: p.columns.map(c => c.id === colId ? { ...c, syncStatus: 'synced' } : c)
-                        };
-                    }
-                    return p;
+                    if (p.id !== get().activeProjectId) return p;
+                    return {
+                        ...p,
+                        columns: p.columns.map(c => c.id === id ? { ...c, syncStatus: 'synced' } : c)
+                    };
                 })
             }));
+
+            // Refresh task counts because completion logic changed
+            get().fetchTaskCounts();
+
         } catch (error) {
-            console.error('Error update column color:', error);
-            set((state) => ({
+            console.error('Failed to update column isDone', error);
+            // Revert
+            set(state => ({
                 projects: state.projects.map(p => {
-                    if (p.id === state.activeProjectId) {
-                        return {
-                            ...p,
-                            columns: p.columns.map(c => c.id === colId ? { ...c, syncStatus: 'error' } : c)
-                        };
-                    }
-                    return p;
+                    if (p.id !== get().activeProjectId) return p;
+                    return {
+                        ...p,
+                        columns: p.columns.map(c => c.id === id ? { ...c, isDone: !newIsDone, syncStatus: 'error' } : c)
+                    };
                 })
             }));
         }

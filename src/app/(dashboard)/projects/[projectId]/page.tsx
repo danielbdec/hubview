@@ -41,6 +41,7 @@ export default function KanbanBoardPage() {
         deleteTask,
         moveColumn,
         moveTask,
+        toggleColumnDone,
         setColumns,
         fetchBoardData,
         isLoadingBoard
@@ -356,6 +357,7 @@ export default function KanbanBoardPage() {
                                         onRequestAddTask={handleRequestAddTask}
                                         onDeleteTask={(colId, taskId) => deleteTask(taskId)}
                                         onEditTask={openEditModal}
+                                        onToggleDone={toggleColumnDone}
                                     />
                                 ))}
                             </SortableContext>
@@ -381,6 +383,7 @@ export default function KanbanBoardPage() {
                         onRequestAddTask={() => { }}
                         onDeleteTask={() => { }}
                         onEditTask={() => { }}
+                        onToggleDone={() => { }}
                     />}
                     {activeTask && <KanbanCard task={activeTask} isOverlay />}
                 </DragOverlay>,

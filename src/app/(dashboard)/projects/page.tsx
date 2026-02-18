@@ -322,12 +322,44 @@ export default function ProjectsPage() {
                             const counts = taskCounts[project.id];
                             const totalTasks = counts?.total || 0;
                             const highPriority = counts?.byPriority?.high || 0;
-                            // Sum all columns except first (backlog) for inProgress, last column for completed
-                            const columnIds = Object.keys(counts?.byColumn || {});
-                            const completedTasks = columnIds.length > 0
-                                ? counts?.byColumn[columnIds[columnIds.length - 1]] || 0
-                                : 0;
-                            const inProgressTasks = totalTasks - completedTasks - (columnIds.length > 0 ? (counts?.byColumn[columnIds[0]] || 0) : 0);
+                            // Sum tasks from columns marked as isDone
+                            const projCols = project.columns || [];
+                            let completedTasks = 0;
+                            projCols.forEach(col => {
+                                if (col.isDone) {
+                                    completedTasks += (counts?.byColumn && counts.byColumn[col.id]) || 0;
+                                }
+                            });
+
+                            // Fallback logic
+                            if (completedTasks === 0 && projCols.length > 0) {
+                                const legacyDoneCol = projCols.find(c => /conclu[íi]do|done|finalizad[oa]/i.test(c.title));
+                                if (legacyDoneCol) {
+                                    completedTasks = (counts?.byColumn && counts.byColumn[legacyDoneCol.id]) || 0;
+                                } else {
+                                    // If still no done column found, maybe use last column?
+                                    // Let's stick to last column logic as ultimate fallback to avoid 0% on existing projects
+                                    const colIds = Object.keys(counts?.byColumn || {});
+                                    if (colIds.length > 0) {
+                                        // But counts.byColumn keys might not be ordered. We should rely on project.columns order.
+                                        const lastCol = projCols[projCols.length - 1];
+                                        if (lastCol) {
+                                            completedTasks = (counts?.byColumn && counts.byColumn[lastCol.id]) || 0;
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Backlog (first column, unless it isDone)
+                            let backlogTasks = 0;
+                            if (projCols.length > 0) {
+                                const firstCol = projCols[0];
+                                if (!firstCol.isDone) {
+                                    backlogTasks = (counts?.byColumn && counts.byColumn[firstCol.id]) || 0;
+                                }
+                            }
+
+                            const inProgressTasks = Math.max(0, totalTasks - completedTasks - backlogTasks);
 
                             const progress = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
 

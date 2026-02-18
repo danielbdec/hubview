@@ -79,9 +79,28 @@ export default function DashboardPage() {
       totalTasks += counts.total;
       highPriority += counts.byPriority?.high || 0;
 
-      // Last column = completed
-      const colIds = Object.keys(counts.byColumn || {});
-      const done = colIds.length > 0 ? (counts.byColumn[colIds[colIds.length - 1]] || 0) : 0;
+      // Sum tasks from columns marked as isDone
+      const projectColumns = p.columns || [];
+      let done = 0;
+
+      // If we have columns data, use isDone flag.
+      // Fallback: if no column has isDone=true, assume last column is completion?
+      // No, let's enforce explicitly marking done. But for immediate migration UX,
+      // we could fallback. For now, strict isDone logic.
+      projectColumns.forEach(col => {
+        if (col.isDone) {
+          done += (counts.byColumn && counts.byColumn[col.id]) || 0;
+        }
+      });
+      // Fallback for legacy data if done remains 0 but there are columns
+      if (done === 0 && projectColumns.length > 0) {
+        // Check if any column is actually named "Concluído" or "Done" as a temporary auto-detect
+        const legacyDoneCol = projectColumns.find(c => /conclu[íi]do|done|finalizad[oa]/i.test(c.title));
+        if (legacyDoneCol) {
+          done = (counts.byColumn && counts.byColumn[legacyDoneCol.id]) || 0;
+        }
+      }
+
       completedTasks += done;
       activeTasks += counts.total - done;
     });
@@ -323,8 +342,24 @@ export default function DashboardPage() {
                 {recentProjects.map((project, i) => {
                   const counts = taskCounts[project.id];
                   const total = counts?.total || 0;
-                  const colIds = Object.keys(counts?.byColumn || {});
-                  const done = colIds.length > 0 ? (counts?.byColumn[colIds[colIds.length - 1]] || 0) : 0;
+
+
+                  // Calculate done based on project columns
+                  let done = 0;
+                  const projCols = project.columns || [];
+                  projCols.forEach(col => {
+                    if (col.isDone) {
+                      done += (counts?.byColumn && counts.byColumn[col.id]) || 0;
+                    }
+                  });
+                  // Fallback for legacy
+                  if (done === 0 && projCols.length > 0) {
+                    const legacyDoneCol = projCols.find(c => /conclu[íi]do|done|finalizad[oa]/i.test(c.title));
+                    if (legacyDoneCol) {
+                      done = (counts?.byColumn && counts.byColumn[legacyDoneCol.id]) || 0;
+                    }
+                  }
+
                   const progress = total > 0 ? Math.round((done / total) * 100) : 0;
 
                   return (

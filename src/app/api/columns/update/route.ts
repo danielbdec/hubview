@@ -15,7 +15,7 @@ export async function POST(request: Request) {
         const body = await request.json();
 
         // Webhook: hubview-columns-update
-        const response = await fetch(`${N8N_BASE}/hubview-columns-update`, {
+        const response = await fetch(`${N8N_BASE}/hubview-columns-update-v2`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
