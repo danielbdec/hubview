@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Uninova Hub | Hub View",
+  title: "Hub View - Projetos",
   description: "Sistema de Gestão - Uninova Hub",
+  icons: {
+    icon: "/logo-uninova.png",
+  },
 };
 
 export default function RootLayout({
