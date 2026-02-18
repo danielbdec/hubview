@@ -65,6 +65,9 @@ export function KanbanCard({ task, isOverlay, onEdit, onDelete }: KanbanCardProp
                 {...listeners}
                 className={cn(
                     "p-4 transition-all hover:border-[var(--primary)]/30 bg-[var(--card)] border-[var(--card-border)] flex flex-col gap-3 backdrop-blur-md",
+                    task.priority === 'high' ? 'border-l-[3px] border-l-red-500/80' :
+                        task.priority === 'medium' ? 'border-l-[3px] border-l-yellow-500/80' :
+                            'border-l-[3px] border-l-emerald-500/80',
                     isOverlay && "border-[var(--primary)] shadow-[0_0_20px_-5px_var(--primary)] scale-105 rotate-2 z-50",
                     !isOverlay && "hover:-translate-y-1"
                 )}

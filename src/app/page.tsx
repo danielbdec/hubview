@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   TrendingUp,
@@ -10,37 +11,71 @@ import {
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-
-// Mock Data
-const metrics = [
-  { label: 'Total Projects', value: '12', trend: '+2', icon: TrendingUp, color: 'text-tech-green' },
-  { label: 'Active Tasks', value: '48', trend: '+12%', icon: CheckCircle, color: 'text-tech-yellow' },
-  { label: 'Team Members', value: '8', trend: 'Stable', icon: Users, color: 'text-blue-400' },
-  { label: 'Critical Issues', value: '3', trend: '-1', icon: AlertCircle, color: 'text-tech-red' },
-];
-
-const recentActivity = [
-  { id: 1, user: 'Dev Team', action: 'deployed to', target: 'Production', time: '2m ago' },
-  { id: 2, user: 'Sarah K.', action: 'fixed bug in', target: 'Auth Module', time: '15m ago' },
-  { id: 3, user: 'System', action: 'automated backup', target: 'completed', time: '1h ago' },
-];
+import { useProjectStore } from '@/store/kanbanStore';
+import Link from 'next/link';
 
 export default function Home() {
+  const { projects } = useProjectStore();
+  const [stats, setStats] = useState({
+    totalProjects: 0,
+    activeTasks: 0,
+    highPriority: 0,
+    completedTasks: 0
+  });
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    // Calculate stats
+    const totalProjects = projects.length;
+    let activeTasks = 0;
+    let highPriority = 0;
+    let completedTasks = 0;
+
+    projects.forEach(p => {
+      p.columns.forEach(col => {
+        if (col.id === 'done') {
+          completedTasks += col.tasks.length;
+        } else {
+          activeTasks += col.tasks.length;
+        }
+        // Count high priority regardless of column
+        highPriority += col.tasks.filter(t => t.priority === 'high').length;
+      });
+    });
+
+    setStats({ totalProjects, activeTasks, highPriority, completedTasks });
+  }, [projects]);
+
+  // Derived metrics for display
+  const metrics = [
+    { label: 'Total Projects', value: mounted ? stats.totalProjects.toString() : '-', trend: 'Active', icon: TrendingUp, color: 'text-tech-green' },
+    { label: 'Active Tasks', value: mounted ? stats.activeTasks.toString() : '-', trend: 'In Progress', icon: CheckCircle, color: 'text-tech-yellow' },
+    { label: 'High Priority', value: mounted ? stats.highPriority.toString() : '-', trend: 'Critical', icon: AlertCircle, color: 'text-tech-red' },
+    { label: 'Completed', value: mounted ? stats.completedTasks.toString() : '-', trend: 'All Time', icon: Users, color: 'text-blue-400' },
+  ];
+
+  const recentActivity = [
+    { id: 1, user: 'Dev Team', action: 'system check', target: 'Optimization', time: 'Just now' },
+    { id: 2, user: 'System', action: 'backup', target: 'Auto-Save', time: '10m ago' },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Hero / Welcome */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold uppercase tracking-tight text-white mb-1">
+          <h1 className="text-3xl font-bold uppercase tracking-tight text-[var(--foreground)] mb-1">
             Command Center
           </h1>
-          <p className="text-gray-400 font-mono text-sm">
+          <p className="text-[var(--muted-foreground)] font-mono text-sm">
             SYSTEM_STATUS: <span className="text-tech-green">OPTIMAL</span>
           </p>
         </div>
         <div className="flex gap-3">
-          <Button variant="secondary" size="md">Export Logs</Button>
-          <Button variant="primary" size="md">New Project</Button>
+          <Link href="/projects">
+            <Button variant="primary" size="md">Manage Projects</Button>
+          </Link>
         </div>
       </div>
 
@@ -53,20 +88,20 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
           >
-            <Card variant="default" className="h-full flex flex-col justify-between group cursor-pointer hover:bg-white/10">
+            <Card variant="default" className="h-full flex flex-col justify-between group cursor-pointer hover:bg-[var(--card-hover)]">
               <div className="flex justify-between items-start mb-4">
-                <div className={`p-2 bg-white/5 rounded-none ${metric.color}`}>
+                <div className={`p-2 bg-[var(--column-bg)] rounded-none ${metric.color}`}>
                   <metric.icon size={20} />
                 </div>
-                <span className={`text-xs font-mono px-2 py-1 bg-white/5 ${metric.color}`}>
+                <span className={`text-xs font-mono px-2 py-1 bg-[var(--column-bg)] ${metric.color}`}>
                   {metric.trend}
                 </span>
               </div>
               <div>
-                <h3 className="text-2xl font-bold font-mono text-white mb-1 group-hover:text-tech-green transition-colors">
+                <h3 className="text-2xl font-bold font-mono text-[var(--foreground)] mb-1 group-hover:text-[var(--primary)] transition-colors">
                   {metric.value}
                 </h3>
-                <p className="text-gray-400 text-xs uppercase tracking-wider">
+                <p className="text-[var(--muted-foreground)] text-xs uppercase tracking-wider">
                   {metric.label}
                 </p>
               </div>

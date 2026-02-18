@@ -35,6 +35,7 @@ export default function KanbanBoardPage() {
         addColumn,
         deleteColumn,
         updateColumnTitle,
+        updateColumnColor,
         addTask,
         updateTask,
         deleteTask,
@@ -324,6 +325,7 @@ export default function KanbanBoardPage() {
                                     column={col}
                                     onDeleteColumn={deleteColumn}
                                     onUpdateTitle={updateColumnTitle}
+                                    onUpdateColor={updateColumnColor}
                                     onRequestAddTask={handleRequestAddTask}
                                     onDeleteTask={(colId, taskId) => deleteTask(taskId)}
                                     onEditTask={openEditModal}

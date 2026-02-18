@@ -21,7 +21,7 @@ export type Task = {
     checklist?: { id: string; text: string; completed: boolean; }[];
 };
 
-export type Column = { id: string; title: string; tasks: Task[] };
+export type Column = { id: string; title: string; tasks: Task[]; color?: string; };
 
 export type Project = {
     id: string;
@@ -46,6 +46,7 @@ interface ProjectState {
     addColumn: () => void;
     deleteColumn: (id: string) => void;
     updateColumnTitle: (id: string, title: string) => void;
+    updateColumnColor: (id: string, color: string) => void;
     addTask: (columnId: string, task: Omit<Task, 'id'>) => string;
     updateTask: (taskId: string, updates: Partial<Task>) => void;
     deleteTask: (taskId: string) => void;
@@ -61,21 +62,25 @@ const defaultColumnsTemplate: Column[] = [
         id: 'backlog',
         title: 'BACKLOG',
         tasks: [],
+        color: '#ef4444',
     },
     {
         id: 'in-progress',
         title: 'EM PROGRESSO',
         tasks: [],
+        color: '#eab308',
     },
     {
         id: 'review',
         title: 'CODE REVIEW',
         tasks: [],
+        color: '#8b5cf6',
     },
     {
         id: 'done',
         title: 'CONCLUÍDO',
         tasks: [],
+        color: '#10b981',
     },
 ];
 
@@ -178,12 +183,15 @@ export const useProjectStore = create<ProjectState>()(
             addColumn: () => set((state) => {
                 const { activeProjectId, projects } = state;
                 if (!activeProjectId) return state;
+                const colors = ['#ef4444', '#eab308', '#22c55e', '#3b82f6', '#a855f7', '#f97316', '#06b6d4', '#ec4899'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
                 return {
                     projects: projects.map(p => {
                         if (p.id === activeProjectId) {
                             return {
                                 ...p,
-                                columns: [...p.columns, { id: uuidv4(), title: 'NOVA ETAPA', tasks: [] }],
+                                columns: [...p.columns, { id: uuidv4(), title: 'NOVA ETAPA', tasks: [], color: randomColor }],
                                 updatedAt: Date.now()
                             };
                         }
@@ -218,6 +226,23 @@ export const useProjectStore = create<ProjectState>()(
                             return {
                                 ...p,
                                 columns: p.columns.map(c => c.id === colId ? { ...c, title } : c),
+                                updatedAt: Date.now()
+                            };
+                        }
+                        return p;
+                    })
+                };
+            }),
+
+            updateColumnColor: (colId, color) => set((state) => {
+                const { activeProjectId, projects } = state;
+                if (!activeProjectId) return state;
+                return {
+                    projects: projects.map(p => {
+                        if (p.id === activeProjectId) {
+                            return {
+                                ...p,
+                                columns: p.columns.map(c => c.id === colId ? { ...c, color } : c),
                                 updatedAt: Date.now()
                             };
                         }

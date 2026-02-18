@@ -18,16 +18,19 @@ interface KanbanColumnProps {
     column: Column;
     onDeleteColumn: (id: string) => void;
     onUpdateTitle: (id: string, title: string) => void;
+    onUpdateColor?: (id: string, color: string) => void;
     onRequestAddTask: (columnId: string) => void;
     onDeleteTask: (columnId: string, taskId: string) => void;
     onEditTask: (task: any) => void;
 }
 
-export function KanbanColumn({ column, onDeleteColumn, onUpdateTitle, onRequestAddTask, onDeleteTask, onEditTask }: KanbanColumnProps) {
+export function KanbanColumn({ column, onDeleteColumn, onUpdateTitle, onUpdateColor, onRequestAddTask, onDeleteTask, onEditTask }: KanbanColumnProps) {
     const taskIds = useMemo(() => column.tasks.map((task) => task.id), [column.tasks]);
 
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [titleInput, setTitleInput] = useState(column.title);
+
+    const columnColor = column.color || 'var(--primary)';
 
     const {
         setNodeRef,
@@ -48,7 +51,8 @@ export function KanbanColumn({ column, onDeleteColumn, onUpdateTitle, onRequestA
     const style = {
         transition,
         transform: CSS.Transform.toString(transform),
-    };
+        '--col-color': columnColor,
+    } as React.CSSProperties;
 
     const handleTitleSubmit = () => {
         if (titleInput.trim()) {
@@ -63,6 +67,14 @@ export function KanbanColumn({ column, onDeleteColumn, onUpdateTitle, onRequestA
         onDeleteColumn(column.id);
     };
 
+    const handleColorClick = () => {
+        if (!onUpdateColor) return;
+        const colors = ['#ef4444', '#eab308', '#22c55e', '#3b82f6', '#a855f7', '#f97316', '#06b6d4', '#ec4899'];
+        const currentIndex = colors.findIndex(c => c.toLowerCase() === (column.color || '').toLowerCase());
+        const nextColor = colors[(currentIndex + 1) % colors.length];
+        onUpdateColor(column.id, nextColor);
+    };
+
     return (
         <div
             ref={setNodeRef}
@@ -70,7 +82,7 @@ export function KanbanColumn({ column, onDeleteColumn, onUpdateTitle, onRequestA
             className={cn(
                 "w-80 flex-shrink-0 flex flex-col rounded-sm border transition-colors",
                 "bg-[var(--column-bg)] border-[var(--card-border)]",
-                isDragging && "opacity-50 border-[var(--primary)] border-dashed"
+                isDragging && "opacity-50 border-[var(--col-color)] border-dashed"
             )}
         >
             {/* Header */}
@@ -80,7 +92,12 @@ export function KanbanColumn({ column, onDeleteColumn, onUpdateTitle, onRequestA
                 className="p-3 flex items-center justify-between cursor-grab active:cursor-grabbing border-b border-[var(--card-border)] bg-[var(--card-hover)] group/header"
             >
                 <div className="flex items-center gap-2 flex-1">
-                    <div className="w-2 h-2 rounded-full bg-[var(--primary)] shadow-[0_0_8px_-2px_var(--primary)]" />
+                    <div
+                        className="w-3 h-3 rounded-full shadow-[0_0_8px_-2px_var(--col-color)] cursor-pointer hover:scale-110 transition-transform"
+                        style={{ backgroundColor: 'var(--col-color)' }}
+                        onClick={handleColorClick}
+                        title="Clique para alterar a cor"
+                    />
                     {isEditingTitle ? (
                         <input
                             value={titleInput}
@@ -93,7 +110,7 @@ export function KanbanColumn({ column, onDeleteColumn, onUpdateTitle, onRequestA
                     ) : (
                         <h3
                             onClick={() => setIsEditingTitle(true)}
-                            className="text-sm font-bold font-mono text-[var(--foreground)] uppercase tracking-wider truncate cursor-text hover:text-[var(--primary)] transition-colors"
+                            className="text-sm font-bold font-mono text-[var(--foreground)] uppercase tracking-wider truncate cursor-text hover:text-[var(--col-color)] transition-colors"
                         >
                             {column.title}
                         </h3>
@@ -112,7 +129,15 @@ export function KanbanColumn({ column, onDeleteColumn, onUpdateTitle, onRequestA
             </div>
 
             {/* Tasks Container */}
-            <div className="flex-1 p-2 overflow-y-auto min-h-[100px] space-y-2 scrollbar-thumb-[var(--muted-foreground)] scrollbar-track-[var(--card)]">
+            <div className={cn(
+                "flex-1 p-2 overflow-y-auto min-h-[150px] space-y-2 scrollbar-thumb-[var(--muted-foreground)] scrollbar-track-[var(--card)]",
+                column.tasks.length === 0 && "flex items-center justify-center border-2 border-dashed border-[var(--card-border)]/50 rounded-sm m-2 bg-[var(--card-hover)]/30"
+            )}>
+                {column.tasks.length === 0 && (
+                    <div className="text-center p-4 opacity-50 select-none pointer-events-none">
+                        <p className="text-[10px] font-mono uppercase text-[var(--muted-foreground)]">Sem Tarefas</p>
+                    </div>
+                )}
                 <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
                     {column.tasks.map((task) => (
                         <KanbanCard
@@ -129,9 +154,9 @@ export function KanbanColumn({ column, onDeleteColumn, onUpdateTitle, onRequestA
             <div className="p-2 border-t border-[var(--card-border)]">
                 <button
                     onClick={() => onRequestAddTask(column.id)}
-                    className="w-full py-3 border border-dashed border-[var(--muted-foreground)]/30 hover:border-[var(--primary)] text-[var(--muted-foreground)] hover:text-[var(--primary)] text-xs font-mono transition-colors uppercase tracking-wider flex items-center justify-center gap-2 mt-1 hover:bg-[var(--card-hover)] active:bg-[var(--card-hover)]"
+                    className="w-full py-2.5 border-[1px] border-[var(--col-color)] text-[var(--col-color)] font-bold bg-[var(--col-color)]/10 text-xs font-mono transition-all hover:bg-[var(--col-color)] hover:text-[var(--background)] uppercase tracking-wider flex items-center justify-center gap-2 mt-1 rounded-sm shadow-[0_0_10px_-5px_var(--col-color)]"
                 >
-                    <Plus size={12} /> ADICIONAR ITEM
+                    <Plus size={14} strokeWidth={3} /> ADICIONAR ITEM
                 </button>
             </div>
         </div>
