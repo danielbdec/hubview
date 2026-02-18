@@ -103,7 +103,7 @@ export default function KanbanBoardPage() {
             id: 'temp',
             content: '',
             description: '',
-            tag: 'Geral',
+            tags: [],
             priority: 'medium',
         };
         setEditingTask({ ...newTask, _columnId: columnId } as any);
@@ -127,7 +127,7 @@ export default function KanbanBoardPage() {
             addTask(columnId, {
                 content,
                 description: updates.description,
-                tag: updates.tag || 'Geral',
+                tags: updates.tags || [],
                 priority: updates.priority || 'medium',
                 checklist: updates.checklist
             });
