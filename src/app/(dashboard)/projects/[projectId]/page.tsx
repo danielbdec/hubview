@@ -15,7 +15,7 @@ import {
     DragEndEvent,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates, SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
-import { Plus, Download, Upload, RefreshCw, ArrowLeft, LayoutGrid, Loader2 } from 'lucide-react';
+import { Plus, RefreshCw, ArrowLeft, LayoutGrid, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { KanbanColumn } from '@/components/board/KanbanColumn';
 import { KanbanCard } from '@/components/board/KanbanCard';
@@ -84,7 +84,7 @@ export default function KanbanBoardPage() {
     const [editingTask, setEditingTask] = useState<Task | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+
 
     useEffect(() => {
         setMounted(true);
@@ -154,44 +154,7 @@ export default function KanbanBoardPage() {
 
     // --- Utilities ---
 
-    const handleExport = () => {
-        if (!activeProject) return;
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(columns, null, 2));
-        const downloadAnchorNode = document.createElement('a');
-        downloadAnchorNode.setAttribute("href", dataStr);
-        downloadAnchorNode.setAttribute("download", `${activeProject.title}_backup.json`);
-        document.body.appendChild(downloadAnchorNode);
-        downloadAnchorNode.click();
-        downloadAnchorNode.remove();
-    };
 
-    const handleImportClick = () => {
-        fileInputRef.current?.click();
-    };
-
-    const handleImportFile = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const importedColumns = JSON.parse(e.target?.result as string);
-                if (Array.isArray(importedColumns)) {
-                    if (confirm('Isso substituirá o quadro atual. Deseja continuar?')) {
-                        setColumns(importedColumns);
-                    }
-                } else {
-                    alert('Arquivo inválido. O formato deve ser um array de colunas.');
-                }
-            } catch (error) {
-                console.error('Erro ao importar:', error);
-                alert('Erro ao ler o arquivo JSON.');
-            }
-            if (fileInputRef.current) fileInputRef.current.value = '';
-        };
-        reader.readAsText(file);
-    };
 
     const handleRefresh = () => {
         if (projectId) {
@@ -312,24 +275,10 @@ export default function KanbanBoardPage() {
                     </div>
 
                     <div className="flex gap-2">
-                        {/* Hidden File Input */}
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handleImportFile}
-                            className="hidden"
-                            accept=".json"
-                        />
                         <Button variant="ghost" size="sm" onClick={handleRefresh} title="Atualizar Board" className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)]">
                             <RefreshCw size={16} className={isLoadingBoard ? 'animate-spin' : ''} />
                         </Button>
-                        <Button variant="secondary" size="sm" onClick={handleExport} title="Exportar JSON" className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] border border-[var(--card-border)] bg-[var(--card)] hover:bg-[var(--card-hover)]">
-                            <Download size={16} />
-                        </Button>
-                        <Button variant="secondary" size="sm" onClick={handleImportClick} title="Importar JSON" className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] border border-[var(--card-border)] bg-[var(--card)] hover:bg-[var(--card-hover)]">
-                            <Upload size={16} />
-                        </Button>
-                        <div className="w-px h-6 bg-[var(--card-border)] mx-2" />
+
                         <Button variant="primary" size="sm" onClick={addColumn} disabled={isLoadingBoard}>
                             <Plus size={16} className="mr-2" /> Novo Painel
                         </Button>
@@ -351,9 +300,7 @@ export default function KanbanBoardPage() {
                                 Nenhum Painel Criado
                             </h2>
                             <p className="text-[var(--muted-foreground)] font-mono text-sm leading-relaxed mb-8">
-                                Este projeto ainda não possui painéis. Clique em{' '}
-                                <span className="text-[var(--primary)] font-bold">+ Novo Painel</span>{' '}
-                                para começar a organizar suas tarefas.
+                                Este projeto ainda não possui painéis.
                             </p>
                             <Button variant="primary" onClick={addColumn}>
                                 <Plus size={18} className="mr-2" /> Novo Painel

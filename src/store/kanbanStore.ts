@@ -88,28 +88,32 @@ const defaultColumnsTemplate: Column[] = [
         title: 'BACKLOG',
         tasks: [],
         color: '#ef4444',
-        syncStatus: 'synced'
+        syncStatus: 'synced',
+        isDone: false
     },
     {
         id: 'in-progress',
         title: 'EM PROGRESSO',
         tasks: [],
         color: '#eab308',
-        syncStatus: 'synced'
+        syncStatus: 'synced',
+        isDone: false
     },
     {
         id: 'review',
         title: 'CODE REVIEW',
         tasks: [],
         color: '#8b5cf6',
-        syncStatus: 'synced'
+        syncStatus: 'synced',
+        isDone: false
     },
     {
         id: 'done',
         title: 'CONCLUÍDO',
         tasks: [],
         color: '#10b981',
-        syncStatus: 'synced'
+        syncStatus: 'synced',
+        isDone: true
     },
 ];
 
@@ -341,15 +345,17 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             }
 
             // 3. Map to Store Structure
-            const newColumns: Column[] = (dbColumns as { id: string, title: string, color: string, position: number, completed?: string }[]).map(c => ({
-                id: c.id,
-                title: c.title,
-                color: c.color,
-                position: c.position,
-                isDone: c.completed === 'Sim',
-                tasks: [],
-                syncStatus: 'synced' as const
-            })).sort((a, b) => (a.position || 0) - (b.position || 0));
+            const newColumns: Column[] = (dbColumns as { id: string, title: string, color: string, position: number, completed?: string }[])
+                .filter(c => c.id && c.title) // Filter out invalid entries (e.g. from SQL left join)
+                .map(c => ({
+                    id: c.id,
+                    title: c.title,
+                    color: c.color,
+                    position: c.position,
+                    isDone: c.completed === 'Sim',
+                    tasks: [],
+                    syncStatus: 'synced' as const
+                })).sort((a, b) => (a.position || 0) - (b.position || 0));
 
             // Distribute Tasks to Columns
             (dbTasks as any[]).forEach((t) => {
@@ -405,6 +411,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             tasks: [],
             color: randomColor,
             syncStatus: 'syncing',
+            isDone: false,
             position: newPosition
         };
 

@@ -141,7 +141,7 @@ export function KanbanColumn({
             className={cn(
                 "w-80 flex-shrink-0 flex flex-col rounded-md border transition-all relative h-full max-h-full shadow-sm",
                 "bg-[var(--column-bg)] border-[var(--card-border)]",
-                column.isDone && "bg-emerald-500/5 border-emerald-500/20",
+                column.isDone === true && "bg-emerald-500/5 border-emerald-500/20",
                 isDragging && "opacity-50 border-[var(--col-color)] border-dashed ring-2 ring-[var(--col-color)] ring-opacity-50"
             )}
         >
@@ -154,11 +154,11 @@ export function KanbanColumn({
                 {...listeners}
                 className={cn(
                     "p-3 flex items-center justify-between cursor-grab active:cursor-grabbing border-b border-[var(--card-border)] bg-[var(--card-hover)] group/header relative",
-                    column.isDone && "bg-emerald-500/10"
+                    column.isDone === true && "bg-emerald-500/10"
                 )}
             >
                 <div className="flex items-center gap-2 flex-1 relative min-w-0">
-                    {column.isDone && (
+                    {column.isDone === true && (
                         <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />
                     )}
 
@@ -181,7 +181,7 @@ export function KanbanColumn({
                                 onClick={() => setIsEditingTitle(true)}
                                 className={cn(
                                     "text-sm font-bold font-mono text-[var(--foreground)] uppercase tracking-wider truncate cursor-text hover:text-[var(--col-color)] transition-colors min-w-0",
-                                    column.isDone && "text-emerald-600 dark:text-emerald-400"
+                                    column.isDone === true && "text-emerald-600 dark:text-emerald-400"
                                 )}
                                 title={column.title}
                             >
@@ -250,7 +250,7 @@ export function KanbanColumn({
                                     <div
                                         className={cn(
                                             "flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 border group active:scale-95 select-none",
-                                            column.isDone
+                                            column.isDone === true
                                                 ? "bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/15"
                                                 : "bg-[var(--background)] border-[var(--card-border)] hover:border-[var(--foreground)]/30 hover:shadow-sm"
                                         )}
@@ -262,17 +262,17 @@ export function KanbanColumn({
                                     >
                                         <div className={cn(
                                             "w-10 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out flex-shrink-0",
-                                            column.isDone ? "bg-emerald-500" : "bg-[var(--muted-foreground)]/30 group-hover:bg-[var(--muted-foreground)]/50"
+                                            column.isDone === true ? "bg-emerald-500" : "bg-[var(--muted-foreground)]/30 group-hover:bg-[var(--muted-foreground)]/50"
                                         )}>
                                             <div className={cn(
                                                 "bg-white w-4 h-4 rounded-full shadow-sm transform transition-transform duration-200 ease-in-out",
-                                                column.isDone ? "translate-x-4" : "translate-x-0"
+                                                column.isDone === true ? "translate-x-4" : "translate-x-0"
                                             )} />
                                         </div>
                                         <div className="flex-1">
                                             <p className={cn(
                                                 "text-sm font-bold transition-colors",
-                                                column.isDone ? "text-emerald-500" : "text-[var(--foreground)]"
+                                                column.isDone === true ? "text-emerald-500" : "text-[var(--foreground)]"
                                             )}>
                                                 Etapa de Conclusão
                                             </p>
@@ -280,7 +280,7 @@ export function KanbanColumn({
                                                 Tarefas nesse painel serão consideradas como concluídas
                                             </p>
                                         </div>
-                                        {column.isDone && <CheckCircle2 size={14} className="text-emerald-500 animate-in zoom-in spin-in-90 duration-300" />}
+                                        {column.isDone === true && <CheckCircle2 size={14} className="text-emerald-500 animate-in zoom-in spin-in-90 duration-300" />}
                                     </div>
 
                                     <div className="h-px bg-[var(--card-border)]" />
