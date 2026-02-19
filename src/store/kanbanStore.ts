@@ -1,7 +1,8 @@
 import { create } from 'zustand';
-
 import { v4 as uuidv4 } from 'uuid';
 import { arrayMove } from '@dnd-kit/sortable';
+import { api } from '@/lib/api';
+import { COLUMN_COLORS, DEFAULT_COLUMNS } from '@/lib/constants';
 
 export type Tag = {
     id: string;
@@ -46,10 +47,20 @@ export type Project = {
 
 export type TaskCounts = Record<string, { total: number; byColumn: Record<string, number>; byPriority: Record<string, number> }>;
 
+export type User = {
+    id: string;
+    name: string;
+    email: string;
+};
+
 interface ProjectState {
     projects: Project[];
     activeProjectId: string | null;
     taskCounts: TaskCounts;
+    currentUser: User | null;
+
+    // Initialization
+    initializeUser: () => void;
 
     // Project Actions
     fetchProjects: () => Promise<void>;
@@ -82,63 +93,39 @@ interface ProjectState {
     setColumns: (columns: Column[]) => void;
 }
 
-const defaultColumnsTemplate: Column[] = [
-    {
-        id: 'backlog',
-        title: 'BACKLOG',
-        tasks: [],
-        color: '#ef4444',
-        syncStatus: 'synced',
-        isDone: false
-    },
-    {
-        id: 'in-progress',
-        title: 'EM PROGRESSO',
-        tasks: [],
-        color: '#eab308',
-        syncStatus: 'synced',
-        isDone: false
-    },
-    {
-        id: 'review',
-        title: 'CODE REVIEW',
-        tasks: [],
-        color: '#8b5cf6',
-        syncStatus: 'synced',
-        isDone: false
-    },
-    {
-        id: 'done',
-        title: 'CONCLUÍDO',
-        tasks: [],
-        color: '#10b981',
-        syncStatus: 'synced',
-        isDone: true
-    },
-];
-
 export const useProjectStore = create<ProjectState>((set, get) => ({
     projects: [],
     activeProjectId: null,
     taskCounts: {},
     isLoadingProjects: false,
     isLoadingBoard: false,
+    currentUser: null,
+
+    initializeUser: () => {
+        if (typeof window === 'undefined') return;
+        try {
+            const storedUser = localStorage.getItem('hubview_user');
+            if (storedUser) {
+                const user = JSON.parse(storedUser);
+                set({ currentUser: user });
+            }
+        } catch (error) {
+            console.error('Failed to parse user from localStorage', error);
+        }
+    },
 
     fetchProjects: async () => {
         set({ isLoadingProjects: true });
         try {
-            const response = await fetch('/api/projects/fetch', { method: 'POST' });
-            if (!response.ok) throw new Error('Failed to fetch projects');
-
-            const data = await response.json();
+            const data = await api.post<any[]>('/api/projects/fetch', {});
 
             const parseColumns = (raw: unknown): Column[] => {
                 if (!raw || raw === 'undefined' || raw === 'null') {
-                    return JSON.parse(JSON.stringify(defaultColumnsTemplate));
+                    return JSON.parse(JSON.stringify(DEFAULT_COLUMNS));
                 }
                 try {
                     const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-                    const columns = Array.isArray(parsed) ? parsed : JSON.parse(JSON.stringify(defaultColumnsTemplate));
+                    const columns = Array.isArray(parsed) ? parsed : JSON.parse(JSON.stringify(DEFAULT_COLUMNS));
 
                     // Map 'completed' (Sim/Não) to isDone (boolean)
                     return columns.map((c: any) => ({
@@ -146,11 +133,11 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
                         isDone: c.isDone || c.completed === 'Sim'
                     }));
                 } catch {
-                    return JSON.parse(JSON.stringify(defaultColumnsTemplate));
+                    return JSON.parse(JSON.stringify(DEFAULT_COLUMNS));
                 }
             };
 
-            const loadedProjects: Project[] = (data as any[]).map((p: any) => ({
+            const loadedProjects: Project[] = data.map((p: any) => ({
                 id: p.id,
                 title: p.title,
                 description: p.description,
@@ -180,10 +167,8 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
     fetchTaskCounts: async () => {
         try {
-            const response = await fetch('/api/tasks/count', { method: 'POST' });
-            if (!response.ok) return;
-            const counts = await response.json();
-            if (counts && !counts.error) {
+            const counts = await api.post<TaskCounts>('/api/tasks/count', {});
+            if (counts && !(counts as any).error) {
                 set({ taskCounts: counts });
             }
         } catch (error) {
@@ -193,11 +178,13 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
     addProject: async (title, description) => {
         const tempId = uuidv4();
+        const currentUser = get().currentUser;
+
         const newProject: Project = {
             id: tempId,
             title,
             description,
-            columns: JSON.parse(JSON.stringify(defaultColumnsTemplate)),
+            columns: JSON.parse(JSON.stringify(DEFAULT_COLUMNS)),
             createdAt: Date.now(),
             updatedAt: Date.now(),
             syncStatus: 'syncing'
@@ -207,19 +194,12 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         set((state) => ({ projects: [...state.projects, newProject], activeProjectId: tempId }));
 
         try {
-            const response = await fetch('/api/projects/create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    title,
-                    description,
-                    createdBy: 'Daniel_Admin' // Hardcoded for now as per plan
-                })
+            const result = await api.post<any>('/api/projects/create', {
+                title,
+                description,
+                createdBy: currentUser?.name || 'Unknown User'
             });
 
-            if (!response.ok) throw new Error('Failed to create project');
-
-            const result = await response.json();
             const realId = result.id || result[0]?.id; // Adjust based on n8n response
 
             if (realId) {
@@ -258,13 +238,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         }));
 
         try {
-            const response = await fetch('/api/projects/update', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, ...updates })
-            });
-
-            if (!response.ok) throw new Error('Falha ao atualizar projeto');
+            await api.post('/api/projects/update', { id, ...updates });
 
             set((state) => ({
                 projects: state.projects.map((p) =>
@@ -290,13 +264,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         }));
 
         try {
-            const response = await fetch('/api/projects/inactivate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id })
-            });
-
-            if (!response.ok) throw new Error('Falha ao inativar projeto');
+            await api.post('/api/projects/inactivate', { id });
         } catch (error) {
             console.error('Erro ao inativar projeto:', error);
             // Re-fetch to restore state
@@ -316,36 +284,24 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     setActiveProject: (id) => set({ activeProjectId: id }),
 
     // --- Fetch Board Data ---
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    // --- Fetch Board Data ---
     fetchBoardData: async (projectId) => {
         if (!projectId) return;
         set({ isLoadingBoard: true });
 
         try {
-            // 1. Fetch Columns
-            const colResponse = await fetch('/api/columns/list', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ projectId })
-            });
-            const dbColumns = await colResponse.json();
-
-            // 2. Fetch Tasks
-            const taskResponse = await fetch('/api/tasks/list', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ projectId })
-            });
-            const dbTasks = await taskResponse.json();
+            // Parallel fetch for columns and rules
+            const [dbColumns, dbTasks] = await Promise.all([
+                api.post<any[]>('/api/columns/list', { projectId }),
+                api.post<any[]>('/api/tasks/list', { projectId })
+            ]);
 
             if (!Array.isArray(dbColumns) || !Array.isArray(dbTasks)) {
                 console.error('Dados inválidos retornados da API', { dbColumns, dbTasks });
                 return;
             }
 
-            // 3. Map to Store Structure
-            const newColumns: Column[] = (dbColumns as { id: string, title: string, color: string, position: number, completed?: string }[])
+            // Map to Store Structure
+            const newColumns: Column[] = dbColumns
                 .filter(c => c.id && c.title) // Filter out invalid entries (e.g. from SQL left join)
                 .map(c => ({
                     id: c.id,
@@ -358,7 +314,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
                 })).sort((a, b) => (a.position || 0) - (b.position || 0));
 
             // Distribute Tasks to Columns
-            (dbTasks as any[]).forEach((t) => {
+            dbTasks.forEach((t) => {
                 const column = newColumns.find(c => c.id === t.columnId); // columnId (CamelCase)
                 if (column) {
                     column.tasks.push({
@@ -366,11 +322,38 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
                         content: t.content,
                         description: t.description,
                         priority: t.priority,
-                        tags: t.tag ? [t.tag] : [], // Novo schema usa 'tag' string única
-                        assignee: t.createdBy, // Mapeado de 'createdBy'
-                        startDate: t.startDate, // (Se existir no futuro/transient)
-                        endDate: t.endDate,     // (Se existir no futuro/transient)
-                        checklist: [],          // Removido do schema SQL
+                        // Normalização de Tags: Backend retorna string única ou objeto? Assumindo string se for antigo, ou objeto
+                        // Normalização de Tags: Tenta decodificar JSON se for string array, senão trata como string única
+                        tags: (() => {
+                            if (!t.tag) return [];
+                            let raw = t.tag;
+
+                            if (typeof raw === 'string') {
+                                raw = raw.trim();
+                                // Clean up obvious bad values
+                                if (raw === '[]' || raw === 'undefined' || raw === 'null' || raw === '[undefined]' || raw === '""') return [];
+
+                                if (raw.startsWith('[') && raw.endsWith(']')) {
+                                    try {
+                                        const parsed = JSON.parse(raw);
+                                        if (Array.isArray(parsed)) {
+                                            // Ensure each tag is valid and not "undefined" string
+                                            return parsed.filter(pt => pt && pt.name && pt.name !== 'undefined');
+                                        }
+                                        return [];
+                                    } catch {
+                                        return [{ id: 'tag-' + t.id, name: raw, color: '#3b82f6' }];
+                                    }
+                                }
+                                // Legacy simple string tag
+                                return [{ id: 'tag-' + t.id, name: raw, color: '#3b82f6' }];
+                            }
+                            return Array.isArray(raw) ? raw : [raw];
+                        })(),
+                        assignee: t.createdBy,
+                        startDate: t.startDate_planned || t.startDate || t.start_date, // Support new field, camelCase and snake_case
+                        endDate: t.endDate_planned || t.endDate || t.end_date,       // Support new field, camelCase and snake_case
+                        checklist: [],
                         position: t.position,
                         syncStatus: 'synced' as const
                     });
@@ -380,7 +363,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             // Sort Tasks
             newColumns.forEach(c => c.tasks.sort((a, b) => (a.position || 0) - (b.position || 0)));
 
-            // 4. Update Store
+            // Update Store
             set(state => ({
                 projects: state.projects.map(p =>
                     p.id === projectId ? { ...p, columns: newColumns } : p
@@ -402,8 +385,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         if (!activeProject) return;
 
         const newPosition = activeProject.columns.length;
-        const colors = ['#ef4444', '#eab308', '#22c55e', '#3b82f6', '#a855f7', '#f97316', '#06b6d4', '#ec4899'];
-        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+        const randomColor = COLUMN_COLORS[Math.floor(Math.random() * COLUMN_COLORS.length)];
 
         const newColumn: Column = {
             id: tempId,
@@ -430,20 +412,14 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         }));
 
         try {
-            const response = await fetch('/api/columns/create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id: tempId, // Envia ID gerado para o n8n
-                    projectId: activeProject.id,
-                    title: newColumn.title,
-                    color: newColumn.color,
-                    position: newColumn.position
-                })
+            const result = await api.post<any>('/api/columns/create', {
+                id: tempId, // Envia ID gerado para o n8n
+                projectId: activeProject.id,
+                title: newColumn.title,
+                color: newColumn.color,
+                position: newColumn.position
             });
 
-            if (!response.ok) throw new Error('Failed to create column');
-            const result = await response.json();
             const realId = result.id || result[0]?.id;
 
             if (realId) {
@@ -495,16 +471,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         }));
 
         try {
-            const response = await fetch('/api/columns/delete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: colId })
-            });
-
-            if (!response.ok) throw new Error('Failed to delete column');
+            await api.post('/api/columns/delete', { id: colId });
         } catch (error) {
             console.error('Error deleting column:', error);
-            // Revert would be complex, maybe just show error toast or re-fetch
             get().fetchProjects(); // Simplest rollback
         }
     },
@@ -524,13 +493,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         }));
 
         try {
-            const response = await fetch('/api/columns/update', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: colId, title })
-            });
-
-            if (!response.ok) throw new Error('Failed to update column');
+            await api.post('/api/columns/update', { id: colId, title });
 
             set((state) => ({
                 projects: state.projects.map(p => {
@@ -574,13 +537,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         }));
 
         try {
-            const response = await fetch('/api/columns/update', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: colId, color })
-            });
-
-            if (!response.ok) throw new Error('Failed to update column color');
+            await api.post('/api/columns/update', { id: colId, color });
 
             set((state) => ({
                 projects: state.projects.map(p => {
@@ -629,11 +586,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         }));
 
         try {
-            await fetch('/api/columns/completed', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, isDone: newIsDone })
-            });
+            await api.post('/api/columns/completed', { id, isDone: newIsDone });
 
             set(state => ({
                 projects: state.projects.map(p => {
@@ -665,57 +618,64 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
     addTask: async (colId, task) => {
         const newId = uuidv4();
-        const activeProject = get().projects.find(p => p.id === get().activeProjectId);
+        const state = get();
+        const activeProject = state.projects.find(p => p.id === state.activeProjectId);
         if (!activeProject) return newId;
 
         const column = activeProject.columns.find(c => c.id === colId);
         const newPosition = column ? column.tasks.length : 0;
+        const currentUser = state.currentUser;
+
+        // Use provided assignee or fallback to current user
+        const finalAssignee = task.assignee || currentUser?.name || 'Unassigned';
 
         const newTask: Task = {
             ...task,
             id: newId,
             syncStatus: 'syncing',
-            position: newPosition
+            position: newPosition,
+            assignee: finalAssignee
         };
 
-        set((state) => {
-            return {
-                projects: state.projects.map(p => {
-                    if (p.id === state.activeProjectId) {
-                        return {
-                            ...p,
-                            columns: p.columns.map(c => {
-                                if (c.id === colId) {
-                                    return { ...c, tasks: [...c.tasks, newTask] };
-                                }
-                                return c;
-                            }),
-                            updatedAt: Date.now()
-                        };
-                    }
-                    return p;
-                })
-            };
-        });
+        set((state) => ({
+            projects: state.projects.map(p => {
+                if (p.id === state.activeProjectId) {
+                    return {
+                        ...p,
+                        columns: p.columns.map(c => {
+                            if (c.id === colId) {
+                                return { ...c, tasks: [...c.tasks, newTask] };
+                            }
+                            return c;
+                        }),
+                        updatedAt: Date.now()
+                    };
+                }
+                return p;
+            })
+        }));
+
+        const cleanedTags = (task.tags || []).filter(t => t && t.name && t.name.trim() !== '' && t.name !== 'undefined');
+        console.log('[DEBUG] addTask payload:', { ...task, tags: cleanedTags });
 
         try {
-            const response = await fetch('/api/tasks/create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id: newId, // Envia ID gerado
-                    columnId: colId,
-                    content: task.content,
-                    description: task.description,
-                    priority: task.priority,
-                    tag: (task.tags && task.tags[0]) ? task.tags[0].name : '', // Safe access
-                    position: newPosition,
-                    createdBy: 'Daniel_User'
-                })
+            const result = await api.post<any>('/api/tasks/create', {
+                id: newId, // Envia ID gerado
+                columnId: colId,
+                content: task.content,
+                description: task.description,
+                priority: task.priority,
+                tag: (cleanedTags && cleanedTags[0]) ? cleanedTags[0].name : '', // Legacy support
+                tags: cleanedTags, // Full array for modern n8n workflows
+                position: newPosition,
+                createdBy: currentUser?.name || 'Unknown',
+                assignee: finalAssignee,
+                startDate: task.startDate,
+                endDate: task.endDate,
+                startDate_planned: task.startDate, // Send to new field
+                endDate_planned: task.endDate      // Send to new field
             });
 
-            if (!response.ok) throw new Error('Failed to create task');
-            const result = await response.json();
             const realId = result.id || result[0]?.id;
 
             if (realId) {
@@ -755,8 +715,6 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             }));
             return newId;
         }
-
-        return newId;
     },
 
     updateTask: async (taskId, updates) => {
@@ -781,17 +739,21 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         });
 
         try {
-            // Map updates to API expected format if needed
-            const payload = { id: taskId, ...updates };
-            // TODO: Handle tags mapping if updates contains tags
+            const cleanedTags = updates.tags ? updates.tags.filter(t => t && t.name && t.name.trim() !== '' && t.name !== 'undefined') : undefined;
+            const updatesToLog = { ...updates };
+            if (cleanedTags !== undefined) updatesToLog.tags = cleanedTags;
+            console.log('[DEBUG] updateTask payload:', { id: taskId, ...updatesToLog });
 
-            const response = await fetch('/api/tasks/update', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) throw new Error('Failed to update task');
+            const payload = {
+                id: taskId,
+                ...updates,
+                // Ensure tags are sent correctly as array, even if empty
+                ...(updates.hasOwnProperty('tags') ? { tags: cleanedTags || [] } : {}),
+                // If updating start/end date, also send to _planned fields
+                ...(updates.startDate ? { startDate_planned: updates.startDate } : {}),
+                ...(updates.endDate ? { endDate_planned: updates.endDate } : {})
+            };
+            await api.post('/api/tasks/update', payload);
 
             set((state) => {
                 const { activeProjectId, projects } = state;
@@ -812,7 +774,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
                 };
             });
         } catch (error) {
-            console.error('Error update task:', error);
+            console.error('Error updating task:', error);
             set((state) => {
                 const { activeProjectId, projects } = state;
                 if (!activeProjectId) return state;
@@ -835,7 +797,6 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     },
 
     deleteTask: async (taskId) => {
-        // Optimistic
         set((state) => {
             const { activeProjectId, projects } = state;
             if (!activeProjectId) return state;
@@ -857,233 +818,145 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         });
 
         try {
-            const response = await fetch('/api/tasks/delete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: taskId })
-            });
-
-            if (!response.ok) throw new Error('Failed to delete task');
+            await api.post('/api/tasks/delete', { id: taskId });
         } catch (error) {
             console.error('Error deleting task:', error);
-            get().fetchProjects(); // Sync back
+            get().fetchBoardData(get().activeProjectId!);
         }
     },
 
     moveColumn: async (activeId, overId) => {
-        // Optimistic
-        set((state) => {
-            const { activeProjectId, projects } = state;
-            if (!activeProjectId) return state;
+        const state = get();
+        const activeProject = state.projects.find(p => p.id === state.activeProjectId);
+        if (!activeProject) return;
 
-            const project = projects.find(p => p.id === activeProjectId);
-            if (!project) return state;
+        const oldIndex = activeProject.columns.findIndex(c => c.id === activeId);
+        const newIndex = activeProject.columns.findIndex(c => c.id === overId);
 
-            const oldIndex = project.columns.findIndex(c => c.id === activeId);
-            const newIndex = project.columns.findIndex(c => c.id === overId);
-            const newColumns = arrayMove(project.columns, oldIndex, newIndex);
+        if (oldIndex === -1 || newIndex === -1) return;
 
-            // Update positions locally
-            const updatedColumns = newColumns.map((col, index) => ({ ...col, position: index, syncStatus: 'syncing' as const }));
+        const newColumns = arrayMove(activeProject.columns, oldIndex, newIndex).map((col, index) => ({
+            ...col,
+            position: index
+        }));
 
-            return {
-                projects: projects.map(p => {
-                    if (p.id === activeProjectId) {
-                        return {
-                            ...p,
-                            columns: updatedColumns,
-                            updatedAt: Date.now()
-                        };
-                    }
-                    return p;
-                })
-            };
-        });
-
-        // API Call for reorder
-        // According to plan: "Enviar ID e nova position" for the moved column, but often dnd requires updating multiple positions.
-        // The plan says: "Movimentação: Receber o taskId e a nova position/columnId e fazer o UPDATE".
-        // For columns it might be similar.
-        // Let's send the whole batch of changed columns or just the move info.
-        // Assuming simple update for now: Send update for each column that changed position? Or a reorder endpoint?
-        // Reuse Update Column endpoint for now updating position.
+        set((state) => ({
+            projects: state.projects.map(p => {
+                if (p.id === state.activeProjectId) {
+                    return { ...p, columns: newColumns, updatedAt: Date.now() };
+                }
+                return p;
+            })
+        }));
 
         try {
-            const state = get();
-            const project = state.projects.find(p => p.id === state.activeProjectId);
-            if (project) {
-                // Send updates for all columns to ensure consistency
-                // Or simplified: Just update the one moved if the backend handles reorder? 
-                // SQL is manual. Safe way: Update position of all columns in standard 'update' route.
-
-                // Note: The plan for Columns Move says: "Receber o taskId e a nova position...". Wait, that's for tasks.
-                // For Columns Move: "Movimentação: Receber o taskId e a nova position/columnId e fazer o UPDATE." (Wait, copy paste error in plan?)
-                // Assuming we use the generic update column endpoint.
-
-                const updates = project.columns.map(col =>
-                    fetch('/api/columns/update', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id: col.id, position: col.position })
-                    })
-                );
-
-                await Promise.all(updates); // Parallel updates
-
-                set((state) => ({
-                    projects: state.projects.map(p => {
-                        if (p.id === state.activeProjectId) {
-                            return {
-                                ...p,
-                                columns: p.columns.map(c => ({ ...c, syncStatus: 'synced' as const }))
-                            };
-                        }
-                        return p;
-                    })
-                }));
+            // Sequential updates to ensure order
+            for (const col of newColumns) {
+                await api.post('/api/columns/update', { id: col.id, position: col.position });
             }
         } catch (error) {
             console.error('Error moving column:', error);
-            get().fetchProjects();
+            get().fetchBoardData(state.activeProjectId!);
         }
     },
 
     moveTask: async (activeId, overId, activeColId, overColId) => {
-        // Optimistic
-        set((state) => {
-            const activeIdProj = state.activeProjectId;
-            if (!activeIdProj) return state;
+        const state = get();
+        const activeProject = state.projects.find(p => p.id === state.activeProjectId);
+        if (!activeProject || !activeColId || !overColId) return;
 
-            const projectIndex = state.projects.findIndex(p => p.id === activeIdProj);
-            if (projectIndex === -1) return state;
+        // Clone current state for optimistic update
+        const sourceColIndex = activeProject.columns.findIndex(c => c.id === activeColId);
+        const destColIndex = activeProject.columns.findIndex(c => c.id === overColId);
 
-            const project = state.projects[projectIndex];
+        if (sourceColIndex === -1 || destColIndex === -1) return;
 
-            // Deep clone columns to safely mutate tasks array
-            const newColumns = project.columns.map(col => ({
-                ...col,
-                tasks: [...col.tasks]
-            }));
+        const newColumns = [...activeProject.columns];
+        const sourceCol = { ...newColumns[sourceColIndex], tasks: [...newColumns[sourceColIndex].tasks] };
+        const destCol = activeColId === overColId
+            ? sourceCol
+            : { ...newColumns[destColIndex], tasks: [...newColumns[destColIndex].tasks] };
 
-            const activeColIndex = newColumns.findIndex(c => c.id === activeColId);
-            const overColIndex = newColumns.findIndex(c => c.id === overColId);
+        const activeTaskIndex = sourceCol.tasks.findIndex(t => t.id === activeId);
+        const activeTask = sourceCol.tasks[activeTaskIndex];
 
-            if (activeColIndex === -1 || overColIndex === -1) return state;
+        if (!activeTask) return;
 
-            const activeTaskIndex = newColumns[activeColIndex].tasks.findIndex(t => t.id === activeId);
-            const overTaskIndex = newColumns[overColIndex].tasks.findIndex(t => t.id === overId);
+        // Perform move locally
+        if (activeColId === overColId) {
+            // Same column reorder
+            const overTaskIndex = sourceCol.tasks.findIndex(t => t.id === overId);
+            sourceCol.tasks = arrayMove(sourceCol.tasks, activeTaskIndex, overTaskIndex);
 
-            if (activeTaskIndex === -1) return state;
+            // Re-assign positions
+            sourceCol.tasks = sourceCol.tasks.map((t, i) => ({ ...t, position: i }));
+            newColumns[sourceColIndex] = sourceCol;
+        } else {
+            // Different column
+            sourceCol.tasks.splice(activeTaskIndex, 1);
 
-            if (activeColId === overColId) {
-                // Same column reorder
-                if (activeTaskIndex !== overTaskIndex && overTaskIndex !== -1) {
-                    newColumns[activeColIndex].tasks = arrayMove(newColumns[activeColIndex].tasks, activeTaskIndex, overTaskIndex);
+            const overTaskIndex = overId
+                ? destCol.tasks.findIndex(t => t.id === overId)
+                : destCol.tasks.length;
+
+            const newIndex = overTaskIndex >= 0 ? overTaskIndex : destCol.tasks.length;
+
+            // Insert into new column
+            destCol.tasks.splice(newIndex, 0, { ...activeTask, position: newIndex });
+
+            // Re-assign positions for both columns
+            sourceCol.tasks = sourceCol.tasks.map((t, i) => ({ ...t, position: i }));
+            destCol.tasks = destCol.tasks.map((t, i) => ({ ...t, position: i }));
+
+            newColumns[sourceColIndex] = sourceCol;
+            newColumns[destColIndex] = destCol;
+        }
+
+        // Apply optimistic update
+        set((state) => ({
+            projects: state.projects.map(p => {
+                if (p.id === state.activeProjectId) {
+                    return { ...p, columns: newColumns, updatedAt: Date.now() };
                 }
-            } else {
-                // Different column move
-                const [movedTask] = newColumns[activeColIndex].tasks.splice(activeTaskIndex, 1);
+                return p;
+            })
+        }));
 
-                if (overId === overColId) {
-                    // Dropped in empty space of column
-                    newColumns[overColIndex].tasks.push(movedTask);
-                } else {
-                    // Dropped on another task
-                    const targetIndex = overTaskIndex >= 0 ? overTaskIndex : newColumns[overColIndex].tasks.length;
-                    newColumns[overColIndex].tasks.splice(targetIndex, 0, movedTask);
-                }
-            }
-
-            // Recalculate positions for ALL tasks in affected columns
-            newColumns[activeColIndex].tasks.forEach((t, i) => { t.position = i; t.syncStatus = 'syncing'; });
-            if (activeColId !== overColId) {
-                newColumns[overColIndex].tasks.forEach((t, i) => { t.position = i; t.syncStatus = 'syncing'; });
-            }
-
-            const newProjects = [...state.projects];
-            newProjects[projectIndex] = { ...project, columns: newColumns, updatedAt: Date.now() };
-
-            return { projects: newProjects };
-        });
-
-        // API Sync
+        // Sequential Sync Logic
         try {
-            // We need to send updates for all tasks that changed position or column.
-            // Crucial: The task that moved column needs to send columnId update too.
-            const state = get();
-            const project = state.projects.find(p => p.id === state.activeProjectId);
+            const updatesToSync: Promise<any>[] = [];
 
-            if (!project) return;
+            // If moved to different column, update the task's columnId immediately
+            if (activeColId !== overColId) {
+                await api.post('/api/tasks/update', { id: activeId, columnId: overColId });
+            }
 
-            // Gather all tasks from affected columns that need update
-            const affectedTasks: { id: string; position: number; columnId: string }[] = [];
-            const colsToCheck = [activeColId, overColId].filter((v, i, a) => v && a.indexOf(v) === i); // unique non-null codes
+            // Prepare batch of position updates
+            const affectedTasks = activeColId === overColId
+                ? sourceCol.tasks
+                : [...sourceCol.tasks, ...destCol.tasks];
 
-            colsToCheck.forEach(cId => {
-                const col = project.columns.find(c => c.id === cId);
-                if (col) {
-                    col.tasks.forEach(t => {
-                        // Ideally only send if dirty. For now sending all in col ensures integrity.
-                        // Filter payload to minimize data: id, position, columnId
-                        affectedTasks.push({
-                            id: t.id,
-                            position: t.position ?? 0,
-                            columnId: cId || '', // Ensure columnId is correct
-                        });
-                    });
-                }
-            });
-
-            // Batch update? Plan says: "O front-end envia uma lista de IDs e as suas novas posições. O n8n executa múltiplos UPDATE".
-            // If the endpoint supports array, great. If not, standard loop.
-            // Assuming the `update` route is per task based on standard REST.
-            // Plan hint: "n8n: O front-end envia uma lista...". This implies a Batch endpoint or the update endpoint handles a list.
-            // My created `api/tasks/update` proxies to `hubview-cards-altera`.
-            // Let's assume `hubview-cards-altera` can handle a single object.
-            // If the user plan says "Lista de IDs", maybe I should have made a batch route?
-            // "n8n: O front-end envia uma lista de IDs e as suas novas posições. O n8n executa múltiplos UPDATE no MSSQL."
-            // This suggests a BULK update.
-            // I will implement parallel single updates for now as it's safer without validiting the batch capability of the webhook.
-            // But to be cleaner, I'll send just the critical one first (the move) then the reorders.
-
-            // Actually, `hubview-cards-altera` logic in n8n (Move) likely expects: id, columnId, position.
-
-            const updates = affectedTasks.map(t =>
-                fetch('/api/tasks/update', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(t)
-                })
-            );
-
-            await Promise.all(updates);
-
-            set((state) => ({
-                projects: state.projects.map(p => {
-                    if (p.id === state.activeProjectId) {
-                        return {
-                            ...p,
-                            columns: p.columns.map(c => ({
-                                ...c,
-                                tasks: c.tasks.map(t => t.syncStatus === 'syncing' ? { ...t, syncStatus: 'synced' as const } : t)
-                            }))
-                        };
-                    }
-                    return p;
-                })
-            }));
+            // We use simple sequential await here to guarantee consistency, 
+            // as Promise.all can be flaky if the DB locks rows
+            for (const task of affectedTasks) {
+                await api.post('/api/tasks/update', { id: task.id, position: task.position });
+            }
 
         } catch (error) {
             console.error('Error moving task:', error);
-            get().fetchProjects();
+            // Rollback is hard, simpler to just refetch the board state to sync with server
+            get().fetchBoardData(state.activeProjectId!);
         }
     },
 
-    setColumns: (columns) => set((state) => {
-        const { activeProjectId, projects } = state;
-        if (!activeProjectId) return state;
-        return {
-            projects: projects.map(p => p.id === activeProjectId ? { ...p, columns, updatedAt: Date.now() } : p)
-        };
-    }),
+    setColumns: (columns) => {
+        set((state) => ({
+            projects: state.projects.map(p => {
+                if (p.id === state.activeProjectId) {
+                    return { ...p, columns, updatedAt: Date.now() };
+                }
+                return p;
+            })
+        }));
+    }
 }));

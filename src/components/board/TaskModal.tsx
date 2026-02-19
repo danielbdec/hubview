@@ -72,8 +72,8 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                 tags: task.tags || [],
                 priority: task.priority,
                 assignee: defaultAssignee,
-                startDate: task.startDate,
-                endDate: task.endDate,
+                startDate: task.startDate ? task.startDate.split('T')[0] : '',
+                endDate: task.endDate ? task.endDate.split('T')[0] : '',
                 checklist: task.checklist || [],
             });
         }
@@ -260,7 +260,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                             <label className="text-xs font-mono text-[var(--primary)] uppercase tracking-wider">Data Início Prevista</label>
                             <Input
                                 type="date"
-                                value={formData.startDate || ''}
+                                value={formData.startDate ? formData.startDate.split('T')[0] : ''}
                                 onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                                 className="bg-[var(--input-bg)] border-[var(--input-border)] text-[var(--foreground)] focus:border-[var(--primary)] text-sm [color-scheme:dark] dark:[color-scheme:dark]"
                             />
@@ -269,7 +269,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                             <label className="text-xs font-mono text-[var(--primary)] uppercase tracking-wider">Data Finalização Prevista</label>
                             <Input
                                 type="date"
-                                value={formData.endDate || ''}
+                                value={formData.endDate ? formData.endDate.split('T')[0] : ''}
                                 onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                                 className="bg-[var(--input-bg)] border-[var(--input-border)] text-[var(--foreground)] focus:border-[var(--primary)] text-sm [color-scheme:dark] dark:[color-scheme:dark]"
                             />

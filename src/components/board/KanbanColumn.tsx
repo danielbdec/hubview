@@ -6,67 +6,55 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Plus, Trash2, MoreHorizontal, Check, Palette, CheckCircle2 } from 'lucide-react';
 import { KanbanCard } from '@/components/board/KanbanCard';
 import ConfirmModal from '@/components/ui/ConfirmModal';
-import { useMemo, useState, useRef, useEffect } from 'react';
-import { Task, Column } from '@/store/kanbanStore';
+import { useMemo, useState, useRef, useEffect, memo } from 'react';
+import { useProjectStore } from '@/store/kanbanStore';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { COLUMN_COLORS } from '@/lib/constants';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
 export interface KanbanColumnProps {
-    column: Column;
-    onDeleteColumn: (id: string) => void;
-    onUpdateTitle: (id: string, title: string) => void;
-    onUpdateColor?: (id: string, color: string) => void;
+    columnId: string;
+    isOverlay?: boolean;
     onRequestAddTask: (columnId: string) => void;
-    onDeleteTask: (columnId: string, taskId: string) => void;
     onEditTask: (task: any) => void;
-    onToggleDone: (id: string) => void;
 }
 
-const COLORS = [
-    '#ef4444', // Red
-    '#eab308', // Yellow
-    '#22c55e', // Green
-    '#3b82f6', // Blue
-    '#a855f7', // Purple
-    '#f97316', // Orange
-    '#06b6d4', // Cyan
-    '#ec4899', // Pink
-];
-
-export function KanbanColumn({
-    column,
-    onDeleteColumn,
-    onUpdateTitle,
-    onUpdateColor,
+export const KanbanColumn = memo(function KanbanColumn({
+    columnId,
+    isOverlay,
     onRequestAddTask,
-    onDeleteTask,
     onEditTask,
-    onToggleDone
 }: KanbanColumnProps) {
-    const tasks = column.tasks || [];
-    const taskIds = useMemo(() => tasks.map((task) => task.id), [tasks]);
+    const column = useProjectStore((state) => {
+        const project = state.projects.find(p => p.id === state.activeProjectId);
+        return project?.columns.find(c => c.id === columnId);
+    });
+
+    const {
+        deleteColumn: deleteColumnAction,
+        updateColumnTitle: updateTitleAction,
+        updateColumnColor: updateColorAction,
+        deleteTask: deleteTaskAction,
+        toggleColumnDone: toggleDoneAction
+    } = useProjectStore();
 
     const [isEditingTitle, setIsEditingTitle] = useState(false);
-    const [titleInput, setTitleInput] = useState(column.title);
-
-    // Sync titleInput when column.title changes from the store
-    useEffect(() => {
-        if (!isEditingTitle) {
-            setTitleInput(column.title);
-        }
-    }, [column.title, isEditingTitle]);
+    const [titleInput, setTitleInput] = useState('');
     const [showSettings, setShowSettings] = useState(false);
     const [showDeleteColumnConfirm, setShowDeleteColumnConfirm] = useState(false);
     const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
     const settingsRef = useRef<HTMLDivElement>(null);
 
-    const columnColor = column.color || 'var(--primary)';
+    useEffect(() => {
+        if (column && !isEditingTitle) {
+            setTitleInput(column.title);
+        }
+    }, [column?.title, isEditingTitle, column]);
 
-    // Close settings when clicking outside
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
@@ -89,13 +77,19 @@ export function KanbanColumn({
         transition,
         isDragging,
     } = useSortable({
-        id: column.id,
+        id: columnId,
         data: {
             type: 'Column',
             column,
         },
-        disabled: false
+        disabled: !!isOverlay
     });
+
+    if (!column) return null;
+
+    const tasks = column.tasks || [];
+    const taskIds = useMemo(() => tasks.map((task) => task.id), [tasks]);
+    const columnColor = column.color || 'var(--primary)';
 
     const style = {
         transition,
@@ -105,7 +99,7 @@ export function KanbanColumn({
 
     const handleTitleSubmit = () => {
         if (titleInput.trim()) {
-            onUpdateTitle(column.id, titleInput);
+            updateTitleAction(column.id, titleInput);
         } else {
             setTitleInput(column.title);
         }
@@ -117,21 +111,19 @@ export function KanbanColumn({
     };
 
     const confirmDeleteColumn = () => {
-        onDeleteColumn(column.id);
+        deleteColumnAction(column.id);
         setShowDeleteColumnConfirm(false);
     };
 
     const confirmDeleteTask = () => {
         if (taskToDelete) {
-            onDeleteTask(column.id, taskToDelete);
+            deleteTaskAction(taskToDelete);
             setTaskToDelete(null);
         }
     };
 
     const handleColorSelect = (color: string) => {
-        if (onUpdateColor) {
-            onUpdateColor(column.id, color);
-        }
+        updateColorAction(column.id, color);
     };
 
     return (
@@ -142,13 +134,12 @@ export function KanbanColumn({
                 "w-80 flex-shrink-0 flex flex-col rounded-md border transition-all relative h-full max-h-full shadow-sm",
                 "bg-[var(--column-bg)] border-[var(--card-border)]",
                 column.isDone === true && "bg-emerald-500/5 border-emerald-500/20",
-                isDragging && "opacity-50 border-[var(--col-color)] border-dashed ring-2 ring-[var(--col-color)] ring-opacity-50"
+                isDragging && "opacity-50 border-[var(--col-color)] border-dashed ring-2 ring-[var(--col-color)] ring-opacity-50",
+                isOverlay && "rotate-2 scale-105 shadow-2xl cursor-grabbing z-50 opacity-90"
             )}
         >
-            {/* Color Line Indicator */}
             <div className="h-1 w-full rounded-t-md" style={{ backgroundColor: columnColor }} />
 
-            {/* Header */}
             <div
                 {...attributes}
                 {...listeners}
@@ -199,7 +190,6 @@ export function KanbanColumn({
                         <span className="animate-spin h-3 w-3 border-2 border-[var(--primary)] border-t-transparent rounded-full mr-1" title="Sincronizando..." />
                     )}
 
-                    {/* Settings Menu Button */}
                     <div className="relative" ref={settingsRef}>
                         <button
                             onClick={(e) => {
@@ -214,7 +204,6 @@ export function KanbanColumn({
                             <MoreHorizontal size={16} />
                         </button>
 
-                        {/* Settings Popover */}
                         {showSettings && (
                             <div
                                 className="absolute right-0 top-full mt-1 w-56 z-[70] p-3 bg-zinc-900/95 backdrop-blur-sm border border-zinc-800 rounded-lg shadow-2xl animate-in fade-in zoom-in-95 duration-200"
@@ -222,14 +211,13 @@ export function KanbanColumn({
                                 onPointerDown={(e) => e.stopPropagation()}
                             >
                                 <div className="space-y-4">
-                                    {/* Colors */}
                                     <div>
                                         <div className="flex items-center gap-2 mb-2 text-[var(--muted-foreground)]">
                                             <Palette size={12} />
                                             <span className="text-[10px] font-bold uppercase tracking-wider">Cor da Coluna</span>
                                         </div>
                                         <div className="grid grid-cols-4 gap-2">
-                                            {COLORS.map((color) => (
+                                            {COLUMN_COLORS.map((color) => (
                                                 <button
                                                     key={color}
                                                     onClick={() => handleColorSelect(color)}
@@ -246,7 +234,6 @@ export function KanbanColumn({
 
                                     <div className="h-px bg-[var(--card-border)]" />
 
-                                    {/* Is Done Toggle - Redesigned */}
                                     <div
                                         className={cn(
                                             "flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 border group active:scale-95 select-none",
@@ -256,7 +243,7 @@ export function KanbanColumn({
                                         )}
                                         onClick={() => {
                                             if (column.syncStatus !== 'syncing') {
-                                                onToggleDone(column.id);
+                                                toggleDoneAction(column.id);
                                             }
                                         }}
                                     >
@@ -285,7 +272,6 @@ export function KanbanColumn({
 
                                     <div className="h-px bg-[var(--card-border)]" />
 
-                                    {/* Delete */}
                                     <button
                                         onClick={() => {
                                             setShowSettings(false);
@@ -303,7 +289,6 @@ export function KanbanColumn({
                 </div>
             </div>
 
-            {/* Tasks Container */}
             <div className={cn(
                 "flex-1 p-2 overflow-y-auto min-h-0 space-y-2 scrollbar-thin scrollbar-thumb-[var(--muted-foreground)]/20 scrollbar-track-transparent",
                 tasks.length === 0 && "flex items-center justify-center border-2 border-dashed border-[var(--card-border)]/50 rounded-sm m-2 bg-[var(--card-hover)]/30"
@@ -325,7 +310,6 @@ export function KanbanColumn({
                 </SortableContext>
             </div>
 
-            {/* Footer */}
             <div className="p-2 border-t border-[var(--card-border)] bg-[var(--card)]">
                 <button
                     onClick={() => onRequestAddTask(column.id)}
@@ -334,7 +318,6 @@ export function KanbanColumn({
                     <Plus size={14} strokeWidth={3} /> Nova Tarefa
                 </button>
             </div>
-            {/* Modals */}
             <ConfirmModal
                 isOpen={showDeleteColumnConfirm}
                 title="Excluir Coluna"
@@ -356,4 +339,4 @@ export function KanbanColumn({
             />
         </div>
     );
-}
+});

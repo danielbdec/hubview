@@ -144,7 +144,10 @@ export default function KanbanBoardPage() {
                 description: updates.description,
                 tags: updates.tags || [],
                 priority: updates.priority || 'medium',
-                checklist: updates.checklist
+                checklist: updates.checklist,
+                assignee: updates.assignee,
+                startDate: updates.startDate,
+                endDate: updates.endDate
             });
 
         } else {
@@ -314,14 +317,9 @@ export default function KanbanBoardPage() {
                                 {columns.map((col) => (
                                     <KanbanColumn
                                         key={col.id}
-                                        column={col}
-                                        onDeleteColumn={deleteColumn}
-                                        onUpdateTitle={updateColumnTitle}
-                                        onUpdateColor={updateColumnColor}
+                                        columnId={col.id}
                                         onRequestAddTask={handleRequestAddTask}
-                                        onDeleteTask={(colId, taskId) => deleteTask(taskId)}
                                         onEditTask={openEditModal}
-                                        onToggleDone={toggleColumnDone}
                                     />
                                 ))}
                             </SortableContext>
@@ -341,13 +339,10 @@ export default function KanbanBoardPage() {
             {createPortal(
                 <DragOverlay>
                     {activeColumn && <KanbanColumn
-                        column={activeColumn}
-                        onDeleteColumn={() => { }}
-                        onUpdateTitle={() => { }}
+                        columnId={activeColumn.id}
+                        isOverlay
                         onRequestAddTask={() => { }}
-                        onDeleteTask={() => { }}
                         onEditTask={() => { }}
-                        onToggleDone={() => { }}
                     />}
                     {activeTask && <KanbanCard task={activeTask} isOverlay />}
                 </DragOverlay>,

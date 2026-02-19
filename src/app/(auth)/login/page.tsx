@@ -1,199 +1,15 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-
-// Floating particle component for background
-function FloatingParticles() {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        let animationId: number;
-        let particles: Array<{
-            x: number; y: number; vx: number; vy: number;
-            size: number; opacity: number; hue: number;
-        }> = [];
-
-        const resize = () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        };
-        resize();
-        window.addEventListener('resize', resize);
-
-        // Create particles
-        for (let i = 0; i < 60; i++) {
-            particles.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                vx: (Math.random() - 0.5) * 0.4,
-                vy: (Math.random() - 0.5) * 0.4,
-                size: Math.random() * 2.5 + 0.5,
-                opacity: Math.random() * 0.5 + 0.1,
-                hue: 120 + Math.random() * 40, // green spectrum
-            });
-        }
-
-        const animate = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            particles.forEach((p, i) => {
-                p.x += p.vx;
-                p.y += p.vy;
-
-                if (p.x < 0) p.x = canvas.width;
-                if (p.x > canvas.width) p.x = 0;
-                if (p.y < 0) p.y = canvas.height;
-                if (p.y > canvas.height) p.y = 0;
-
-                // Draw particle
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fillStyle = `hsla(${p.hue}, 80%, 55%, ${p.opacity})`;
-                ctx.fill();
-
-                // Connect nearby particles
-                for (let j = i + 1; j < particles.length; j++) {
-                    const dx = particles[j].x - p.x;
-                    const dy = particles[j].y - p.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < 150) {
-                        ctx.beginPath();
-                        ctx.moveTo(p.x, p.y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.strokeStyle = `hsla(140, 70%, 50%, ${0.08 * (1 - dist / 150)})`;
-                        ctx.lineWidth = 0.5;
-                        ctx.stroke();
-                    }
-                }
-            });
-
-            animationId = requestAnimationFrame(animate);
-        };
-
-        animate();
-        return () => {
-            cancelAnimationFrame(animationId);
-            window.removeEventListener('resize', resize);
-        };
-    }, []);
-
-    return (
-        <canvas
-            ref={canvasRef}
-            className="fixed inset-0 z-0 pointer-events-none"
-            style={{ opacity: 0.6 }}
-        />
-    );
-}
-
-// Animated hex grid background
-function HexGrid() {
-    return (
-        <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-            {/* Radial gradient overlay */}
-            <div
-                className="absolute inset-0"
-                style={{
-                    background: 'radial-gradient(ellipse at 30% 20%, rgba(34, 197, 94, 0.08) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(16, 185, 129, 0.06) 0%, transparent 50%)',
-                }}
-            />
-
-            {/* Animated scan line */}
-            <motion.div
-                className="absolute left-0 right-0 h-[1px]"
-                style={{
-                    background: 'linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.3), transparent)',
-                }}
-                animate={{ y: [0, typeof window !== 'undefined' ? window.innerHeight : 900] }}
-                transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-            />
-
-            {/* Floating orbs */}
-            <motion.div
-                className="absolute w-[500px] h-[500px] rounded-full"
-                style={{
-                    background: 'radial-gradient(circle, rgba(34, 197, 94, 0.04), transparent 70%)',
-                    left: '-10%',
-                    top: '20%',
-                    filter: 'blur(60px)',
-                }}
-                animate={{
-                    x: [0, 50, -30, 0],
-                    y: [0, -40, 30, 0],
-                }}
-                transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
-            />
-            <motion.div
-                className="absolute w-[400px] h-[400px] rounded-full"
-                style={{
-                    background: 'radial-gradient(circle, rgba(16, 185, 129, 0.05), transparent 70%)',
-                    right: '-5%',
-                    bottom: '10%',
-                    filter: 'blur(80px)',
-                }}
-                animate={{
-                    x: [0, -40, 20, 0],
-                    y: [0, 30, -50, 0],
-                }}
-                transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
-            />
-        </div>
-    );
-}
-
-// Hexagonal data nodes decoration
-function DataNodes() {
-    const nodes = [
-        { x: '10%', y: '15%', delay: 0, size: 6 },
-        { x: '85%', y: '25%', delay: 0.5, size: 4 },
-        { x: '15%', y: '75%', delay: 1, size: 5 },
-        { x: '90%', y: '70%', delay: 1.5, size: 3 },
-        { x: '50%', y: '10%', delay: 2, size: 4 },
-        { x: '75%', y: '85%', delay: 0.8, size: 5 },
-        { x: '30%', y: '90%', delay: 1.2, size: 3 },
-        { x: '5%', y: '45%', delay: 0.3, size: 4 },
-    ];
-
-    return (
-        <div className="fixed inset-0 z-0 pointer-events-none">
-            {nodes.map((node, i) => (
-                <motion.div
-                    key={i}
-                    className="absolute"
-                    style={{ left: node.x, top: node.y }}
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{
-                        opacity: [0.2, 0.6, 0.2],
-                        scale: [0.8, 1.2, 0.8],
-                    }}
-                    transition={{
-                        duration: 4,
-                        repeat: Infinity,
-                        delay: node.delay,
-                        ease: 'easeInOut',
-                    }}
-                >
-                    <div
-                        className="rounded-full border border-emerald-500/30"
-                        style={{
-                            width: `${node.size}px`,
-                            height: `${node.size}px`,
-                            boxShadow: '0 0 8px rgba(34, 197, 94, 0.3)',
-                        }}
-                    />
-                </motion.div>
-            ))}
-        </div>
-    );
-}
+import {
+    FloatingParticles,
+    PerspectiveGrid,
+    DecodingText,
+    CinematicIntro
+} from '@/components/auth/LoginEffects';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -204,6 +20,7 @@ export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [focusedField, setFocusedField] = useState<string | null>(null);
+    const [showContent, setShowContent] = useState(false);
 
     // Check if already logged in
     useEffect(() => {
@@ -250,377 +67,281 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden"
-            style={{ background: '#030806' }}
-        >
-            {/* Animated backgrounds */}
+        <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-[#030806] text-white selection:bg-emerald-500/30">
+            {/* Cinematic Background */}
+            <PerspectiveGrid />
             <FloatingParticles />
-            <HexGrid />
-            <DataNodes />
 
-            {/* Main content */}
+            {/* Intro Sequence Overlay */}
+            {!showContent && (
+                <CinematicIntro onComplete={() => setShowContent(true)} />
+            )}
+
+            {/* Main content - reveals after intro */}
             <AnimatePresence mode="wait">
-                {isSuccess ? (
-                    <motion.div
-                        key="success"
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="z-10 flex flex-col items-center gap-6"
-                    >
+                {showContent && (
+                    isSuccess ? (
                         <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                            key="success"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="z-10 flex flex-col items-center gap-6"
                         >
-                            <div className="w-20 h-20 rounded-full border-2 border-emerald-400 flex items-center justify-center"
-                                style={{ boxShadow: '0 0 40px rgba(34, 197, 94, 0.4), inset 0 0 20px rgba(34, 197, 94, 0.1)' }}
+                            <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: 'spring', stiffness: 200, damping: 15 }}
                             >
-                                <motion.svg
-                                    width="40" height="40" viewBox="0 0 24 24" fill="none"
-                                    initial={{ pathLength: 0 }}
-                                    animate={{ pathLength: 1 }}
-                                    transition={{ duration: 0.6, delay: 0.3 }}
+                                <div className="w-24 h-24 rounded-full border-2 border-emerald-400 flex items-center justify-center relative bg-emerald-900/20 backdrop-blur-md"
+                                    style={{ boxShadow: '0 0 40px rgba(34, 197, 94, 0.4), inset 0 0 20px rgba(34, 197, 94, 0.1)' }}
                                 >
-                                    <motion.path
-                                        d="M5 13l4 4L19 7"
-                                        stroke="#34d399"
-                                        strokeWidth="2.5"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
+                                    <div className="absolute inset-0 rounded-full border border-emerald-500/30 animate-ping opacity-20" />
+                                    <motion.svg
+                                        width="48" height="48" viewBox="0 0 24 24" fill="none"
                                         initial={{ pathLength: 0 }}
                                         animate={{ pathLength: 1 }}
                                         transition={{ duration: 0.6, delay: 0.3 }}
-                                    />
-                                </motion.svg>
+                                    >
+                                        <motion.path
+                                            d="M5 13l4 4L19 7"
+                                            stroke="#34d399"
+                                            strokeWidth="2.5"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            initial={{ pathLength: 0 }}
+                                            animate={{ pathLength: 1 }}
+                                            transition={{ duration: 0.6, delay: 0.3 }}
+                                        />
+                                    </motion.svg>
+                                </div>
+                            </motion.div>
+                            <div className="text-center">
+                                <motion.p
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.5 }}
+                                    className="text-emerald-300 font-bold text-xl tracking-widest uppercase font-mono"
+                                >
+                                    <DecodingText text="PERMISSION GRANTED" />
+                                </motion.p>
+                                <motion.p
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 0.6 }}
+                                    transition={{ delay: 0.8 }}
+                                    className="text-emerald-500/50 text-xs tracking-[0.3em] font-mono mt-2"
+                                >
+                                    ESTABLISHING SESSION...
+                                </motion.p>
                             </div>
                         </motion.div>
-                        <motion.p
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.5 }}
-                            className="text-emerald-300 font-medium text-lg tracking-wide"
-                        >
-                            Acesso autorizado
-                        </motion.p>
+                    ) : (
                         <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: 200 }}
-                            transition={{ duration: 1, delay: 0.3 }}
-                            className="h-[2px] bg-gradient-to-r from-transparent via-emerald-500 to-transparent"
-                        />
-                    </motion.div>
-                ) : (
-                    <motion.div
-                        key="login"
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -30, scale: 0.95 }}
-                        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                        className="z-10 w-full max-w-[440px] px-6"
-                    >
-                        {/* Login Card */}
-                        <div
-                            className="relative overflow-hidden"
-                            style={{
-                                background: 'rgba(10, 20, 15, 0.7)',
-                                backdropFilter: 'blur(24px) saturate(150%)',
-                                border: '1px solid rgba(34, 197, 94, 0.15)',
-                                borderRadius: '2px',
-                                boxShadow: '0 0 60px -10px rgba(34, 197, 94, 0.08), 0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-                            }}
+                            key="login"
+                            initial={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
+                            animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                            className="z-10 w-full max-w-[420px] px-4"
                         >
-                            {/* Top accent line */}
-                            <motion.div
-                                className="absolute top-0 left-0 right-0 h-[2px]"
-                                style={{
-                                    background: 'linear-gradient(90deg, transparent, #22c55e, #10b981, transparent)',
-                                }}
-                                animate={{ opacity: [0.5, 1, 0.5] }}
-                                transition={{ duration: 3, repeat: Infinity }}
-                            />
-
-                            {/* Corner accents */}
-                            <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-emerald-500/50" />
-                            <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-emerald-500/50" />
-                            <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-emerald-500/50" />
-                            <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-emerald-500/50" />
-
-                            <div className="p-10">
-                                {/* Logo + Title */}
+                            {/* HUD Container */}
+                            <div className="relative group perspective-1000">
+                                {/* HUD Brackets */}
                                 <motion.div
-                                    className="flex flex-col items-center mb-10"
-                                    initial={{ opacity: 0, y: -20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.2 }}
+                                    className="absolute -inset-4 border-2 border-emerald-500/20 rounded-lg pointer-events-none"
+                                    initial={{ opacity: 0, scale: 1.1 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ duration: 1, delay: 0.2 }}
                                 >
-                                    <motion.div
-                                        className="relative mb-5"
-                                        whileHover={{ scale: 1.05 }}
-                                        transition={{ type: 'spring', stiffness: 300 }}
-                                    >
-                                        <div
-                                            className="absolute inset-0 rounded-full"
-                                            style={{
-                                                background: 'radial-gradient(circle, rgba(34, 197, 94, 0.15), transparent 70%)',
-                                                filter: 'blur(15px)',
-                                                transform: 'scale(2)',
-                                            }}
-                                        />
-                                        <Image
-                                            src="/logo-uninova.png"
-                                            alt="Uninova Hub"
-                                            width={72}
-                                            height={72}
-                                            className="relative"
-                                            style={{ filter: 'drop-shadow(0 0 12px rgba(34, 197, 94, 0.3))' }}
-                                        />
-                                    </motion.div>
+                                    <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-emerald-500" />
+                                    <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-emerald-500" />
+                                    <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-emerald-500" />
+                                    <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-emerald-500" />
+                                </motion.div>
 
-                                    <div className="flex items-baseline gap-1">
-                                        <span
-                                            className="text-4xl font-black tracking-tighter uppercase"
-                                            style={{
-                                                background: 'linear-gradient(135deg, #ffffff 0%, #d1fae5 50%, #34d399 100%)',
-                                                WebkitBackgroundClip: 'text',
-                                                WebkitTextFillColor: 'transparent',
-                                            }}
+                                {/* Background Glass */}
+                                <div
+                                    className="relative overflow-hidden p-8 md:p-10"
+                                    style={{
+                                        background: 'rgba(5, 20, 15, 0.85)',
+                                        backdropFilter: 'blur(12px)',
+                                        border: '1px solid rgba(16, 185, 129, 0.1)',
+                                        clipPath: 'polygon(0 0, 100% 0, 100% 90%, 95% 100%, 0 100%)' // Cut corner
+                                    }}
+                                >
+                                    {/* Scanline */}
+                                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-500/5 to-transparent pointer-events-none animate-scan" style={{ height: '50%', animation: 'scan 4s linear infinite' }} />
+
+                                    {/* Header Section */}
+                                    <div className="flex flex-col items-center mb-10 relative z-20">
+                                        <motion.div
+                                            className="relative mb-6"
+                                            initial={{ rotateY: 90 }}
+                                            animate={{ rotateY: 0 }}
+                                            transition={{ duration: 0.8, delay: 0.4 }}
                                         >
-                                            Hub
-                                        </span>
-                                        <span
-                                            className="text-4xl font-black tracking-tighter uppercase text-emerald-400"
-                                            style={{ fontFamily: 'var(--font-sans)', marginLeft: '-2px' }}
-                                        >
-                                            View
-                                        </span>
+                                            <div className="absolute inset-0 bg-emerald-500/30 blur-2xl rounded-full" />
+                                            <Image
+                                                src="/logo-uninova.png"
+                                                alt="Uninova Logo"
+                                                width={64}
+                                                height={64}
+                                                className="relative z-10 drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]"
+                                            />
+                                        </motion.div>
+
+                                        <div className="flex items-baseline gap-1">
+                                            <DecodingText
+                                                text="HUB"
+                                                className="text-4xl font-black tracking-tighter uppercase text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]"
+                                                trigger={showContent}
+                                            />
+                                            <DecodingText
+                                                text="VIEW"
+                                                className="text-4xl font-black tracking-tighter uppercase text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.3)]"
+                                                trigger={showContent}
+                                            />
+                                        </div>
+
+                                        <div className="mt-2 flex items-center gap-2">
+                                            <div className="h-[1px] w-8 bg-emerald-500/40" />
+                                            <p className="text-[10px] tracking-tight font-bold uppercase text-emerald-500/60 font-sans">
+                                                GESTÃO DE PROJETOS
+                                            </p>
+                                            <div className="h-[1px] w-8 bg-emerald-500/40" />
+                                        </div>
                                     </div>
 
-                                    <motion.p
-                                        className="mt-1 text-[10px] tracking-tight font-bold uppercase text-emerald-500/60 font-sans"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={{ delay: 0.6 }}
-                                    >
-                                        Gestão de Projetos
-                                    </motion.p>
-                                </motion.div>
-
-                                {/* Form */}
-                                <form onSubmit={handleSubmit} className="space-y-5">
-                                    {/* Email Field */}
-                                    <motion.div
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.3 }}
-                                    >
-                                        <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-emerald-400/50 mb-2">
-                                            Email
-                                        </label>
-                                        <div
-                                            className="relative group"
-                                            style={{
-                                                border: `1px solid ${focusedField === 'email' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(34, 197, 94, 0.1)'}`,
-                                                borderRadius: '2px',
-                                                transition: 'border-color 0.3s ease',
-                                            }}
+                                    {/* Login Form */}
+                                    <form onSubmit={handleSubmit} className="space-y-6 relative z-20">
+                                        <motion.div
+                                            initial={{ x: -20, opacity: 0 }}
+                                            animate={{ x: 0, opacity: 1 }}
+                                            transition={{ delay: 0.8 }}
                                         >
-                                            {focusedField === 'email' && (
-                                                <motion.div
-                                                    layoutId="inputGlow"
-                                                    className="absolute inset-0 pointer-events-none"
-                                                    style={{
-                                                        boxShadow: '0 0 20px -5px rgba(34, 197, 94, 0.15), inset 0 0 20px -10px rgba(34, 197, 94, 0.05)',
-                                                    }}
+                                            <label className="text-[10px] font-mono text-emerald-500/60 uppercase tracking-widest mb-1 block">Identity : Email</label>
+                                            <div className="relative group">
+                                                <input
+                                                    type="email"
+                                                    value={email}
+                                                    onChange={(e) => setEmail(e.target.value)}
+                                                    onFocus={() => setFocusedField('email')}
+                                                    onBlur={() => setFocusedField(null)}
+                                                    placeholder="ACCESS ID"
+                                                    required
+                                                    className="w-full bg-[#0a1510] border border-emerald-500/20 text-emerald-100 px-4 py-3 text-sm font-mono focus:border-emerald-500/60 focus:bg-[#0f221a] focus:outline-none transition-all placeholder:text-emerald-500/20"
                                                 />
-                                            )}
-                                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500/40">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                                    <rect x="2" y="4" width="20" height="16" rx="2" />
-                                                    <path d="M22 7l-8.97 5.7a1.94 1.94 0 01-2.06 0L2 7" />
-                                                </svg>
+                                                <div className={`absolute right-0 top-0 bottom-0 w-1 bg-emerald-500 transition-all duration-300 ${focusedField === 'email' ? 'opacity-100' : 'opacity-0'}`} />
                                             </div>
-                                            <input
-                                                id="email-input"
-                                                type="email"
-                                                value={email}
-                                                onChange={(e) => setEmail(e.target.value)}
-                                                onFocus={() => setFocusedField('email')}
-                                                onBlur={() => setFocusedField(null)}
-                                                placeholder="seu@email.com"
-                                                required
-                                                className="w-full bg-transparent pl-10 pr-4 py-3 text-sm text-white/90 placeholder:text-white/15 outline-none font-mono"
-                                                autoComplete="email"
-                                            />
-                                        </div>
-                                    </motion.div>
+                                        </motion.div>
 
-                                    {/* Password Field */}
-                                    <motion.div
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.4 }}
-                                    >
-                                        <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-emerald-400/50 mb-2">
-                                            Senha
-                                        </label>
-                                        <div
-                                            className="relative group"
-                                            style={{
-                                                border: `1px solid ${focusedField === 'password' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(34, 197, 94, 0.1)'}`,
-                                                borderRadius: '2px',
-                                                transition: 'border-color 0.3s ease',
-                                            }}
+                                        <motion.div
+                                            initial={{ x: 20, opacity: 0 }}
+                                            animate={{ x: 0, opacity: 1 }}
+                                            transition={{ delay: 1.0 }}
                                         >
-                                            {focusedField === 'password' && (
-                                                <motion.div
-                                                    layoutId="inputGlow"
-                                                    className="absolute inset-0 pointer-events-none"
-                                                    style={{
-                                                        boxShadow: '0 0 20px -5px rgba(34, 197, 94, 0.15), inset 0 0 20px -10px rgba(34, 197, 94, 0.05)',
-                                                    }}
+                                            <label className="text-[10px] font-mono text-emerald-500/60 uppercase tracking-widest mb-1 block">Security : Verify</label>
+                                            <div className="relative group">
+                                                <input
+                                                    type={showPassword ? 'text' : 'password'}
+                                                    value={password}
+                                                    onChange={(e) => setPassword(e.target.value)}
+                                                    onFocus={() => setFocusedField('password')}
+                                                    onBlur={() => setFocusedField(null)}
+                                                    placeholder="PASSPHRASE"
+                                                    required
+                                                    className="w-full bg-[#0a1510] border border-emerald-500/20 text-emerald-100 px-4 py-3 text-sm font-mono focus:border-emerald-500/60 focus:bg-[#0f221a] focus:outline-none transition-all placeholder:text-emerald-500/20"
                                                 />
-                                            )}
-                                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500/40">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                                                    <path d="M7 11V7a5 5 0 0110 0v4" />
-                                                </svg>
-                                            </div>
-                                            <input
-                                                id="password-input"
-                                                type={showPassword ? 'text' : 'password'}
-                                                value={password}
-                                                onChange={(e) => setPassword(e.target.value)}
-                                                onFocus={() => setFocusedField('password')}
-                                                onBlur={() => setFocusedField(null)}
-                                                placeholder="••••••••••"
-                                                required
-                                                className="w-full bg-transparent pl-10 pr-12 py-3 text-sm text-white/90 placeholder:text-white/15 outline-none font-mono"
-                                                autoComplete="current-password"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowPassword(!showPassword)}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500/30 hover:text-emerald-400 transition-colors"
-                                            >
-                                                {showPassword ? (
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                                        <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 01-4.24-4.24" />
-                                                        <line x1="1" y1="1" x2="23" y2="23" />
-                                                    </svg>
-                                                ) : (
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                                        <circle cx="12" cy="12" r="3" />
-                                                    </svg>
-                                                )}
-                                            </button>
-                                        </div>
-                                    </motion.div>
-
-                                    {/* Error Message */}
-                                    <AnimatePresence>
-                                        {error && (
-                                            <motion.div
-                                                initial={{ opacity: 0, height: 0 }}
-                                                animate={{ opacity: 1, height: 'auto' }}
-                                                exit={{ opacity: 0, height: 0 }}
-                                                className="overflow-hidden"
-                                            >
-                                                <div
-                                                    className="flex items-center gap-2 px-3 py-2.5 text-xs font-mono"
-                                                    style={{
-                                                        background: 'rgba(239, 68, 68, 0.08)',
-                                                        border: '1px solid rgba(239, 68, 68, 0.2)',
-                                                        borderRadius: '2px',
-                                                        color: '#fca5a5',
-                                                    }}
+                                                <div className={`absolute right-0 top-0 bottom-0 w-1 bg-emerald-500 transition-all duration-300 ${focusedField === 'password' ? 'opacity-100' : 'opacity-0'}`} />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500/30 hover:text-emerald-400 transition-colors"
                                                 >
-                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                        <circle cx="12" cy="12" r="10" />
-                                                        <line x1="15" y1="9" x2="9" y2="15" />
-                                                        <line x1="9" y1="9" x2="15" y2="15" />
-                                                    </svg>
-                                                    {error}
-                                                </div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
+                                                    {showPassword ? (
+                                                        <span className="text-[10px] uppercase font-bold">HIDE</span>
+                                                    ) : (
+                                                        <span className="text-[10px] uppercase font-bold">SHOW</span>
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </motion.div>
 
-                                    {/* Submit Button */}
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.5 }}
-                                    >
+                                        <AnimatePresence>
+                                            {error && (
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    className="overflow-hidden"
+                                                >
+                                                    <div className="bg-red-900/20 border border-red-500/30 p-2 text-center">
+                                                        <p className="text-red-400 text-xs font-mono tracking-wide">⚠ ERROR: {error}</p>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+
                                         <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            initial={{ y: 20, opacity: 0 }}
+                                            animate={{ y: 0, opacity: 1 }}
+                                            transition={{ delay: 1.2 }}
                                             type="submit"
                                             disabled={isLoading}
-                                            whileHover={{ scale: 1.01 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            className="relative w-full py-3.5 font-mono text-sm font-semibold tracking-wider uppercase overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
+                                            className="w-full relative overflow-hidden group bg-emerald-600 hover:bg-emerald-500 transition-colors py-4 clip-corner-btn"
                                             style={{
-                                                background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.9), rgba(16, 185, 129, 0.8))',
-                                                color: '#030806',
-                                                borderRadius: '2px',
-                                                border: '1px solid rgba(34, 197, 94, 0.5)',
-                                                boxShadow: '0 0 30px -5px rgba(34, 197, 94, 0.3)',
+                                                clipPath: 'polygon(0 0, 100% 0, 100% 75%, 95% 100%, 0 100%)'
                                             }}
                                         >
-                                            {/* Button shimmer effect */}
-                                            <motion.div
-                                                className="absolute inset-0 pointer-events-none"
-                                                style={{
-                                                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)',
-                                                }}
-                                                animate={{ x: ['-100%', '200%'] }}
-                                                transition={{ duration: 3, repeat: Infinity, repeatDelay: 2 }}
-                                            />
-
-                                            {isLoading ? (
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <motion.div
-                                                        className="w-4 h-4 border-2 border-[#030806]/30 border-t-[#030806] rounded-full"
-                                                        animate={{ rotate: 360 }}
-                                                        transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
-                                                    />
-                                                    Autenticando...
-                                                </div>
-                                            ) : (
-                                                <span className="relative z-10">Acessar Sistema</span>
-                                            )}
+                                            <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10" />
+                                            <div className="relative flex items-center justify-center gap-2">
+                                                {isLoading ? (
+                                                    <>
+                                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                        <span className="text-xs font-bold tracking-[0.2em] font-mono">AUTHENTICATING...</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <span className="text-xs font-black tracking-[0.2em] font-mono">INITIALIZE UPLINK</span>
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                                        </svg>
+                                                    </>
+                                                )}
+                                            </div>
                                         </motion.button>
-                                    </motion.div>
-                                </form>
+                                    </form>
 
-                                {/* Footer */}
-                                <motion.div
-                                    className="mt-8 pt-5 text-center"
-                                    style={{ borderTop: '1px solid rgba(34, 197, 94, 0.08)' }}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.7 }}
-                                >
-                                    <p className="text-[10px] tracking-[0.15em] uppercase font-mono text-white/20">
-                                        Powered by{' '}
-                                        <span className="text-emerald-500/40">Uninova Hub</span>
-                                    </p>
-                                </motion.div>
+                                    {/* Tech Decorations footer */}
+                                    <div className="mt-8 flex justify-between items-end opacity-40">
+                                        <div className="flex flex-col gap-1">
+                                            <div className="h-1 w-1 bg-emerald-500" />
+                                            <div className="h-1 w-1 bg-emerald-500/50" />
+                                            <div className="h-1 w-1 bg-emerald-500/20" />
+                                        </div>
+                                        <div className="text-[8px] font-mono text-emerald-500/80 text-right">
+                                            SYS.VER.2.4.0<br />
+                                            SECURE.ENCRYPTED
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-
-                        {/* Version tag */}
-                        <motion.p
-                            className="text-center mt-4 text-[9px] font-mono text-white/10 tracking-widest"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 1 }}
-                        >
-                            v1.0.0 — SECURE CONNECTION
-                        </motion.p>
-                    </motion.div>
+                        </motion.div>
+                    )
                 )}
             </AnimatePresence>
+
+            {/* Global Styles for perspective */}
+            <style jsx global>{`
+                @keyframes scan {
+                    0% { transform: translateY(-100%); }
+                    100% { transform: translateY(200%); }
+                }
+                .perspective-1000 {
+                    perspective: 1000px;
+                }
+            `}</style>
         </div>
     );
 }
+
