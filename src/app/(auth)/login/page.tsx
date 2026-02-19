@@ -122,7 +122,7 @@ export default function LoginPage() {
                                     transition={{ delay: 0.5 }}
                                     className="text-emerald-300 font-bold text-xl tracking-widest uppercase font-mono"
                                 >
-                                    <DecodingText text="PERMISSION GRANTED" />
+                                    <DecodingText text="ACESSO PERMITIDO" />
                                 </motion.p>
                                 <motion.p
                                     initial={{ opacity: 0 }}
@@ -130,7 +130,7 @@ export default function LoginPage() {
                                     transition={{ delay: 0.8 }}
                                     className="text-emerald-500/50 text-xs tracking-[0.3em] font-mono mt-2"
                                 >
-                                    ESTABLISHING SESSION...
+                                    ESTABALECENDO SESSÃO...
                                 </motion.p>
                             </div>
                         </motion.div>
@@ -217,7 +217,7 @@ export default function LoginPage() {
                                             animate={{ x: 0, opacity: 1 }}
                                             transition={{ delay: 0.8 }}
                                         >
-                                            <label className="text-[10px] font-mono text-emerald-500/60 uppercase tracking-widest mb-1 block">Identity : Email</label>
+                                            <label className="text-[10px] font-mono text-emerald-500/60 uppercase tracking-widest mb-1 block">Identidade : E-mail</label>
                                             <div className="relative group">
                                                 <input
                                                     type="email"
@@ -225,7 +225,7 @@ export default function LoginPage() {
                                                     onChange={(e) => setEmail(e.target.value)}
                                                     onFocus={() => setFocusedField('email')}
                                                     onBlur={() => setFocusedField(null)}
-                                                    placeholder="ACCESS ID"
+                                                    placeholder="ID DE ACESSO"
                                                     required
                                                     className="w-full bg-[#0a1510] border border-emerald-500/20 text-emerald-100 px-4 py-3 text-sm font-mono focus:border-emerald-500/60 focus:bg-[#0f221a] focus:outline-none transition-all placeholder:text-emerald-500/20"
                                                 />
@@ -238,7 +238,7 @@ export default function LoginPage() {
                                             animate={{ x: 0, opacity: 1 }}
                                             transition={{ delay: 1.0 }}
                                         >
-                                            <label className="text-[10px] font-mono text-emerald-500/60 uppercase tracking-widest mb-1 block">Security : Verify</label>
+                                            <label className="text-[10px] font-mono text-emerald-500/60 uppercase tracking-widest mb-1 block">Segurança : Verificar</label>
                                             <div className="relative group">
                                                 <input
                                                     type={showPassword ? 'text' : 'password'}
@@ -246,7 +246,7 @@ export default function LoginPage() {
                                                     onChange={(e) => setPassword(e.target.value)}
                                                     onFocus={() => setFocusedField('password')}
                                                     onBlur={() => setFocusedField(null)}
-                                                    placeholder="PASSPHRASE"
+                                                    placeholder="SENHA"
                                                     required
                                                     className="w-full bg-[#0a1510] border border-emerald-500/20 text-emerald-100 px-4 py-3 text-sm font-mono focus:border-emerald-500/60 focus:bg-[#0f221a] focus:outline-none transition-all placeholder:text-emerald-500/20"
                                                 />
@@ -257,9 +257,9 @@ export default function LoginPage() {
                                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500/30 hover:text-emerald-400 transition-colors"
                                                 >
                                                     {showPassword ? (
-                                                        <span className="text-[10px] uppercase font-bold">HIDE</span>
+                                                        <span className="text-[10px] uppercase font-bold">OCULTAR</span>
                                                     ) : (
-                                                        <span className="text-[10px] uppercase font-bold">SHOW</span>
+                                                        <span className="text-[10px] uppercase font-bold">MOSTRAR</span>
                                                     )}
                                                 </button>
                                             </div>
@@ -298,11 +298,11 @@ export default function LoginPage() {
                                                 {isLoading ? (
                                                     <>
                                                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                        <span className="text-xs font-bold tracking-[0.2em] font-mono">AUTHENTICATING...</span>
+                                                        <span className="text-xs font-bold tracking-[0.2em] font-mono">AUTENTICANDO...</span>
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <span className="text-xs font-black tracking-[0.2em] font-mono">INITIALIZE UPLINK</span>
+                                                        <span className="text-xs font-black tracking-[0.2em] font-mono">INICIAR CONEXÃO</span>
                                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                                                         </svg>
@@ -321,7 +321,7 @@ export default function LoginPage() {
                                         </div>
                                         <div className="text-[8px] font-mono text-emerald-500/80 text-right">
                                             SYS.VER.2.4.0<br />
-                                            SECURE.ENCRYPTED
+                                            SEGURO.CRIPTOGRAFADO
                                         </div>
                                     </div>
                                 </div>

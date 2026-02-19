@@ -216,7 +216,7 @@ export function CinematicIntro({ onComplete }: { onComplete: () => void }) {
                     animate={{ opacity: [0, 1, 1, 0] }}
                     transition={{ duration: 2, times: [0, 0.2, 0.8, 1] }}
                 >
-                    <DecodingText text="SYSTEM INITIALIZING..." />
+                    <DecodingText text="SISTEMA INICIALIZANDO..." />
                 </motion.p>
 
                 <motion.div
@@ -225,7 +225,7 @@ export function CinematicIntro({ onComplete }: { onComplete: () => void }) {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 1 }}
                 >
-                    ESTABLISHING SECURE UPLINK
+                    ESTABELECENDO CONEXÃO SEGURA
                 </motion.div>
             </div>
         </motion.div>
