@@ -206,7 +206,7 @@ export function KanbanColumn({
                         {/* Settings Popover */}
                         {showSettings && (
                             <div
-                                className="absolute right-0 top-full mt-1 w-56 z-[70] p-3 bg-[var(--card)] border border-[var(--card-border)] rounded-lg shadow-xl animate-in fade-in zoom-in-95 duration-200"
+                                className="absolute right-0 top-full mt-1 w-56 z-[70] p-3 bg-zinc-900/95 backdrop-blur-sm border border-zinc-800 rounded-lg shadow-2xl animate-in fade-in zoom-in-95 duration-200"
                                 onClick={(e) => e.stopPropagation()}
                                 onPointerDown={(e) => e.stopPropagation()}
                             >
