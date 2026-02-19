@@ -376,9 +376,9 @@ export default function LoginPage() {
                                         />
                                     </motion.div>
 
-                                    <div className="flex items-baseline gap-2">
+                                    <div className="flex items-baseline gap-1">
                                         <span
-                                            className="text-[28px] font-bold tracking-tight"
+                                            className="text-4xl font-black tracking-tighter uppercase"
                                             style={{
                                                 background: 'linear-gradient(135deg, #ffffff 0%, #d1fae5 50%, #34d399 100%)',
                                                 WebkitBackgroundClip: 'text',
@@ -388,15 +388,15 @@ export default function LoginPage() {
                                             Hub
                                         </span>
                                         <span
-                                            className="text-[28px] font-light tracking-widest text-emerald-400/80"
-                                            style={{ fontFamily: 'var(--font-mono)' }}
+                                            className="text-4xl font-black tracking-tighter uppercase text-emerald-400"
+                                            style={{ fontFamily: 'var(--font-sans)', marginLeft: '-2px' }}
                                         >
                                             View
                                         </span>
                                     </div>
 
                                     <motion.p
-                                        className="mt-2 text-[11px] tracking-[0.3em] uppercase text-emerald-500/40 font-mono"
+                                        className="mt-1 text-[10px] tracking-tight font-bold uppercase text-emerald-500/60 font-sans"
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{ delay: 0.6 }}
