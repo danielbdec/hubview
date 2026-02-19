@@ -55,7 +55,7 @@ export function Sidebar() {
                             className="flex items-center gap-2.5"
                         >
                             <Image src="/logo-uninova.png" alt="HubView" width={24} height={24} className="shrink-0" />
-                            <span className="font-mono font-bold tracking-wider text-[var(--foreground)]">HUBVIEW</span>
+                            <span className="font-sans font-black tracking-tighter uppercase text-[var(--foreground)]">HubView</span>
                         </motion.div>
                     ) : (
                         <motion.div
@@ -113,7 +113,7 @@ export function Sidebar() {
                                         initial={{ opacity: 0, x: -10 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         exit={{ opacity: 0, x: -10 }}
-                                        className="font-mono text-sm tracking-wide whitespace-nowrap"
+                                        className="font-sans text-[13px] font-bold tracking-tighter whitespace-nowrap"
                                     >
                                         {item.label}
                                     </motion.span>
@@ -144,7 +144,7 @@ export function Sidebar() {
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -10 }}
-                                className="font-mono text-xs tracking-wide"
+                                className="font-sans text-xs font-bold tracking-tighter"
                             >
                                 Sair
                             </motion.span>
@@ -153,7 +153,7 @@ export function Sidebar() {
                 </button>
 
                 {/* System Status */}
-                <div className={cn("text-[10px] text-[var(--muted-foreground)] font-mono flex items-center gap-2", isCollapsed && "justify-center")}>
+                <div className={cn("text-[10px] text-[var(--muted-foreground)] font-sans font-semibold tracking-tighter uppercase flex items-center gap-2", isCollapsed && "justify-center")}>
                     <div className="w-2 h-2 rounded-full bg-[var(--primary)] animate-pulse" />
                     {!isCollapsed && <span>SISTEMA ONLINE</span>}
                 </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Save, Trash2, CheckSquare, Plus, Eye, EyeOff, User } from 'lucide-react';
+import { X, Save, Trash2, CheckSquare, Plus, Eye, EyeOff, User, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { createPortal } from 'react-dom';
@@ -10,6 +10,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { Task } from '@/store/kanbanStore';
 
 type ChecklistItem = NonNullable<Task['checklist']>[number];
+
+interface UserOption {
+    id: string;
+    name: string;
+    avatar?: string;
+}
 
 interface TaskModalProps {
     task: Task | null;
@@ -24,19 +30,48 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
     const [formData, setFormData] = useState<Partial<Task>>({});
     const [newChecklistItem, setNewChecklistItem] = useState('');
     const [hideCompleted, setHideCompleted] = useState(false);
+    const [users, setUsers] = useState<UserOption[]>([]);
+    const [isLoadingUsers, setIsLoadingUsers] = useState(false);
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
+    // Fetch users list for assignee selector
+    useEffect(() => {
+        if (!isOpen) return;
+        setIsLoadingUsers(true);
+        fetch('/api/users/list')
+            .then(res => res.json())
+            .then((data) => {
+                if (Array.isArray(data)) {
+                    setUsers(data);
+                }
+            })
+            .catch(err => console.error('Erro ao buscar usuários:', err))
+            .finally(() => setIsLoadingUsers(false));
+    }, [isOpen]);
+
     useEffect(() => {
         if (task) {
+            // Get logged-in user name from localStorage for default assignee
+            let defaultAssignee = task.assignee || '';
+            if (!defaultAssignee) {
+                try {
+                    const stored = localStorage.getItem('hubview_user');
+                    if (stored) {
+                        const user = JSON.parse(stored);
+                        defaultAssignee = user.name || '';
+                    }
+                } catch { /* ignore */ }
+            }
+
             setFormData({
                 content: task.content,
                 description: task.description || '',
                 tags: task.tags || [],
                 priority: task.priority,
-                assignee: task.assignee || '',
+                assignee: defaultAssignee,
                 startDate: task.startDate,
                 endDate: task.endDate,
                 checklist: task.checklist || [],
@@ -114,13 +149,25 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                     <div className="space-y-2">
                         <label className="text-xs font-mono text-[var(--primary)] uppercase tracking-wider">Responsável</label>
                         <div className="relative">
-                            <User className="absolute left-2.5 top-2.5 h-4 w-4 text-[var(--muted-foreground)]" />
-                            <Input
+                            <User className="absolute left-2.5 top-2.5 h-4 w-4 text-[var(--muted-foreground)] pointer-events-none z-10" />
+                            <select
                                 value={formData.assignee || ''}
                                 onChange={(e) => setFormData({ ...formData, assignee: e.target.value })}
-                                className="pl-9 bg-[var(--input-bg)] border-[var(--input-border)] text-[var(--foreground)] focus:border-[var(--primary)] text-sm"
-                                placeholder="Nome do responsável..."
-                            />
+                                className="w-full h-10 pl-9 pr-8 bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--foreground)] text-sm focus:outline-none focus:border-[var(--primary)] transition-colors rounded-none appearance-none cursor-pointer [color-scheme:dark]"
+                                style={{ colorScheme: 'dark' }}
+                            >
+                                <option value="" className="bg-[#1a1a2e] text-white">Sem responsável</option>
+                                {isLoadingUsers ? (
+                                    <option disabled className="bg-[#1a1a2e] text-zinc-400">Carregando...</option>
+                                ) : (
+                                    users.map((u) => (
+                                        <option key={u.id} value={u.name} className="bg-[#1a1a2e] text-white">
+                                            {u.name}
+                                        </option>
+                                    ))
+                                )}
+                            </select>
+                            <ChevronDown className="absolute right-2.5 top-2.5 h-4 w-4 text-[var(--muted-foreground)] pointer-events-none" />
                         </div>
                     </div>
 

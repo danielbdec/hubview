@@ -1,37 +1,62 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { Bell, Search, User } from 'lucide-react';
-import { Button } from '@/components/ui/Button'; // Assuming Button is available
-import { Input } from '@/components/ui/Input';   // Assuming Input is available
+import { Bell, User } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/Button';
+
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { useProjectStore } from '@/store/kanbanStore';
+
+const breadnameMap: Record<string, string> = {
+    'projects': 'PROJETOS',
+    'dashboard': 'DASHBOARD',
+    'logs': 'LOGS',
+    'settings': 'CONFIGURAÇÕES'
+};
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function Header() {
     const pathname = usePathname();
-    const breadcrumbs = pathname.split('/').filter(Boolean);
+    const { projects } = useProjectStore();
+    const segments = pathname.split('/').filter(Boolean);
 
-    const breadnameMap: Record<string, string> = {
-        'projects': 'PROJETOS',
-        'dashboard': 'DASHBOARD',
-        'logs': 'LOGS',
-        'settings': 'CONFIGURAÇÕES'
-    };
+    // Build smart breadcrumb: resolve UUIDs to project names
+    const breadcrumbParts = segments.map(seg => {
+        if (breadnameMap[seg]) return breadnameMap[seg];
+        if (UUID_REGEX.test(seg)) {
+            const project = projects.find(p => p.id === seg);
+            return project ? project.title.toUpperCase() : null; // null = skip while loading
+        }
+        return seg.toUpperCase();
+    }).filter(Boolean) as string[];
+
+    const displayText = breadcrumbParts.length > 0
+        ? breadcrumbParts.join(' / ')
+        : 'DASHBOARD';
 
     return (
         <header className="h-16 flex items-center justify-between px-6 border-b border-[var(--header-border)] bg-[var(--header)] backdrop-blur-md sticky top-0 z-40">
             {/* Breadcrumbs / Page Title */}
-            <div className="flex items-center gap-2">
-                <span className="text-[var(--muted-foreground)] font-mono text-xs uppercase tracking-wider">/</span>
-                <span className="text-[var(--foreground)] font-bold font-mono uppercase tracking-widest">
-                    {breadcrumbs.length > 0 ? (breadnameMap[breadcrumbs[breadcrumbs.length - 1]] || breadcrumbs[breadcrumbs.length - 1]) : 'DASHBOARD'}
-                </span>
+            <div className="flex items-center gap-2 overflow-hidden">
+                <span className="text-[var(--muted-foreground)] font-sans text-xs uppercase tracking-tight">/</span>
+                <AnimatePresence mode="wait">
+                    <motion.span
+                        key={displayText}
+                        initial={{ opacity: 0, x: 20, filter: 'blur(8px)' }}
+                        animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                        exit={{ opacity: 0, x: -20, filter: 'blur(8px)' }}
+                        transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        className="text-[var(--foreground)] font-black font-sans uppercase tracking-tighter text-sm"
+                    >
+                        {displayText}
+                    </motion.span>
+                </AnimatePresence>
             </div>
 
             {/* Actions */}
             <div className="flex items-center gap-4">
-                <div className="w-64 hidden md:block">
-                    <Input placeholder="PESQUISAR..." className="h-8 text-xs bg-[var(--input-bg)] border-[var(--input-border)] text-[var(--foreground)]" />
-                </div>
 
                 <div className="flex items-center gap-2 border-l border-[var(--header-border)] pl-4">
                     <ThemeToggle />

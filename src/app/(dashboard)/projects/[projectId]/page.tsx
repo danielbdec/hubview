@@ -15,7 +15,7 @@ import {
     DragEndEvent,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates, SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
-import { Plus, Download, Upload, RotateCcw, ArrowLeft, LayoutGrid, Loader2 } from 'lucide-react';
+import { Plus, Download, Upload, RefreshCw, ArrowLeft, LayoutGrid, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { KanbanColumn } from '@/components/board/KanbanColumn';
 import { KanbanCard } from '@/components/board/KanbanCard';
@@ -43,17 +43,28 @@ export default function KanbanBoardPage() {
         moveTask,
         toggleColumnDone,
         setColumns,
+        fetchProjects,
         fetchBoardData,
+        isLoadingProjects,
         isLoadingBoard
     } = useProjectStore();
 
-    // Effect to synchronization
+    const hasFetchedRef = useRef(false);
+
+    // Fetch projects first (needed on browser reload), then board data
     useEffect(() => {
-        if (projectId) {
-            setActiveProject(projectId);
+        if (!projectId) return;
+        setActiveProject(projectId);
+
+        if (projects.length === 0 && !hasFetchedRef.current) {
+            hasFetchedRef.current = true;
+            fetchProjects().then(() => {
+                fetchBoardData(projectId);
+            });
+        } else {
             fetchBoardData(projectId);
         }
-    }, [projectId, setActiveProject, fetchBoardData]);
+    }, [projectId]);
 
     const activeProject = projects.find(p => p.id === projectId);
 
@@ -182,12 +193,9 @@ export default function KanbanBoardPage() {
         reader.readAsText(file);
     };
 
-    const handleReset = () => {
-        if (confirm('Tem certeza? Isso apagará todas as tarefas deste projeto.')) {
-            // We can manually reset columns to default template or empty
-            // But the store doesn't have a "resetProject" action exposed yet.
-            // Let's just create a new project behavior or empty the columns.
-            setColumns([]);
+    const handleRefresh = () => {
+        if (projectId) {
+            fetchBoardData(projectId);
         }
     };
 
@@ -260,9 +268,18 @@ export default function KanbanBoardPage() {
     if (!mounted) return null;
 
     if (!activeProject) {
+        // Still loading — show spinner instead of 'not found'
+        if (isLoadingProjects || isLoadingBoard) {
+            return (
+                <div className="flex flex-col items-center justify-center h-full">
+                    <Loader2 className="animate-spin text-[var(--primary)] mb-4" size={48} />
+                    <p className="text-[var(--muted-foreground)] font-mono text-sm animate-pulse">Carregando projeto...</p>
+                </div>
+            );
+        }
         return (
             <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                <p>Projeto não encontrado ou carregando...</p>
+                <p>Projeto não encontrado.</p>
                 <Button variant="ghost" onClick={() => router.push('/projects')} className="mt-4">
                     Voltar para Projetos
                 </Button>
@@ -303,8 +320,8 @@ export default function KanbanBoardPage() {
                             className="hidden"
                             accept=".json"
                         />
-                        <Button variant="ghost" size="sm" onClick={handleReset} title="Resetar Board" className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)]">
-                            <RotateCcw size={16} />
+                        <Button variant="ghost" size="sm" onClick={handleRefresh} title="Atualizar Board" className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)]">
+                            <RefreshCw size={16} className={isLoadingBoard ? 'animate-spin' : ''} />
                         </Button>
                         <Button variant="secondary" size="sm" onClick={handleExport} title="Exportar JSON" className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] border border-[var(--card-border)] bg-[var(--card)] hover:bg-[var(--card-hover)]">
                             <Download size={16} />

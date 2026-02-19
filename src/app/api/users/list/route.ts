@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 const N8N_BASE = process.env.N8N_API_URL;
 const API_KEY = process.env.N8N_API_KEY;
 
-export async function POST(request: Request) {
+export async function GET() {
     if (!N8N_BASE) {
         return NextResponse.json(
             { error: 'N8N_API_URL não configurada' },
@@ -12,16 +12,11 @@ export async function POST(request: Request) {
     }
 
     try {
-        const body = await request.json();
-
-        // Webhook: hubview-columns-update
-        const response = await fetch(`${N8N_BASE}/hubview-columns-update`, {
-            method: 'POST',
+        const response = await fetch(`${N8N_BASE}/hubview-users-list`, {
+            method: 'GET',
             headers: {
-                'Content-Type': 'application/json',
                 ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
             },
-            body: JSON.stringify(body),
         });
 
         if (!response.ok) {
@@ -29,11 +24,20 @@ export async function POST(request: Request) {
         }
 
         const data = await response.json();
-        return NextResponse.json(data);
+        const users = Array.isArray(data) ? data : [data];
+
+        // Return only id and name for the selector
+        const mapped = users.map((u: any) => ({
+            id: u.id,
+            name: u.name,
+            avatar: u.avatar || '',
+        }));
+
+        return NextResponse.json(mapped);
     } catch (error) {
-        console.error('Erro ao atualizar coluna:', error);
+        console.error('Erro ao listar usuários:', error);
         return NextResponse.json(
-            { error: 'Falha ao atualizar coluna' },
+            { error: 'Falha ao buscar usuários' },
             { status: 502 }
         );
     }

@@ -47,10 +47,18 @@ export function KanbanColumn({
     onEditTask,
     onToggleDone
 }: KanbanColumnProps) {
-    const taskIds = useMemo(() => column.tasks.map((task) => task.id), [column.tasks]);
+    const tasks = column.tasks || [];
+    const taskIds = useMemo(() => tasks.map((task) => task.id), [tasks]);
 
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [titleInput, setTitleInput] = useState(column.title);
+
+    // Sync titleInput when column.title changes from the store
+    useEffect(() => {
+        if (!isEditingTitle) {
+            setTitleInput(column.title);
+        }
+    }, [column.title, isEditingTitle]);
     const [showSettings, setShowSettings] = useState(false);
     const [showDeleteColumnConfirm, setShowDeleteColumnConfirm] = useState(false);
     const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
@@ -159,25 +167,28 @@ export function KanbanColumn({
                             value={titleInput}
                             onChange={(e) => setTitleInput(e.target.value)}
                             onBlur={handleTitleSubmit}
-                            onKeyDown={(e) => e.key === 'Enter' && handleTitleSubmit()}
+                            onKeyDown={(e) => {
+                                e.stopPropagation();
+                                if (e.key === 'Enter') handleTitleSubmit();
+                            }}
                             className="bg-[var(--background)] text-sm font-bold font-mono text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--col-color)] w-full uppercase tracking-wider px-2 py-1 rounded"
                             autoFocus
                             onFocus={(e) => e.target.select()}
                         />
                     ) : (
-                        <div className="flex items-center gap-2 overflow-hidden">
+                        <div className="flex items-center gap-2 min-w-0 w-full">
                             <h3
                                 onClick={() => setIsEditingTitle(true)}
                                 className={cn(
-                                    "text-sm font-bold font-mono text-[var(--foreground)] uppercase tracking-wider truncate cursor-text hover:text-[var(--col-color)] transition-colors",
+                                    "text-sm font-bold font-mono text-[var(--foreground)] uppercase tracking-wider truncate cursor-text hover:text-[var(--col-color)] transition-colors min-w-0",
                                     column.isDone && "text-emerald-600 dark:text-emerald-400"
                                 )}
                                 title={column.title}
                             >
                                 {column.title}
                             </h3>
-                            <span className="text-[10px] text-[var(--muted-foreground)] font-mono bg-[var(--background)] px-1.5 py-0.5 rounded-full border border-[var(--card-border)]">
-                                {column.tasks.length}
+                            <span className="text-[10px] text-[var(--muted-foreground)] font-mono bg-[var(--background)] px-1.5 py-0.5 rounded-full border border-[var(--card-border)] flex-shrink-0 whitespace-nowrap">
+                                {tasks.length}
                             </span>
                         </div>
                     )}
@@ -263,10 +274,10 @@ export function KanbanColumn({
                                                 "text-sm font-bold transition-colors",
                                                 column.isDone ? "text-emerald-500" : "text-[var(--foreground)]"
                                             )}>
-                                                Concluir Tarefas
+                                                Etapa de Conclusão
                                             </p>
                                             <p className="text-[10px] text-[var(--muted-foreground)] leading-tight mt-0.5 font-medium opacity-80">
-                                                Marca tarefas como 100%
+                                                Tarefas nesse painel serão consideradas como concluídas
                                             </p>
                                         </div>
                                         {column.isDone && <CheckCircle2 size={14} className="text-emerald-500 animate-in zoom-in spin-in-90 duration-300" />}
@@ -295,15 +306,15 @@ export function KanbanColumn({
             {/* Tasks Container */}
             <div className={cn(
                 "flex-1 p-2 overflow-y-auto min-h-0 space-y-2 scrollbar-thin scrollbar-thumb-[var(--muted-foreground)]/20 scrollbar-track-transparent",
-                column.tasks.length === 0 && "flex items-center justify-center border-2 border-dashed border-[var(--card-border)]/50 rounded-sm m-2 bg-[var(--card-hover)]/30"
+                tasks.length === 0 && "flex items-center justify-center border-2 border-dashed border-[var(--card-border)]/50 rounded-sm m-2 bg-[var(--card-hover)]/30"
             )}>
-                {column.tasks.length === 0 && (
+                {tasks.length === 0 && (
                     <div className="text-center p-4 opacity-50 select-none pointer-events-none">
                         <p className="text-[10px] font-mono uppercase text-[var(--muted-foreground)]">Sem Tarefas</p>
                     </div>
                 )}
                 <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-                    {column.tasks.map((task) => (
+                    {tasks.map((task) => (
                         <KanbanCard
                             key={task.id}
                             task={task}
