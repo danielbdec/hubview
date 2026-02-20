@@ -14,6 +14,10 @@ export async function POST(request: Request) {
     try {
         const body = await request.json();
 
+        if (!body.taskId) {
+            return NextResponse.json([]);
+        }
+
         // Webhook: hubview-activities-list
         const response = await fetch(`${N8N_BASE}/hubview-activities-list`, {
             method: 'POST',
@@ -32,9 +36,8 @@ export async function POST(request: Request) {
         return NextResponse.json(data);
     } catch (error) {
         console.error('Erro ao listar atividades da tarefa:', error);
-        return NextResponse.json(
-            { error: 'Falha ao listar atividades' },
-            { status: 502 }
-        );
+        // Fallback gracefully to empty array so the UI doesn't crash 
+        // if a legacy taskId in non-UUID format causes MS SQL to throw error 8169
+        return NextResponse.json([]);
     }
 }
