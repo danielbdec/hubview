@@ -22,7 +22,7 @@ import { KanbanCard } from '@/components/board/KanbanCard';
 import { TaskModal } from '@/components/board/TaskModal';
 import { createPortal } from 'react-dom';
 import { useProjectStore, Task, Column } from '@/store/kanbanStore';
-import { Segmented, Input, Select } from 'antd';
+import { Segmented, Input, Select, ConfigProvider, theme } from 'antd';
 import ProjectListView from './ProjectListView';
 import ProjectCalendarView from './ProjectCalendarView';
 
@@ -348,73 +348,110 @@ export default function KanbanBoardPage() {
                     </div>
 
                     {/* Control Bar */}
-                    <div className="flex items-center justify-between bg-[var(--sidebar)]/80 p-2 border-y border-[var(--sidebar-border)] backdrop-blur-sm -mx-6 px-6">
-                        <div className="flex items-center gap-3 flex-1 overflow-x-auto scrollbar-none py-1">
-                            <Input
-                                placeholder="Buscar tarefas..."
-                                prefix={<Search size={14} className="text-[var(--muted-foreground)]" />}
-                                className="w-64 rounded-none bg-[var(--input-bg)]/80 border-[var(--input-border)] text-[var(--foreground)] hover:border-[var(--primary)] focus:border-[var(--primary)] h-8 text-sm"
-                                value={filters.search}
-                                onChange={e => setFilters(f => ({ ...f, search: e.target.value }))}
-                            />
+                    <ConfigProvider
+                        theme={{
+                            algorithm: theme.darkAlgorithm,
+                            token: {
+                                colorBgContainer: 'transparent',
+                                colorBorder: 'var(--input-border)',
+                                colorText: 'var(--foreground)',
+                                colorTextPlaceholder: 'var(--muted-foreground)',
+                                borderRadius: 0,
+                                fontFamily: 'var(--font-geist-sans)',
+                                colorPrimary: 'var(--primary)',
+                                controlItemBgActive: 'var(--card-hover)',
+                            },
+                            components: {
+                                Select: {
+                                    selectorBg: 'var(--input-bg)',
+                                    optionSelectedBg: 'var(--primary)',
+                                    optionSelectedColor: '#000000',
+                                    optionActiveBg: 'var(--card-hover)',
+                                },
+                                Segmented: {
+                                    itemSelectedBg: 'var(--primary)',
+                                    itemSelectedColor: '#000000',
+                                    trackBg: 'var(--input-bg)',
+                                    itemHoverBg: 'var(--card-hover)',
+                                    itemHoverColor: 'var(--foreground)',
+                                }
+                            }
+                        }}
+                    >
+                        <div className="flex items-center justify-between bg-[var(--sidebar)]/80 p-2 border-y border-[var(--sidebar-border)] backdrop-blur-sm -mx-6 px-6">
+                            <div className="flex items-center gap-3 flex-1 overflow-x-auto scrollbar-none py-1">
+                                <Input
+                                    placeholder="Buscar tarefas..."
+                                    prefix={<Search size={14} className="text-[var(--muted-foreground)]" />}
+                                    className="w-64 rounded-none bg-[var(--input-bg)] border-[var(--input-border)] text-[var(--foreground)] hover:border-[var(--primary)] focus:border-[var(--primary)] h-8 text-sm"
+                                    value={filters.search}
+                                    onChange={e => setFilters(f => ({ ...f, search: e.target.value }))}
+                                />
 
-                            <Select
-                                mode="multiple"
-                                allowClear
-                                placeholder="Prioridade"
-                                className="min-w-[140px] [&_.ant-select-selector]:rounded-none [&_.ant-select-selector]:bg-[var(--input-bg)] [&_.ant-select-selector]:border-[var(--input-border)] [&_.ant-select-selector]:!min-h-[32px] font-mono text-xs"
-                                value={filters.priority}
-                                onChange={v => setFilters(f => ({ ...f, priority: v }))}
-                                options={[
-                                    { label: 'Alta', value: 'high' },
-                                    { label: 'Média', value: 'medium' },
-                                    { label: 'Baixa', value: 'low' },
-                                ]}
-                            />
+                                <Select
+                                    mode="multiple"
+                                    allowClear
+                                    placeholder="Prioridade"
+                                    maxTagCount="responsive"
+                                    className="min-w-[140px] [&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-[var(--input-bg)] [&_.ant-select-selector]:!border-[var(--input-border)] [&_.ant-select-selector]:!min-h-[32px] font-mono text-xs shadow-none hover:[&_.ant-select-selector]:!border-[var(--primary)]"
+                                    value={filters.priority}
+                                    onChange={v => setFilters(f => ({ ...f, priority: v }))}
+                                    options={[
+                                        { label: 'Alta', value: 'high' },
+                                        { label: 'Média', value: 'medium' },
+                                        { label: 'Baixa', value: 'low' },
+                                    ]}
+                                    popupClassName="!rounded-none border border-[var(--input-border)] !bg-[var(--card)] [&_.ant-select-item]:!rounded-none [&_.ant-select-item-option-selected]:!font-bold [&_.ant-select-item]:!font-mono [&_.ant-select-item]:!text-xs"
+                                />
 
-                            <Select
-                                mode="multiple"
-                                allowClear
-                                placeholder="Responsável"
-                                className="min-w-[160px] [&_.ant-select-selector]:rounded-none [&_.ant-select-selector]:bg-[var(--input-bg)] [&_.ant-select-selector]:border-[var(--input-border)] [&_.ant-select-selector]:!min-h-[32px] font-mono text-xs"
-                                value={filters.assignees}
-                                onChange={v => setFilters(f => ({ ...f, assignees: v }))}
-                                options={uniqueAssignees.map(a => ({ label: a, value: a }))}
-                            />
+                                <Select
+                                    mode="multiple"
+                                    allowClear
+                                    placeholder="Responsável"
+                                    maxTagCount="responsive"
+                                    className="min-w-[160px] [&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-[var(--input-bg)] [&_.ant-select-selector]:!border-[var(--input-border)] [&_.ant-select-selector]:!min-h-[32px] font-mono text-xs shadow-none hover:[&_.ant-select-selector]:!border-[var(--primary)]"
+                                    value={filters.assignees}
+                                    onChange={v => setFilters(f => ({ ...f, assignees: v }))}
+                                    options={uniqueAssignees.map(a => ({ label: a, value: a }))}
+                                    popupClassName="!rounded-none border border-[var(--input-border)] !bg-[var(--card)] [&_.ant-select-item]:!rounded-none [&_.ant-select-item-option-selected]:!font-bold [&_.ant-select-item]:!font-mono [&_.ant-select-item]:!text-xs"
+                                />
 
-                            <Select
-                                mode="multiple"
-                                allowClear
-                                placeholder="Tags"
-                                className="min-w-[160px] [&_.ant-select-selector]:rounded-none [&_.ant-select-selector]:bg-[var(--input-bg)] [&_.ant-select-selector]:border-[var(--input-border)] [&_.ant-select-selector]:!min-h-[32px] font-mono text-xs"
-                                value={filters.tags}
-                                onChange={v => setFilters(f => ({ ...f, tags: v }))}
-                                options={uniqueTags.map(t => ({ label: t.name, value: t.name }))}
-                            />
+                                <Select
+                                    mode="multiple"
+                                    allowClear
+                                    placeholder="Tags"
+                                    maxTagCount="responsive"
+                                    className="min-w-[160px] [&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-[var(--input-bg)] [&_.ant-select-selector]:!border-[var(--input-border)] [&_.ant-select-selector]:!min-h-[32px] font-mono text-xs shadow-none hover:[&_.ant-select-selector]:!border-[var(--primary)]"
+                                    value={filters.tags}
+                                    onChange={v => setFilters(f => ({ ...f, tags: v }))}
+                                    options={uniqueTags.map(t => ({ label: t.name, value: t.name }))}
+                                    popupClassName="!rounded-none border border-[var(--input-border)] !bg-[var(--card)] [&_.ant-select-item]:!rounded-none [&_.ant-select-item-option-selected]:!font-bold [&_.ant-select-item]:!font-mono [&_.ant-select-item]:!text-xs"
+                                />
 
-                            {hasActiveFilters && (
-                                <button
-                                    onClick={clearFilters}
-                                    className="text-[10px] font-mono uppercase tracking-wider text-[var(--muted-foreground)] hover:text-red-500 transition-colors flex items-center gap-1 shrink-0 ml-2"
-                                >
-                                    <Filter size={12} /> Limpar
-                                </button>
-                            )}
+                                {hasActiveFilters && (
+                                    <button
+                                        onClick={clearFilters}
+                                        className="text-[10px] font-mono uppercase tracking-wider text-[var(--muted-foreground)] hover:text-red-500 transition-colors flex items-center gap-1 shrink-0 ml-2 border border-transparent hover:border-red-900/50 bg-transparent hover:bg-red-500/10 px-2 py-1"
+                                    >
+                                        <Filter size={12} /> Limpar
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="ml-4 shrink-0 border border-[var(--input-border)] bg-[var(--input-bg)] p-0.5 flex">
+                                <Segmented
+                                    value={activeView}
+                                    onChange={(value) => setActiveView(value as ViewMode)}
+                                    className="bg-transparent font-mono text-[10px] tracking-widest uppercase [&_.ant-segmented-item-selected]:bg-[var(--primary)] [&_.ant-segmented-item-selected]:text-black [&_.ant-segmented-item-selected]:font-bold [&_.ant-segmented-item-selected]:!rounded-none [&_.ant-segmented-item]:!rounded-none [&_.ant-segmented-item]:text-[var(--muted-foreground)]"
+                                    options={[
+                                        { label: <div className="flex items-center gap-1.5 px-3 py-1"><KanbanIcon size={14} /> Kanban</div>, value: 'kanban' },
+                                        { label: <div className="flex items-center gap-1.5 px-3 py-1"><ListIcon size={14} /> Lista</div>, value: 'list' },
+                                        { label: <div className="flex items-center gap-1.5 px-3 py-1"><CalendarIcon size={14} /> Calendário</div>, value: 'calendar' },
+                                    ]}
+                                />
+                            </div>
                         </div>
-
-                        <div className="ml-4 shrink-0 border border-[var(--input-border)] bg-[var(--input-bg)] p-0.5 flex">
-                            <Segmented
-                                value={activeView}
-                                onChange={(value) => setActiveView(value as ViewMode)}
-                                className="bg-transparent font-mono text-xs tracking-wider uppercase [&_.ant-segmented-item-selected]:bg-[var(--primary)] [&_.ant-segmented-item-selected]:text-black [&_.ant-segmented-item-selected]:rounded-none [&_.ant-segmented-item]:rounded-none"
-                                options={[
-                                    { label: <div className="flex items-center gap-1.5 px-2 py-0.5"><KanbanIcon size={14} /> Kanban</div>, value: 'kanban' },
-                                    { label: <div className="flex items-center gap-1.5 px-2 py-0.5"><ListIcon size={14} /> Lista</div>, value: 'list' },
-                                    { label: <div className="flex items-center gap-1.5 px-2 py-0.5"><CalendarIcon size={14} /> Calendário</div>, value: 'calendar' },
-                                ]}
-                            />
-                        </div>
-                    </div>
+                    </ConfigProvider>
                 </div>
 
                 {isLoadingBoard ? (
