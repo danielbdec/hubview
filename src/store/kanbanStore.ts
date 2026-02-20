@@ -353,7 +353,11 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
                         assignee: t.createdBy,
                         startDate: t.startDate_planned || t.startDate || t.start_date, // Support new field, camelCase and snake_case
                         endDate: t.endDate_planned || t.endDate || t.end_date,       // Support new field, camelCase and snake_case
-                        checklist: [],
+                        checklist: (() => {
+                            if (!t.checklist) return [];
+                            try { return typeof t.checklist === 'string' ? JSON.parse(t.checklist) : t.checklist; }
+                            catch { return []; }
+                        })(),
                         position: t.position,
                         syncStatus: 'synced' as const
                     });
@@ -679,6 +683,14 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             const realId = result.id || result[0]?.id;
 
             if (realId) {
+                // Trigger checklist save if new task contains checklist
+                if (task.checklist && task.checklist.length > 0) {
+                    api.post('/api/tasks/checklist/save', {
+                        taskId: realId,
+                        checklist: task.checklist
+                    }).catch(err => console.error('Error saving checklist on task creation:', err));
+                }
+
                 set((state) => ({
                     projects: state.projects.map(p => {
                         if (p.id === state.activeProjectId) {
@@ -753,7 +765,21 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
                 ...(updates.startDate ? { startDate_planned: updates.startDate } : {}),
                 ...(updates.endDate ? { endDate_planned: updates.endDate } : {})
             };
+
+            // Delete checklist from update payload if it exists so n8n update node doesn't fail
+            if ('checklist' in payload) {
+                delete payload.checklist;
+            }
+
             await api.post('/api/tasks/update', payload);
+
+            // Trigger checklist save in parallel if it was updated
+            if (updates.checklist) {
+                api.post('/api/tasks/checklist/save', {
+                    taskId,
+                    checklist: updates.checklist
+                }).catch(err => console.error('Error syncing checklist:', err));
+            }
 
             set((state) => {
                 const { activeProjectId, projects } = state;

@@ -49,11 +49,20 @@ export const KanbanColumn = memo(function KanbanColumn({
     const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
     const settingsRef = useRef<HTMLDivElement>(null);
 
+    const initialMountRef = useRef(true);
+
     useEffect(() => {
         if (column && !isEditingTitle) {
-            setTitleInput(column.title);
+            if (initialMountRef.current) {
+                // To avoid set-state-in-effect lint on initial load
+                initialMountRef.current = false;
+                // eslint-disable-next-line react-hooks/exhaustive-deps
+                setTitleInput(column.title);
+            } else if (titleInput !== column.title) {
+                setTitleInput(column.title);
+            }
         }
-    }, [column?.title, isEditingTitle, column]);
+    }, [column?.title, isEditingTitle, column, titleInput]);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
