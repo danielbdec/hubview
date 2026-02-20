@@ -401,7 +401,7 @@ export default function KanbanBoardPage() {
                                         { label: 'Média', value: 'medium' },
                                         { label: 'Baixa', value: 'low' },
                                     ]}
-                                    popupClassName="!rounded-none border border-[var(--input-border)] !bg-[#0a0a0a] [&_.ant-select-item]:!rounded-none [&_.ant-select-item-option-selected]:!font-bold [&_.ant-select-item]:!font-mono [&_.ant-select-item]:!text-xs"
+                                    classNames={{ popup: { root: '!rounded-none border border-[var(--input-border)] !bg-[#0a0a0a] [&_.ant-select-item]:!rounded-none [&_.ant-select-item-option-selected]:!font-bold [&_.ant-select-item]:!font-mono [&_.ant-select-item]:!text-xs' } }}
                                 />
 
                                 <Select
@@ -413,7 +413,7 @@ export default function KanbanBoardPage() {
                                     value={filters.assignees}
                                     onChange={v => setFilters(f => ({ ...f, assignees: v }))}
                                     options={uniqueAssignees.map(a => ({ label: a, value: a }))}
-                                    popupClassName="!rounded-none border border-[var(--input-border)] !bg-[#0a0a0a] [&_.ant-select-item]:!rounded-none [&_.ant-select-item-option-selected]:!font-bold [&_.ant-select-item]:!font-mono [&_.ant-select-item]:!text-xs"
+                                    classNames={{ popup: { root: '!rounded-none border border-[var(--input-border)] !bg-[#0a0a0a] [&_.ant-select-item]:!rounded-none [&_.ant-select-item-option-selected]:!font-bold [&_.ant-select-item]:!font-mono [&_.ant-select-item]:!text-xs' } }}
                                 />
 
                                 <Select
@@ -425,7 +425,7 @@ export default function KanbanBoardPage() {
                                     value={filters.tags}
                                     onChange={v => setFilters(f => ({ ...f, tags: v }))}
                                     options={uniqueTags.map(t => ({ label: t.name, value: t.name }))}
-                                    popupClassName="!rounded-none border border-[var(--input-border)] !bg-[#0a0a0a] [&_.ant-select-item]:!rounded-none [&_.ant-select-item-option-selected]:!font-bold [&_.ant-select-item]:!font-mono [&_.ant-select-item]:!text-xs"
+                                    classNames={{ popup: { root: '!rounded-none border border-[var(--input-border)] !bg-[#0a0a0a] [&_.ant-select-item]:!rounded-none [&_.ant-select-item-option-selected]:!font-bold [&_.ant-select-item]:!font-mono [&_.ant-select-item]:!text-xs' } }}
                                 />
 
                                 {hasActiveFilters && (
