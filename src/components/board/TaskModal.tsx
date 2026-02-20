@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Save, Trash2, CheckSquare, Plus, Eye, EyeOff, User, ChevronDown } from 'lucide-react';
+import { X, Save, Trash2, CheckSquare, Plus, Eye, EyeOff, User, ChevronDown, Check } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { createPortal } from 'react-dom';
@@ -148,7 +148,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
 
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 animate-in fade-in duration-200">
-            <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-[var(--sidebar)] border-2 border-[var(--primary)] shadow-[12px_12px_0_0_var(--primary)] flex flex-col animate-in zoom-in-95 duration-200 rounded-none" onClick={(e) => e.stopPropagation()}>
+            <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-[var(--sidebar)] border border-[var(--primary)]/40 shadow-[4px_4px_0_0_var(--primary)] flex flex-col animate-in zoom-in-95 duration-200 rounded-none" onClick={(e) => e.stopPropagation()}>
 
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-[var(--sidebar-border)] bg-[var(--sidebar)] sticky top-0 z-10">
@@ -254,19 +254,28 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                             {formData.checklist?.map((item) => {
                                 if (hideCompleted && item.completed) return null;
                                 return (
-                                    <div key={item.id} className="flex items-start gap-3 group/item">
-                                        <input
-                                            type="checkbox"
-                                            checked={item.completed}
-                                            onChange={() => toggleChecklistItem(item.id)}
-                                            className="mt-1 w-4 h-4 rounded border-[var(--input-border)] bg-[var(--input-bg)] text-[var(--primary)] focus:ring-0 focus:ring-offset-0 checked:bg-[var(--primary)] checked:border-[var(--primary)] cursor-pointer transition-colors"
-                                        />
-                                        <div className={`flex-1 text-sm transition-colors ${item.completed ? 'text-[var(--muted-foreground)] line-through' : 'text-[var(--foreground)]'}`}>
+                                    <div key={item.id} className="flex items-start gap-3 group/item p-1 hover:bg-[var(--input-bg)]/50 transition-colors">
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleChecklistItem(item.id)}
+                                            className={cn(
+                                                "mt-0.5 w-4 h-4 rounded-none border flex-shrink-0 flex items-center justify-center transition-none",
+                                                item.completed
+                                                    ? "bg-[var(--primary)] border-[var(--primary)]"
+                                                    : "bg-[var(--input-bg)] border-[var(--input-border)] hover:border-[var(--primary)]/50"
+                                            )}
+                                        >
+                                            {item.completed && <Check size={12} className="text-black stroke-[3]" />}
+                                        </button>
+                                        <div className={cn(
+                                            "flex-1 text-xs font-mono tracking-tight transition-none pt-0.5",
+                                            item.completed ? "text-[var(--muted-foreground)] opacity-50 line-through" : "text-[var(--foreground)]"
+                                        )}>
                                             {item.text}
                                         </div>
                                         <button
                                             onClick={() => deleteChecklistItem(item.id)}
-                                            className="text-[var(--muted-foreground)] hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity"
+                                            className="text-[var(--muted-foreground)] hover:text-red-500 hover:bg-red-500/10 p-1 opacity-0 group-hover/item:opacity-100 transition-none"
                                         >
                                             <Trash2 size={14} />
                                         </button>
@@ -276,17 +285,21 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                         </div>
 
                         {/* Add Item Input */}
-                        <div className="flex gap-2 mt-2">
-                            <Input
+                        <div className="flex mt-3 shadow-sm border border-[var(--input-border)] focus-within:border-[var(--primary)] focus-within:ring-1 focus-within:ring-[var(--primary)]">
+                            <input
                                 value={newChecklistItem}
                                 onChange={(e) => setNewChecklistItem(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && addChecklistItem()}
-                                placeholder="Adicionar um item..."
-                                className="bg-[var(--input-bg)] border-[var(--input-border)] text-[var(--foreground)] h-9 text-sm focus:border-[var(--primary)] rounded-none"
+                                placeholder="Adicionar nova subtarefa..."
+                                className="flex-1 bg-[var(--input-bg)] border-none text-[var(--foreground)] h-10 px-3 text-sm focus:ring-0 focus:outline-none placeholder:text-[var(--muted-foreground)]/50"
                             />
-                            <Button size="sm" variant="secondary" onClick={addChecklistItem} disabled={!newChecklistItem.trim()} className="rounded-none border border-[var(--input-border)] hover:border-[var(--primary)] hover:bg-[var(--primary)]/10 transition-colors">
-                                <Plus size={16} />
-                            </Button>
+                            <button
+                                onClick={addChecklistItem}
+                                disabled={!newChecklistItem.trim()}
+                                className="px-4 bg-[var(--background)] hover:bg-[var(--primary)] text-[var(--primary)] hover:text-black border-l border-[var(--input-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center font-mono text-xs uppercase tracking-wider"
+                            >
+                                <Plus size={16} className="mr-1.5" /> Adicionar
+                            </button>
                         </div>
                     </div>
 

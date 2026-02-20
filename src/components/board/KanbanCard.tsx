@@ -149,7 +149,7 @@ export function KanbanCard({ task, isOverlay, onEdit, onDelete }: KanbanCardProp
                                     task.priority === 'high' ? 'text-red-500' :
                                         task.priority === 'medium' ? 'text-amber-500' : 'text-emerald-500'
                                 )}>
-                                    {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Med' : 'Baixa'}
+                                    {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Média' : 'Baixa'}
                                 </span>
                             </div>
 
