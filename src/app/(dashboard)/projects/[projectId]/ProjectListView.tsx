@@ -93,11 +93,17 @@ export default function ProjectListView({ columns, onEditTask }: ProjectListView
             title: 'PRAZO',
             key: 'dates',
             render: (_, record) => {
-                const start = record.startDate ? dayjs(record.startDate).format('DD/MM/YY') : null;
-                const end = record.endDate ? dayjs(record.endDate).format('DD/MM/YY') : null;
+                const formatDate = (dateString: string) => {
+                    const datePart = dateString.split('T')[0];
+                    return dayjs(datePart).format('DD/MM/YY');
+                };
+
+                const start = record.startDate ? formatDate(record.startDate) : null;
+                const end = record.endDate ? formatDate(record.endDate) : null;
+
                 if (!start && !end) return <span className="text-[var(--muted-foreground)] text-xs font-mono">-</span>;
 
-                const isLate = record.endDate && dayjs(record.endDate).isBefore(dayjs(), 'day') && !record.columnDone;
+                const isLate = record.endDate && dayjs(record.endDate.split('T')[0]).isBefore(dayjs().startOf('day')) && !record.columnDone;
 
                 return (
                     <span className={`text-xs font-mono ${isLate ? 'text-red-500 font-bold' : 'text-[var(--muted-foreground)]'}`}>

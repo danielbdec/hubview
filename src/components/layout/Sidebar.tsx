@@ -21,9 +21,9 @@ function cn(...inputs: ClassValue[]) {
 }
 
 const menuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
-    { icon: KanbanSquare, label: 'Projetos', href: '/projects' },
-    { icon: Settings, label: 'Configurações', href: '/settings' },
+    { icon: LayoutDashboard, label: 'DASHBOARD', href: '/' },
+    { icon: KanbanSquare, label: 'PROJETOS', href: '/projects' },
+    { icon: Settings, label: 'CONFIGURAÇÕES', href: '/settings' },
 ];
 
 export function Sidebar() {
@@ -113,7 +113,7 @@ export function Sidebar() {
                                         initial={{ opacity: 0, x: -10 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         exit={{ opacity: 0, x: -10 }}
-                                        className="font-sans text-[13px] font-bold tracking-tighter whitespace-nowrap"
+                                        className="font-sans text-[13px] font-bold tracking-tighter whitespace-nowrap uppercase"
                                     >
                                         {item.label}
                                     </motion.span>
@@ -144,9 +144,9 @@ export function Sidebar() {
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -10 }}
-                                className="font-sans text-xs font-bold tracking-tighter"
+                                className="font-sans text-xs font-bold tracking-tighter uppercase"
                             >
-                                Sair
+                                SAIR
                             </motion.span>
                         )}
                     </AnimatePresence>
