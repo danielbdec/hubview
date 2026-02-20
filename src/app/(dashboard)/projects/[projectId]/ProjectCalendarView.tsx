@@ -73,10 +73,10 @@ export default function ProjectCalendarView({ columns, onEditTask }: ProjectCale
                         {value.date()}
                     </span>
                 </div>
-                <ul className="m-0 p-0 pb-2 list-none flex-1 overflow-y-auto scrollbar-none space-y-1.5 flex flex-col items-center">
+                <ul className="m-0 p-0 pb-2 list-none flex-1 overflow-y-auto scrollbar-none space-y-1.5 flex flex-col items-center w-full">
                     {dayTasks.map((task, idx) => (
                         <li key={`${task.id}-${dateStr}-${idx}`} className="w-full flex justify-center" onClick={(e) => { e.stopPropagation(); onEditTask(task); }}>
-                            <div className="w-[94%] font-sans leading-tight border-l-[3px] cursor-pointer hover:bg-[var(--card-hover)] hover:-translate-y-0.5 transition-all bg-[var(--background)]/80 backdrop-blur-sm shadow-sm p-1.5 flex flex-col gap-1.5 group/calcard"
+                            <div className="w-[96%] font-sans leading-tight border-l-[3px] cursor-pointer hover:bg-[var(--card-hover)] hover:-translate-y-0.5 transition-all bg-[var(--background)]/80 backdrop-blur-sm shadow-sm p-1.5 flex flex-col gap-1.5 group/calcard"
                                 style={{ borderColor: task.columnColor, color: 'var(--foreground)' }}
                                 title={task.content}
                             >
@@ -172,7 +172,7 @@ export default function ProjectCalendarView({ columns, onEditTask }: ProjectCale
                         if (info.type === 'date') return dateCellRender(current);
                         return info.originNode;
                     }}
-                    className="[&_.ant-picker-calendar-date]:!p-0 [&_.ant-picker-calendar-date-value]:!hidden [&_.ant-picker-panel]:!bg-transparent [&_.ant-picker-cell-in-view.ant-picker-cell-today_.ant-picker-calendar-date]:!border-[var(--primary)] [&_.ant-picker-cell-in-view.ant-picker-cell-today_.ant-picker-calendar-date]:!border [&_.ant-picker-cell-in-view.ant-picker-cell-today_.ant-picker-calendar-date]:!bg-[var(--primary)]/5"
+                    className="[&_.ant-picker-calendar-date]:!p-0 [&_.ant-picker-calendar-date]:!m-0 [&_.ant-picker-cell-inner]:!min-w-0 [&_.ant-picker-calendar-date-value]:!hidden [&_.ant-picker-panel]:!bg-transparent [&_.ant-picker-cell-in-view.ant-picker-cell-today_.ant-picker-calendar-date]:!border-[var(--primary)] [&_.ant-picker-cell-in-view.ant-picker-cell-today_.ant-picker-calendar-date]:!border [&_.ant-picker-cell-in-view.ant-picker-cell-today_.ant-picker-calendar-date]:!bg-[var(--primary)]/5"
                 />
             </div>
         </ConfigProvider>
