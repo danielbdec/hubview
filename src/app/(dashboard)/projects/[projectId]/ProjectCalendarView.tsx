@@ -166,7 +166,7 @@ export default function ProjectCalendarView({ columns, onEditTask }: ProjectCale
                 }
             }}
         >
-            <div className="flex-1 overflow-auto bg-[var(--card)] p-4 border border-[var(--card-border)] rounded-none brutalist-calendar">
+            <div className="flex-1 overflow-auto bg-[var(--card)] p-4 border border-[var(--card-border)] rounded-none brutalist-calendar [&_.ant-radio-button-wrapper-checked]:!text-black [&_.ant-radio-button-wrapper-checked]:!font-bold">
                 <Calendar
                     cellRender={(current, info) => {
                         if (info.type === 'date') return dateCellRender(current);
