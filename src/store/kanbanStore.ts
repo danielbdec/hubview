@@ -55,6 +55,21 @@ export type Activity = {
     userAvatar?: string;
 };
 
+export type Notification = {
+    id: string;
+    userId: string;
+    activityId: string;
+    projectId: string;
+    isRead: boolean;
+    createdAt: string;
+    activityContent: string;
+    activityType: string;
+    activityUserName: string;
+    activityUserAvatar?: string;
+    taskId: string;
+    projectName: string;
+};
+
 export type TaskCounts = Record<string, { total: number; byColumn: Record<string, number>; byPriority: Record<string, number> }>;
 
 export type User = {
@@ -109,6 +124,13 @@ interface ProjectState {
     fetchTaskActivities: (taskId: string) => Promise<void>;
     addTaskActivity: (taskId: string, type: 'comment' | 'history', content: string) => Promise<void>;
 
+    // Notifications
+    notifications: Notification[];
+    unreadNotificationsCount: number;
+    fetchNotifications: () => Promise<void>;
+    markNotificationAsRead: (id: string) => Promise<void>;
+    markAllNotificationsAsRead: () => Promise<void>;
+
     // View State
     activeView: 'kanban' | 'list' | 'calendar';
     setActiveView: (view: 'kanban' | 'list' | 'calendar') => void;
@@ -124,6 +146,8 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     activeView: 'kanban',
     taskActivities: {},
     isLoadingActivities: false,
+    notifications: [],
+    unreadNotificationsCount: 0,
     setActiveView: (view) => set({ activeView: view }),
 
     initializeUser: () => {
@@ -133,9 +157,51 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             if (storedUser) {
                 const user = JSON.parse(storedUser);
                 set({ currentUser: user });
+                // Also kick off notification polling here directly
+                get().fetchNotifications();
+                // We'll set an interval later
             }
         } catch (error) {
             console.error('Failed to parse user from localStorage', error);
+        }
+    },
+
+    fetchNotifications: async () => {
+        const { currentUser } = get();
+        if (!currentUser?.id) return;
+        try {
+            const data = await api.post<{ success: boolean; notifications: Notification[] }>('/api/notifications/list', { userId: currentUser.id });
+            if (data?.success && Array.isArray(data.notifications)) {
+                set({
+                    notifications: data.notifications,
+                    unreadNotificationsCount: data.notifications.length
+                });
+            }
+        } catch (error) {
+            console.error('Failed to fetch notifications', error);
+        }
+    },
+
+    markNotificationAsRead: async (id: string) => {
+        try {
+            await api.post('/api/notifications/read', { notificationId: id });
+            set((state) => {
+                const updated = state.notifications.filter(n => n.id !== id);
+                return { notifications: updated, unreadNotificationsCount: updated.length };
+            });
+        } catch (error) {
+            console.error('Failed to mark read', error);
+        }
+    },
+
+    markAllNotificationsAsRead: async () => {
+        const { currentUser } = get();
+        if (!currentUser?.id) return;
+        try {
+            await api.post('/api/notifications/read-all', { userId: currentUser.id });
+            set({ notifications: [], unreadNotificationsCount: 0 });
+        } catch (error) {
+            console.error('Failed to mark all as read', error);
         }
     },
 

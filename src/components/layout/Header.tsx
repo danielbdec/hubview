@@ -9,6 +9,7 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useProjectStore } from '@/store/kanbanStore';
 import { Segmented, ConfigProvider, theme } from 'antd';
 import { KanbanIcon, ListIcon, CalendarIcon } from 'lucide-react';
+import { NotificationDropdown } from './NotificationDropdown';
 
 const breadnameMap: Record<string, string> = {
     'projects': 'PROJETOS',
@@ -100,9 +101,7 @@ export function Header() {
 
                 <div className="flex items-center gap-2 border-l border-[var(--header-border)] pl-4">
                     <ThemeToggle />
-                    <Button variant="ghost" size="sm" className="w-8 h-8 px-0 text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
-                        <Bell size={16} />
-                    </Button>
+                    <NotificationDropdown />
                     <Button variant="ghost" size="sm" className="w-8 h-8 px-0">
                         <User size={16} />
                     </Button>
