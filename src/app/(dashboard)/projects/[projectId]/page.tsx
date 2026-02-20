@@ -124,12 +124,14 @@ export default function KanbanBoardPage() {
         const hasFilters = filters.search || filters.priority.length > 0 || filters.assignees.length > 0 || filters.tags.length > 0;
         if (!hasFilters) return columns;
 
+        const searchLower = (filters.search || '').toLowerCase();
+
         return columns.map(col => ({
             ...col,
             tasks: (col.tasks || []).filter(task => {
-                const matchSearch = !filters.search ||
-                    task.content.toLowerCase().includes(filters.search.toLowerCase()) ||
-                    (task.description?.toLowerCase() || '').includes(filters.search.toLowerCase());
+                const matchSearch = !searchLower ||
+                    (task.content || '').toLowerCase().includes(searchLower) ||
+                    (task.description || '').toLowerCase().includes(searchLower);
 
                 const matchPriority = filters.priority.length === 0 || filters.priority.includes(task.priority);
                 const matchAssignee = filters.assignees.length === 0 || (task.assignee && filters.assignees.includes(task.assignee));
@@ -221,6 +223,7 @@ export default function KanbanBoardPage() {
     // --- Drag and Drop Handlers ---
 
     function handleDragStart(event: DragStartEvent) {
+        if (activeView !== 'kanban') return;
         const { active } = event;
         const update = active.data.current;
 
@@ -236,6 +239,7 @@ export default function KanbanBoardPage() {
     }
 
     function handleDragOver(event: DragOverEvent) {
+        if (activeView !== 'kanban') return;
         const { active, over } = event;
         if (!over) return;
 
@@ -258,6 +262,7 @@ export default function KanbanBoardPage() {
     }
 
     function handleDragEnd(event: DragEndEvent) {
+        if (activeView !== 'kanban') return;
         const { active, over } = event;
 
         setActiveColumn(null);

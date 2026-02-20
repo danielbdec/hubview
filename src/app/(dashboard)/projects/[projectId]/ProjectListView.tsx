@@ -33,10 +33,7 @@ export default function ProjectListView({ columns, onEditTask }: ProjectListView
             dataIndex: 'content',
             key: 'content',
             render: (text, record) => (
-                <div
-                    className="font-bold cursor-pointer hover:text-[var(--primary)] transition-colors flex items-center gap-2"
-                    onClick={() => onEditTask(record)}
-                >
+                <div className="font-bold hover:text-[var(--primary)] transition-colors flex items-center gap-2">
                     {record.columnDone && <CheckCircle2 size={14} className="text-emerald-500" />}
                     {text}
                 </div>
@@ -157,6 +154,10 @@ export default function ProjectListView({ columns, onEditTask }: ProjectListView
                     dataSource={flatData}
                     rowKey="id"
                     pagination={false}
+                    onRow={(record) => ({
+                        onClick: () => onEditTask(record),
+                        className: 'cursor-pointer hover:bg-[var(--card-hover)] transition-colors'
+                    })}
                     className="font-mono text-sm [&_.ant-table-thead_th]:!font-mono [&_.ant-table-thead_th]:!text-[10px] [&_.ant-table-thead_th]:!tracking-widest [&_.ant-table-thead_th]:!border-b [&_.ant-table-thead_th]:!border-[var(--card-border)] [&_.ant-table-tbody_td]:!border-b [&_.ant-table-tbody_td]:!border-[var(--card-border)]"
                 />
             </div>
