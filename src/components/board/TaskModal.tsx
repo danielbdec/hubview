@@ -414,6 +414,12 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                 <h3 className="text-sm font-bold font-mono tracking-widest text-[var(--foreground)] uppercase">
                     Histórico & Logs
                 </h3>
+                <button
+                    onClick={() => setIsSidebarOpen(false)}
+                    className="p-1.5 rounded-none hover:bg-white/5 border border-transparent hover:border-white/10 text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+                >
+                    <X size={16} />
+                </button>
             </div>
             <div className="flex-1 overflow-y-auto space-y-4 p-6 custom-scrollbar">
                 {isLoadingActivities ? (
