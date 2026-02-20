@@ -37,15 +37,16 @@ export default function ProjectCalendarView({ columns, onEditTask }: ProjectCale
         columns.forEach(col => {
             col.tasks.forEach(task => {
                 const dateKeys = new Set<string>();
+                const safeParseDate = (dString: string) => dayjs(dString.split('T')[0]);
                 // Only map tasks that have explicit start/end dates
-                if (task.startDate) dateKeys.add(dayjs(task.startDate).format('YYYY-MM-DD'));
-                if (task.endDate) dateKeys.add(dayjs(task.endDate).format('YYYY-MM-DD'));
+                if (task.startDate) dateKeys.add(safeParseDate(task.startDate).format('YYYY-MM-DD'));
+                if (task.endDate) dateKeys.add(safeParseDate(task.endDate).format('YYYY-MM-DD'));
 
                 // If a task spans multiple days, we could populate them all, but for simplicity we only mark start and end
                 // or if it has only one date. Let's populate the full range.
                 if (task.startDate && task.endDate) {
-                    let current = dayjs(task.startDate);
-                    const end = dayjs(task.endDate);
+                    let current = safeParseDate(task.startDate);
+                    const end = safeParseDate(task.endDate);
                     while (current.isBefore(end, 'day') || current.isSame(end, 'day')) {
                         dateKeys.add(current.format('YYYY-MM-DD'));
                         current = current.add(1, 'day');
