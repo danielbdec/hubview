@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/Button';
 
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useProjectStore } from '@/store/kanbanStore';
+import { Segmented, ConfigProvider, theme } from 'antd';
+import { KanbanIcon, ListIcon, CalendarIcon } from 'lucide-react';
 
 const breadnameMap: Record<string, string> = {
     'projects': 'PROJETOS',
@@ -19,7 +21,7 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 
 export function Header() {
     const pathname = usePathname();
-    const { projects } = useProjectStore();
+    const { projects, activeView, setActiveView } = useProjectStore();
     const segments = pathname.split('/').filter(Boolean);
 
     // Build smart breadcrumb: resolve UUIDs to project names
@@ -36,8 +38,10 @@ export function Header() {
         ? breadcrumbParts.join(' / ')
         : 'DASHBOARD';
 
+    const isProjectPage = segments.length === 2 && segments[0] === 'projects' && UUID_REGEX.test(segments[1]);
+
     return (
-        <header className="h-16 flex items-center justify-between px-6 border-b border-[var(--header-border)] bg-[var(--header)] backdrop-blur-md sticky top-0 z-40">
+        <header className="h-16 flex items-center justify-between px-6 border-b border-[var(--header-border)] bg-[var(--header)] backdrop-blur-md sticky top-0 z-40 relative">
             {/* Breadcrumbs / Page Title */}
             <div className="flex items-center gap-2 overflow-hidden">
                 <span className="text-[var(--muted-foreground)] font-sans text-xs uppercase tracking-tight">/</span>
@@ -57,6 +61,42 @@ export function Header() {
 
             {/* Actions */}
             <div className="flex items-center gap-4">
+                {isProjectPage && (
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:flex">
+                        <ConfigProvider
+                            theme={{
+                                algorithm: theme.darkAlgorithm,
+                                token: {
+                                    colorPrimary: 'var(--primary)',
+                                    fontFamily: 'var(--font-geist-sans)',
+                                },
+                                components: {
+                                    Segmented: {
+                                        itemSelectedBg: 'var(--primary)',
+                                        itemSelectedColor: '#000000',
+                                        trackBg: 'var(--sidebar)', // match header background roughly
+                                        itemHoverBg: 'var(--card-hover)',
+                                        itemHoverColor: 'var(--foreground)',
+                                        controlPaddingHorizontal: 12
+                                    }
+                                }
+                            }}
+                        >
+                            <div className="border border-[var(--input-border)] bg-[var(--sidebar)] p-0.5 flex rounded-sm overflow-hidden">
+                                <Segmented
+                                    value={activeView}
+                                    onChange={(value) => setActiveView(value as 'kanban' | 'list' | 'calendar')}
+                                    className="bg-transparent font-mono text-[10px] tracking-widest uppercase [&_.ant-segmented-item-selected]:bg-[var(--primary)] [&_.ant-segmented-item-selected]:text-black [&_.ant-segmented-item-selected]:font-bold [&_.ant-segmented-item-selected]:!rounded-none [&_.ant-segmented-item]:!rounded-none [&_.ant-segmented-item]:text-[var(--muted-foreground)]"
+                                    options={[
+                                        { label: <div className="flex items-center gap-1.5 px-3 py-1"><KanbanIcon size={14} /> Kanban</div>, value: 'kanban' },
+                                        { label: <div className="flex items-center gap-1.5 px-3 py-1"><ListIcon size={14} /> Lista</div>, value: 'list' },
+                                        { label: <div className="flex items-center gap-1.5 px-3 py-1"><CalendarIcon size={14} /> Calendário</div>, value: 'calendar' },
+                                    ]}
+                                />
+                            </div>
+                        </ConfigProvider>
+                    </div>
+                )}
 
                 <div className="flex items-center gap-2 border-l border-[var(--header-border)] pl-4">
                     <ThemeToggle />

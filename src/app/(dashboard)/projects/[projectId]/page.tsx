@@ -15,7 +15,7 @@ import {
     DragEndEvent,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates, SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
-import { Plus, RefreshCw, ArrowLeft, LayoutGrid, Loader2, Search, Filter, Kanban as KanbanIcon, List as ListIcon, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, RefreshCw, ArrowLeft, LayoutGrid, Loader2, Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { KanbanColumn } from '@/components/board/KanbanColumn';
 import { KanbanCard } from '@/components/board/KanbanCard';
@@ -25,9 +25,6 @@ import { useProjectStore, Task, Column } from '@/store/kanbanStore';
 import { Segmented, Input, Select, ConfigProvider, theme } from 'antd';
 import ProjectListView from './ProjectListView';
 import ProjectCalendarView from './ProjectCalendarView';
-
-type ViewMode = 'kanban' | 'list' | 'calendar';
-
 export default function KanbanBoardPage() {
     const params = useParams();
     const router = useRouter();
@@ -51,7 +48,8 @@ export default function KanbanBoardPage() {
         fetchProjects,
         fetchBoardData,
         isLoadingProjects,
-        isLoadingBoard
+        isLoadingBoard,
+        activeView
     } = useProjectStore();
 
     const hasFetchedRef = useRef(false);
@@ -90,7 +88,6 @@ export default function KanbanBoardPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
 
-    const [activeView, setActiveView] = useState<ViewMode>('kanban');
     const [filters, setFilters] = useState({
         search: '',
         priority: [] as string[],
@@ -368,18 +365,7 @@ export default function KanbanBoardPage() {
                             </div>
 
                             <div className="flex items-center gap-3 shrink-0">
-                                <div className="border border-[var(--input-border)] bg-[var(--input-bg)] p-0.5 flex">
-                                    <Segmented
-                                        value={activeView}
-                                        onChange={(value) => setActiveView(value as ViewMode)}
-                                        className="bg-transparent font-mono text-[10px] tracking-widest uppercase [&_.ant-segmented-item-selected]:bg-[var(--primary)] [&_.ant-segmented-item-selected]:text-black [&_.ant-segmented-item-selected]:font-bold [&_.ant-segmented-item-selected]:!rounded-none [&_.ant-segmented-item]:!rounded-none [&_.ant-segmented-item]:text-[var(--muted-foreground)]"
-                                        options={[
-                                            { label: <div className="flex items-center gap-1.5 px-3 py-1"><KanbanIcon size={14} /> Kanban</div>, value: 'kanban' },
-                                            { label: <div className="flex items-center gap-1.5 px-3 py-1"><ListIcon size={14} /> Lista</div>, value: 'list' },
-                                            { label: <div className="flex items-center gap-1.5 px-3 py-1"><CalendarIcon size={14} /> Calendário</div>, value: 'calendar' },
-                                        ]}
-                                    />
-                                </div>
+                                {/* Segmented view switcher moved to global header */}
 
                                 <Button variant="ghost" size="sm" onClick={handleRefresh} title="Atualizar Board" className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)] rounded-none border border-transparent hover:border-[var(--card-border)] h-[32px]">
                                     <RefreshCw size={16} className={isLoadingBoard ? 'animate-spin text-[var(--primary)]' : ''} />

@@ -91,6 +91,10 @@ interface ProjectState {
 
     // Import/Export (scoped to active project)
     setColumns: (columns: Column[]) => void;
+
+    // View State
+    activeView: 'kanban' | 'list' | 'calendar';
+    setActiveView: (view: 'kanban' | 'list' | 'calendar') => void;
 }
 
 export const useProjectStore = create<ProjectState>((set, get) => ({
@@ -100,6 +104,8 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     isLoadingProjects: false,
     isLoadingBoard: false,
     currentUser: null,
+    activeView: 'kanban',
+    setActiveView: (view) => set({ activeView: view }),
 
     initializeUser: () => {
         if (typeof window === 'undefined') return;
