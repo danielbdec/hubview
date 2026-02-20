@@ -319,65 +319,79 @@ export default function KanbanBoardPage() {
         >
             <div className="h-full flex flex-col pt-2 max-w-full overflow-hidden">
                 {/* Header & Control Bar Area */}
-                <div className="flex flex-col gap-4 mb-6">
-                    {/* Top Header */}
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <Button variant="ghost" size="sm" onClick={() => router.push('/projects')} className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] pr-0 pl-1">
-                                <ArrowLeft size={16} />
-                            </Button>
-                            <div>
-                                <h1 className="text-2xl font-bold uppercase tracking-tight text-[var(--foreground)] mb-1 leading-none shadow-none truncate max-w-[400px]">
-                                    {activeProject.title}
-                                </h1>
-                                <p className="text-[var(--muted-foreground)] font-mono text-xs">
-                                    STATUS_FLUXO: <span className="text-yellow-500 font-bold">ATIVO</span> | <span className="opacity-50 tracking-widest">ID: {activeProject.id.slice(0, 8)}</span>
-                                </p>
+                <ConfigProvider
+                    theme={{
+                        algorithm: theme.darkAlgorithm,
+                        token: {
+                            colorBgContainer: 'transparent',
+                            colorBorder: 'var(--input-border)',
+                            colorText: 'var(--foreground)',
+                            colorTextPlaceholder: 'var(--muted-foreground)',
+                            borderRadius: 0,
+                            fontFamily: 'var(--font-geist-sans)',
+                            colorPrimary: 'var(--primary)',
+                            controlItemBgActive: 'var(--card-hover)',
+                            colorBgElevated: '#0a0a0a',
+                        },
+                        components: {
+                            Select: {
+                                selectorBg: 'var(--input-bg)',
+                                optionSelectedBg: 'var(--primary)',
+                                optionSelectedColor: '#000000',
+                                optionActiveBg: 'var(--card-hover)',
+                            },
+                            Segmented: {
+                                itemSelectedBg: 'var(--primary)',
+                                itemSelectedColor: '#000000',
+                                trackBg: 'var(--input-bg)',
+                                itemHoverBg: 'var(--card-hover)',
+                                itemHoverColor: 'var(--foreground)',
+                            }
+                        }
+                    }}
+                >
+                    <div className="flex flex-col gap-4 mb-6">
+                        {/* Top Header */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <Button variant="ghost" size="sm" onClick={() => router.push('/projects')} className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] pr-0 pl-1">
+                                    <ArrowLeft size={16} />
+                                </Button>
+                                <div>
+                                    <h1 className="text-2xl font-bold uppercase tracking-tight text-[var(--foreground)] mb-1 leading-none shadow-none truncate max-w-[400px]">
+                                        {activeProject.title}
+                                    </h1>
+                                    <p className="text-[var(--muted-foreground)] font-mono text-xs">
+                                        STATUS_FLUXO: <span className="text-yellow-500 font-bold">ATIVO</span> | <span className="opacity-50 tracking-widest">ID: {activeProject.id.slice(0, 8)}</span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 shrink-0">
+                                <div className="border border-[var(--input-border)] bg-[var(--input-bg)] p-0.5 flex">
+                                    <Segmented
+                                        value={activeView}
+                                        onChange={(value) => setActiveView(value as ViewMode)}
+                                        className="bg-transparent font-mono text-[10px] tracking-widest uppercase [&_.ant-segmented-item-selected]:bg-[var(--primary)] [&_.ant-segmented-item-selected]:text-black [&_.ant-segmented-item-selected]:font-bold [&_.ant-segmented-item-selected]:!rounded-none [&_.ant-segmented-item]:!rounded-none [&_.ant-segmented-item]:text-[var(--muted-foreground)]"
+                                        options={[
+                                            { label: <div className="flex items-center gap-1.5 px-3 py-1"><KanbanIcon size={14} /> Kanban</div>, value: 'kanban' },
+                                            { label: <div className="flex items-center gap-1.5 px-3 py-1"><ListIcon size={14} /> Lista</div>, value: 'list' },
+                                            { label: <div className="flex items-center gap-1.5 px-3 py-1"><CalendarIcon size={14} /> Calendário</div>, value: 'calendar' },
+                                        ]}
+                                    />
+                                </div>
+
+                                <Button variant="ghost" size="sm" onClick={handleRefresh} title="Atualizar Board" className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)] rounded-none border border-transparent hover:border-[var(--card-border)] h-[32px]">
+                                    <RefreshCw size={16} className={isLoadingBoard ? 'animate-spin text-[var(--primary)]' : ''} />
+                                </Button>
+
+                                <Button variant="primary" size="sm" onClick={addColumn} disabled={isLoadingBoard || activeView !== 'kanban'} className="rounded-none font-mono tracking-widest uppercase text-[10px] min-w-[140px] h-[32px]">
+                                    <Plus size={16} className="mr-2" /> Novo Painel
+                                </Button>
                             </div>
                         </div>
 
-                        <div className="flex gap-2 shrink-0">
-                            <Button variant="ghost" size="sm" onClick={handleRefresh} title="Atualizar Board" className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)] rounded-none border border-transparent hover:border-[var(--card-border)]">
-                                <RefreshCw size={16} className={isLoadingBoard ? 'animate-spin text-[var(--primary)]' : ''} />
-                            </Button>
-
-                            <Button variant="primary" size="sm" onClick={addColumn} disabled={isLoadingBoard || activeView !== 'kanban'} className="rounded-none font-mono tracking-widest uppercase text-[10px] min-w-[140px]">
-                                <Plus size={16} className="mr-2" /> Novo Painel
-                            </Button>
-                        </div>
-                    </div>
-
-                    {/* Control Bar */}
-                    <ConfigProvider
-                        theme={{
-                            algorithm: theme.darkAlgorithm,
-                            token: {
-                                colorBgContainer: 'transparent',
-                                colorBorder: 'var(--input-border)',
-                                colorText: 'var(--foreground)',
-                                colorTextPlaceholder: 'var(--muted-foreground)',
-                                borderRadius: 0,
-                                fontFamily: 'var(--font-geist-sans)',
-                                colorPrimary: 'var(--primary)',
-                                controlItemBgActive: 'var(--card-hover)',
-                            },
-                            components: {
-                                Select: {
-                                    selectorBg: 'var(--input-bg)',
-                                    optionSelectedBg: 'var(--primary)',
-                                    optionSelectedColor: '#000000',
-                                    optionActiveBg: 'var(--card-hover)',
-                                },
-                                Segmented: {
-                                    itemSelectedBg: 'var(--primary)',
-                                    itemSelectedColor: '#000000',
-                                    trackBg: 'var(--input-bg)',
-                                    itemHoverBg: 'var(--card-hover)',
-                                    itemHoverColor: 'var(--foreground)',
-                                }
-                            }
-                        }}
-                    >
+                        {/* Control Bar */}
                         <div className="flex items-center justify-between bg-[var(--sidebar)]/80 p-2 border-y border-[var(--sidebar-border)] backdrop-blur-sm -mx-6 px-6">
                             <div className="flex items-center gap-3 flex-1 overflow-x-auto scrollbar-none py-1">
                                 <Input
@@ -401,7 +415,7 @@ export default function KanbanBoardPage() {
                                         { label: 'Média', value: 'medium' },
                                         { label: 'Baixa', value: 'low' },
                                     ]}
-                                    popupClassName="!rounded-none border border-[var(--input-border)] !bg-[var(--card)] [&_.ant-select-item]:!rounded-none [&_.ant-select-item-option-selected]:!font-bold [&_.ant-select-item]:!font-mono [&_.ant-select-item]:!text-xs"
+                                    popupClassName="!rounded-none border border-[var(--input-border)] !bg-[#0a0a0a] [&_.ant-select-item]:!rounded-none [&_.ant-select-item-option-selected]:!font-bold [&_.ant-select-item]:!font-mono [&_.ant-select-item]:!text-xs"
                                 />
 
                                 <Select
@@ -413,7 +427,7 @@ export default function KanbanBoardPage() {
                                     value={filters.assignees}
                                     onChange={v => setFilters(f => ({ ...f, assignees: v }))}
                                     options={uniqueAssignees.map(a => ({ label: a, value: a }))}
-                                    popupClassName="!rounded-none border border-[var(--input-border)] !bg-[var(--card)] [&_.ant-select-item]:!rounded-none [&_.ant-select-item-option-selected]:!font-bold [&_.ant-select-item]:!font-mono [&_.ant-select-item]:!text-xs"
+                                    popupClassName="!rounded-none border border-[var(--input-border)] !bg-[#0a0a0a] [&_.ant-select-item]:!rounded-none [&_.ant-select-item-option-selected]:!font-bold [&_.ant-select-item]:!font-mono [&_.ant-select-item]:!text-xs"
                                 />
 
                                 <Select
@@ -425,7 +439,7 @@ export default function KanbanBoardPage() {
                                     value={filters.tags}
                                     onChange={v => setFilters(f => ({ ...f, tags: v }))}
                                     options={uniqueTags.map(t => ({ label: t.name, value: t.name }))}
-                                    popupClassName="!rounded-none border border-[var(--input-border)] !bg-[var(--card)] [&_.ant-select-item]:!rounded-none [&_.ant-select-item-option-selected]:!font-bold [&_.ant-select-item]:!font-mono [&_.ant-select-item]:!text-xs"
+                                    popupClassName="!rounded-none border border-[var(--input-border)] !bg-[#0a0a0a] [&_.ant-select-item]:!rounded-none [&_.ant-select-item-option-selected]:!font-bold [&_.ant-select-item]:!font-mono [&_.ant-select-item]:!text-xs"
                                 />
 
                                 {hasActiveFilters && (
@@ -437,22 +451,10 @@ export default function KanbanBoardPage() {
                                     </button>
                                 )}
                             </div>
-
-                            <div className="ml-4 shrink-0 border border-[var(--input-border)] bg-[var(--input-bg)] p-0.5 flex">
-                                <Segmented
-                                    value={activeView}
-                                    onChange={(value) => setActiveView(value as ViewMode)}
-                                    className="bg-transparent font-mono text-[10px] tracking-widest uppercase [&_.ant-segmented-item-selected]:bg-[var(--primary)] [&_.ant-segmented-item-selected]:text-black [&_.ant-segmented-item-selected]:font-bold [&_.ant-segmented-item-selected]:!rounded-none [&_.ant-segmented-item]:!rounded-none [&_.ant-segmented-item]:text-[var(--muted-foreground)]"
-                                    options={[
-                                        { label: <div className="flex items-center gap-1.5 px-3 py-1"><KanbanIcon size={14} /> Kanban</div>, value: 'kanban' },
-                                        { label: <div className="flex items-center gap-1.5 px-3 py-1"><ListIcon size={14} /> Lista</div>, value: 'list' },
-                                        { label: <div className="flex items-center gap-1.5 px-3 py-1"><CalendarIcon size={14} /> Calendário</div>, value: 'calendar' },
-                                    ]}
-                                />
-                            </div>
                         </div>
-                    </ConfigProvider>
-                </div>
+                    </div>
+                </ConfigProvider>
+
 
                 {isLoadingBoard ? (
                     <div className="flex-1 flex flex-col items-center justify-center">
@@ -509,18 +511,20 @@ export default function KanbanBoardPage() {
                 onDelete={deleteTask}
             />
 
-            {createPortal(
-                <DragOverlay>
-                    {activeColumn && <KanbanColumn
-                        columnId={activeColumn.id}
-                        isOverlay
-                        onRequestAddTask={() => { }}
-                        onEditTask={() => { }}
-                    />}
-                    {activeTask && <KanbanCard task={activeTask} isOverlay />}
-                </DragOverlay>,
-                document.body
-            )}
-        </DndContext>
+            {
+                createPortal(
+                    <DragOverlay>
+                        {activeColumn && <KanbanColumn
+                            columnId={activeColumn.id}
+                            isOverlay
+                            onRequestAddTask={() => { }}
+                            onEditTask={() => { }}
+                        />}
+                        {activeTask && <KanbanCard task={activeTask} isOverlay />}
+                    </DragOverlay>,
+                    document.body
+                )
+            }
+        </DndContext >
     );
 }
