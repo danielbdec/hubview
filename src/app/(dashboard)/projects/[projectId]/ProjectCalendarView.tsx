@@ -1,11 +1,14 @@
 import React, { useMemo } from 'react';
 import { Calendar, ConfigProvider, theme } from 'antd';
+import ptBR from 'antd/locale/pt_BR';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import localeData from 'dayjs/plugin/localeData';
+import 'dayjs/locale/pt-br';
 import { Column, Task } from '@/store/kanbanStore';
 
 dayjs.extend(localeData);
+dayjs.locale('pt-br');
 
 interface ProjectCalendarViewProps {
     columns: Column[];
@@ -71,6 +74,7 @@ export default function ProjectCalendarView({ columns, onEditTask }: ProjectCale
 
     return (
         <ConfigProvider
+            locale={ptBR}
             theme={{
                 algorithm: theme.darkAlgorithm,
                 token: {
@@ -89,7 +93,6 @@ export default function ProjectCalendarView({ columns, onEditTask }: ProjectCale
                 components: {
                     Calendar: {
                         fullBg: 'var(--card)',
-                        itemActiveBg: 'var(--primary)',
                     }
                 }
             }}
@@ -100,7 +103,7 @@ export default function ProjectCalendarView({ columns, onEditTask }: ProjectCale
                         if (info.type === 'date') return dateCellRender(current);
                         return info.originNode;
                     }}
-                    className="[&_.ant-picker-calendar-date]:!p-0 [&_.ant-picker-calendar-date-value]:!hidden [&_.ant-picker-panel]:!bg-transparent"
+                    className="[&_.ant-picker-calendar-date]:!p-0 [&_.ant-picker-calendar-date-value]:!hidden [&_.ant-picker-panel]:!bg-transparent [&_.ant-picker-cell-in-view.ant-picker-cell-today_.ant-picker-calendar-date]:!border-[var(--primary)] [&_.ant-picker-cell-in-view.ant-picker-cell-today_.ant-picker-calendar-date]:!border [&_.ant-picker-cell-in-view.ant-picker-cell-today_.ant-picker-calendar-date]:!bg-[var(--primary)]/5"
                 />
             </div>
         </ConfigProvider>
