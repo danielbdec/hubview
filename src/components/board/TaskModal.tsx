@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Tabs, Spin } from 'antd';
+import { PanelRightOpen, PanelRightClose } from 'lucide-react';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -40,6 +41,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
     const [users, setUsers] = useState<UserOption[]>([]);
     const [isLoadingUsers, setIsLoadingUsers] = useState(false);
     const [newActivityContent, setNewActivityContent] = useState('');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const { taskActivities, isLoadingActivities, fetchTaskActivities, addTaskActivity } = useProjectStore();
     const activities = task ? (taskActivities[task.id] || []) : [];
@@ -158,8 +160,8 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
     const checklistCompleted = formData.checklist?.filter(i => i.completed).length || 0;
     const progress = checklistTotal === 0 ? 0 : Math.round((checklistCompleted / checklistTotal) * 100);
 
-    const detalhesTab = (
-        <div className="space-y-6 pt-2">
+    const detalhesView = (
+        <div className="space-y-6 pt-2 h-[60vh] overflow-y-auto px-6 pb-6 custom-scrollbar">
             <div className="space-y-2">
                 <label className="text-xs font-mono text-[var(--primary)] uppercase tracking-wider">Título</label>
                 <Input
@@ -406,9 +408,14 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
         </div>
     );
 
-    const atividadesTab = (
-        <div className="space-y-6 pt-2 h-[500px] flex flex-col">
-            <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+    const atividadesView = (
+        <div className="flex flex-col h-full bg-[var(--sidebar)] border-l border-[var(--sidebar-border)] w-96 shrink-0 transition-all duration-300 transform origin-right shadow-[-10px_0_30px_-10px_rgba(0,0,0,0.5)]">
+            <div className="flex items-center justify-between p-6 border-b border-[var(--sidebar-border)] h-[81px] shrink-0 bg-black/20">
+                <h3 className="text-sm font-bold font-mono tracking-widest text-[var(--foreground)] uppercase">
+                    Histórico & Logs
+                </h3>
+            </div>
+            <div className="flex-1 overflow-y-auto space-y-4 p-6 custom-scrollbar">
                 {isLoadingActivities ? (
                     <div className="flex justify-center items-center h-full"><Spin /></div>
                 ) : activities.length === 0 ? (
@@ -475,72 +482,68 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
 
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 animate-in fade-in duration-200">
-            <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-hidden bg-[var(--sidebar)] border border-[var(--primary)]/40 shadow-[4px_4px_0_0_var(--primary)] flex flex-col animate-in zoom-in-95 duration-200 rounded-none" onClick={(e) => e.stopPropagation()}>
+            <div className={cn(
+                "relative max-h-[90vh] overflow-hidden bg-[var(--sidebar)] border border-[var(--primary)]/40 shadow-[4px_4px_0_0_var(--primary)] flex animate-in zoom-in-95 duration-200 rounded-none transition-all duration-300 ease-in-out",
+                isSidebarOpen ? "w-[1000px] max-w-[95vw]" : "w-[600px] max-w-full"
+            )} onClick={(e) => e.stopPropagation()}>
 
-                {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-[var(--sidebar-border)] bg-[var(--sidebar)] shrink-0">
-                    <div className="flex flex-col">
-                        <h2 className="text-lg font-bold font-mono tracking-wider text-[var(--foreground)] uppercase shadow-none tracking-widest">
-                            {task.content || 'Editar Tarefa'}
-                        </h2>
-                        <span className="text-[10px] text-[var(--muted-foreground)] font-mono uppercase">ID: {task.id.slice(0, 8)}</span>
+                {/* Main Content Area */}
+                <div className="flex flex-col flex-1 min-w-0">
+                    {/* Header */}
+                    <div className="flex items-center justify-between p-6 border-b border-[var(--sidebar-border)] bg-[var(--sidebar)] shrink-0 h-[81px]">
+                        <div className="flex flex-col">
+                            <h2 className="text-lg font-bold font-mono tracking-wider text-[var(--foreground)] uppercase shadow-none tracking-widest truncate max-w-sm" title={task.content}>
+                                {task.content || 'Editar Tarefa'}
+                            </h2>
+                            <span className="text-[10px] text-[var(--muted-foreground)] font-mono uppercase">ID: {task.id.slice(0, 8)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                                className={cn(
+                                    "p-2 rounded-none border transition-colors flex items-center gap-2 font-mono text-[10px] tracking-widest uppercase",
+                                    isSidebarOpen
+                                        ? "bg-[var(--primary)] text-black border-[var(--primary)]"
+                                        : "bg-[var(--input-bg)] text-[var(--muted-foreground)] border-[var(--sidebar-border)] hover:border-[var(--primary)]/50 hover:text-[var(--foreground)]"
+                                )}
+                                title="Alternar Histórico"
+                            >
+                                {isSidebarOpen ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />}
+                                <span className="hidden sm:inline">Histórico</span>
+                            </button>
+                            <div className="w-[1px] h-6 bg-[var(--sidebar-border)] mx-1" />
+                            <button onClick={onClose} className="p-2 text-[var(--muted-foreground)] hover:text-white transition-colors">
+                                <X size={20} />
+                            </button>
+                        </div>
                     </div>
-                    <button onClick={onClose} className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors">
-                        <X size={20} />
-                    </button>
-                </div>
 
-                {/* Body - Tabs */}
-                <div className="px-6 pb-2 overflow-y-auto">
-                    <style>{`
-                        .hubview-tabs .ant-tabs-nav {
-                            margin-bottom: 0 !important;
-                        }
-                        .hubview-tabs .ant-tabs-tab {
-                            font-family: var(--font-geist-mono) !important;
-                            text-transform: uppercase !important;
-                            letter-spacing: 0.1em !important;
-                            padding: 16px 0 !important;
-                        }
-                        .hubview-tabs .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
-                            color: var(--primary) !important;
-                            text-shadow: none !important;
-                        }
-                        .hubview-tabs .ant-tabs-tab-btn {
-                            color: var(--muted-foreground) !important;
-                        }
-                        .hubview-tabs .ant-tabs-ink-bar {
-                            background: var(--primary) !important;
-                            height: 2px !important;
-                        }
-                    `}</style>
-                    <Tabs
-                        defaultActiveKey="1"
-                        className="hubview-tabs"
-                        items={[
-                            { key: '1', label: 'Detalhes', children: detalhesTab },
-                            { key: '2', label: 'Atividades', children: atividadesTab }
-                        ]}
-                    />
-                </div>
+                    {/* Body - Details View */}
+                    <div className="flex-1 bg-[var(--background)]">
+                        {detalhesView}
+                    </div>
 
-                {/* Footer */}
-                <div className="flex items-center justify-between p-6 border-t border-[var(--sidebar-border)] bg-[var(--sidebar)] shrink-0">
-                    <Button
-                        variant="ghost"
-                        className="text-[var(--muted-foreground)] hover:text-red-500 hover:bg-red-500/10 px-0 rounded-none font-mono"
-                        onClick={handleDelete}
-                    >
-                        <Trash2 size={16} className="mr-2" /> EXCLUIR
-                    </Button>
-
-                    <div className="flex gap-3">
-                        <Button variant="ghost" className="rounded-none font-mono tracking-widest text-[10px]" onClick={onClose}>CANCELAR</Button>
-                        <Button variant="primary" className="rounded-none font-mono tracking-widest text-[10px]" onClick={handleSave}>
-                            <Save size={16} className="mr-2" /> SALVAR ALTERAÇÕES
+                    {/* Footer */}
+                    <div className="flex items-center justify-between p-6 border-t border-[var(--sidebar-border)] bg-[var(--sidebar)] shrink-0 h-[89px]">
+                        <Button
+                            variant="ghost"
+                            className="text-[var(--muted-foreground)] hover:text-red-500 hover:bg-red-500/10 px-0 rounded-none font-mono"
+                            onClick={handleDelete}
+                        >
+                            <Trash2 size={16} className="mr-2" /> EXCLUIR
                         </Button>
+
+                        <div className="flex gap-3">
+                            <Button variant="ghost" className="rounded-none font-mono tracking-widest text-[10px]" onClick={onClose}>CANCELAR</Button>
+                            <Button variant="primary" className="rounded-none font-mono tracking-widest text-[10px]" onClick={handleSave}>
+                                <Save size={16} className="mr-2" /> SALVAR ALTERAÇÕES
+                            </Button>
+                        </div>
                     </div>
                 </div>
+
+                {/* Optional Sidebar */}
+                {isSidebarOpen && atividadesView}
 
             </div>
         </div>,
