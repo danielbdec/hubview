@@ -67,7 +67,7 @@ export default function ProjectCalendarView({ columns, onEditTask }: ProjectCale
         const dayTasks = tasksByDate.get(dateStr) || [];
 
         return (
-            <div className="w-full h-full min-h-[100px] relative flex flex-col">
+            <div className="w-full h-full min-h-[120px] relative flex flex-col pt-1">
                 <div className="text-right p-2 mb-1">
                     <span className="font-mono text-sm font-bold text-[var(--foreground)] opacity-70">
                         {value.date()}
@@ -172,7 +172,15 @@ export default function ProjectCalendarView({ columns, onEditTask }: ProjectCale
                         if (info.type === 'date') return dateCellRender(current);
                         return info.originNode;
                     }}
-                    className="[&_.ant-picker-calendar-date]:!p-0 [&_.ant-picker-calendar-date]:!m-0 [&_.ant-picker-cell-inner]:!min-w-0 [&_.ant-picker-calendar-date-value]:!hidden [&_.ant-picker-panel]:!bg-transparent [&_.ant-picker-cell-in-view.ant-picker-cell-today_.ant-picker-calendar-date]:!border-[var(--primary)] [&_.ant-picker-cell-in-view.ant-picker-cell-today_.ant-picker-calendar-date]:!border [&_.ant-picker-cell-in-view.ant-picker-cell-today_.ant-picker-calendar-date]:!bg-[var(--primary)]/5"
+                    className={cn(
+                        "[&_.ant-picker-cell]:!p-0",
+                        "[&_.ant-picker-cell-inner]:!p-0 [&_.ant-picker-cell-inner]:!m-0",
+                        "[&_.ant-picker-calendar-date]:!p-0 [&_.ant-picker-calendar-date]:!m-0 [&_.ant-picker-calendar-date]:!w-full",
+                        "[&_.ant-picker-calendar-date-content]:!p-0 [&_.ant-picker-calendar-date-content]:!m-0 [&_.ant-picker-calendar-date-content]:!w-full [&_.ant-picker-calendar-date-content]:!h-full [&_.ant-picker-calendar-date-content]:!overflow-hidden",
+                        "[&_.ant-picker-calendar-date-value]:!hidden",
+                        "[&_.ant-picker-panel]:!bg-transparent",
+                        "[&_.ant-picker-cell-in-view.ant-picker-cell-today_.ant-picker-calendar-date]:!border-[var(--primary)] [&_.ant-picker-cell-in-view.ant-picker-cell-today_.ant-picker-calendar-date]:!border [&_.ant-picker-cell-in-view.ant-picker-cell-today_.ant-picker-calendar-date]:!bg-[var(--primary)]/5"
+                    )}
                 />
             </div>
         </ConfigProvider>
