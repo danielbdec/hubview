@@ -707,7 +707,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
             if (realId) {
                 // Trigger checklist save if new task contains checklist
-                if (task.checklist && task.checklist.length > 0) {
+                if (task.checklist && task.checklist?.length > 0) {
                     api.post('/api/tasks/checklist/save', {
                         taskId: realId,
                         checklist: task.checklist
