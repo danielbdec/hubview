@@ -15,13 +15,18 @@ import {
     DragEndEvent,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates, SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
-import { Plus, RefreshCw, ArrowLeft, LayoutGrid, Loader2 } from 'lucide-react';
+import { Plus, RefreshCw, ArrowLeft, LayoutGrid, Loader2, Search, Filter, Kanban as KanbanIcon, List as ListIcon, Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { KanbanColumn } from '@/components/board/KanbanColumn';
 import { KanbanCard } from '@/components/board/KanbanCard';
 import { TaskModal } from '@/components/board/TaskModal';
 import { createPortal } from 'react-dom';
 import { useProjectStore, Task, Column } from '@/store/kanbanStore';
+import { Segmented, Input, Select } from 'antd';
+import ProjectListView from './ProjectListView';
+import ProjectCalendarView from './ProjectCalendarView';
+
+type ViewMode = 'kanban' | 'list' | 'calendar';
 
 export default function KanbanBoardPage() {
     const params = useParams();
@@ -85,12 +90,63 @@ export default function KanbanBoardPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
 
+    const [activeView, setActiveView] = useState<ViewMode>('kanban');
+    const [filters, setFilters] = useState({
+        search: '',
+        priority: [] as string[],
+        assignees: [] as string[],
+        tags: [] as string[]
+    });
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
-    const columnIds = useMemo(() => columns.map((col) => col.id), [columns]);
+    // Extract unique assignees and tags
+    const { uniqueAssignees, uniqueTags } = useMemo(() => {
+        const assignees = new Set<string>();
+        const tagsMap = new Map<string, { id: string, name: string, color: string }>();
+
+        columns.forEach(col => {
+            col.tasks?.forEach(task => {
+                if (task.assignee) assignees.add(task.assignee);
+                if (task.tags) {
+                    task.tags.forEach(tag => tagsMap.set(tag.id, tag));
+                }
+            });
+        });
+
+        return {
+            uniqueAssignees: Array.from(assignees).sort(),
+            uniqueTags: Array.from(tagsMap.values())
+        };
+    }, [columns]);
+
+    // Filter logic
+    const filteredColumns = useMemo(() => {
+        const hasFilters = filters.search || filters.priority.length > 0 || filters.assignees.length > 0 || filters.tags.length > 0;
+        if (!hasFilters) return columns;
+
+        return columns.map(col => ({
+            ...col,
+            tasks: (col.tasks || []).filter(task => {
+                const matchSearch = !filters.search ||
+                    task.content.toLowerCase().includes(filters.search.toLowerCase()) ||
+                    (task.description?.toLowerCase() || '').includes(filters.search.toLowerCase());
+
+                const matchPriority = filters.priority.length === 0 || filters.priority.includes(task.priority);
+                const matchAssignee = filters.assignees.length === 0 || (task.assignee && filters.assignees.includes(task.assignee));
+                const matchTags = filters.tags.length === 0 || (task.tags && task.tags.some(tag => filters.tags.includes(tag.name)));
+
+                return matchSearch && matchPriority && matchAssignee && matchTags;
+            })
+        }));
+    }, [columns, filters]);
+
+    const hasActiveFilters = !!(filters.search || filters.priority.length || filters.assignees.length || filters.tags.length);
+    const clearFilters = () => setFilters({ search: '', priority: [], assignees: [], tags: [] });
+
+    const columnIds = useMemo(() => filteredColumns.map((col) => col.id), [filteredColumns]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -261,30 +317,103 @@ export default function KanbanBoardPage() {
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
         >
-            <div className="h-full flex flex-col">
-                <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-4">
-                        <Button variant="ghost" size="sm" onClick={() => router.push('/projects')} className="text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
-                            <ArrowLeft size={16} />
-                        </Button>
-                        <div>
-                            <h1 className="text-2xl font-bold uppercase tracking-tight text-[var(--foreground)] mb-1">
-                                {activeProject.title}
-                            </h1>
-                            <p className="text-[var(--muted-foreground)] font-mono text-xs">
-                                STATUS_FLUXO: <span className="text-yellow-500">ATIVO</span> | ID: {activeProject.id.slice(0, 8)}
-                            </p>
+            <div className="h-full flex flex-col pt-2 max-w-full overflow-hidden">
+                {/* Header & Control Bar Area */}
+                <div className="flex flex-col gap-4 mb-6">
+                    {/* Top Header */}
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <Button variant="ghost" size="sm" onClick={() => router.push('/projects')} className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] pr-0 pl-1">
+                                <ArrowLeft size={16} />
+                            </Button>
+                            <div>
+                                <h1 className="text-2xl font-bold uppercase tracking-tight text-[var(--foreground)] mb-1 leading-none shadow-none truncate max-w-[400px]">
+                                    {activeProject.title}
+                                </h1>
+                                <p className="text-[var(--muted-foreground)] font-mono text-xs">
+                                    STATUS_FLUXO: <span className="text-yellow-500 font-bold">ATIVO</span> | <span className="opacity-50 tracking-widest">ID: {activeProject.id.slice(0, 8)}</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-2 shrink-0">
+                            <Button variant="ghost" size="sm" onClick={handleRefresh} title="Atualizar Board" className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)] rounded-none border border-transparent hover:border-[var(--card-border)]">
+                                <RefreshCw size={16} className={isLoadingBoard ? 'animate-spin text-[var(--primary)]' : ''} />
+                            </Button>
+
+                            <Button variant="primary" size="sm" onClick={addColumn} disabled={isLoadingBoard || activeView !== 'kanban'} className="rounded-none font-mono tracking-widest uppercase text-[10px] min-w-[140px]">
+                                <Plus size={16} className="mr-2" /> Novo Painel
+                            </Button>
                         </div>
                     </div>
 
-                    <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" onClick={handleRefresh} title="Atualizar Board" className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)]">
-                            <RefreshCw size={16} className={isLoadingBoard ? 'animate-spin' : ''} />
-                        </Button>
+                    {/* Control Bar */}
+                    <div className="flex items-center justify-between bg-[var(--sidebar)]/80 p-2 border-y border-[var(--sidebar-border)] backdrop-blur-sm -mx-6 px-6">
+                        <div className="flex items-center gap-3 flex-1 overflow-x-auto scrollbar-none py-1">
+                            <Input
+                                placeholder="Buscar tarefas..."
+                                prefix={<Search size={14} className="text-[var(--muted-foreground)]" />}
+                                className="w-64 rounded-none bg-[var(--input-bg)]/80 border-[var(--input-border)] text-[var(--foreground)] hover:border-[var(--primary)] focus:border-[var(--primary)] h-8 text-sm"
+                                value={filters.search}
+                                onChange={e => setFilters(f => ({ ...f, search: e.target.value }))}
+                            />
 
-                        <Button variant="primary" size="sm" onClick={addColumn} disabled={isLoadingBoard}>
-                            <Plus size={16} className="mr-2" /> Novo Painel
-                        </Button>
+                            <Select
+                                mode="multiple"
+                                allowClear
+                                placeholder="Prioridade"
+                                className="min-w-[140px] [&_.ant-select-selector]:rounded-none [&_.ant-select-selector]:bg-[var(--input-bg)] [&_.ant-select-selector]:border-[var(--input-border)] [&_.ant-select-selector]:!min-h-[32px] font-mono text-xs"
+                                value={filters.priority}
+                                onChange={v => setFilters(f => ({ ...f, priority: v }))}
+                                options={[
+                                    { label: 'Alta', value: 'high' },
+                                    { label: 'Média', value: 'medium' },
+                                    { label: 'Baixa', value: 'low' },
+                                ]}
+                            />
+
+                            <Select
+                                mode="multiple"
+                                allowClear
+                                placeholder="Responsável"
+                                className="min-w-[160px] [&_.ant-select-selector]:rounded-none [&_.ant-select-selector]:bg-[var(--input-bg)] [&_.ant-select-selector]:border-[var(--input-border)] [&_.ant-select-selector]:!min-h-[32px] font-mono text-xs"
+                                value={filters.assignees}
+                                onChange={v => setFilters(f => ({ ...f, assignees: v }))}
+                                options={uniqueAssignees.map(a => ({ label: a, value: a }))}
+                            />
+
+                            <Select
+                                mode="multiple"
+                                allowClear
+                                placeholder="Tags"
+                                className="min-w-[160px] [&_.ant-select-selector]:rounded-none [&_.ant-select-selector]:bg-[var(--input-bg)] [&_.ant-select-selector]:border-[var(--input-border)] [&_.ant-select-selector]:!min-h-[32px] font-mono text-xs"
+                                value={filters.tags}
+                                onChange={v => setFilters(f => ({ ...f, tags: v }))}
+                                options={uniqueTags.map(t => ({ label: t.name, value: t.name }))}
+                            />
+
+                            {hasActiveFilters && (
+                                <button
+                                    onClick={clearFilters}
+                                    className="text-[10px] font-mono uppercase tracking-wider text-[var(--muted-foreground)] hover:text-red-500 transition-colors flex items-center gap-1 shrink-0 ml-2"
+                                >
+                                    <Filter size={12} /> Limpar
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="ml-4 shrink-0 border border-[var(--input-border)] bg-[var(--input-bg)] p-0.5 flex">
+                            <Segmented
+                                value={activeView}
+                                onChange={(value) => setActiveView(value as ViewMode)}
+                                className="bg-transparent font-mono text-xs tracking-wider uppercase [&_.ant-segmented-item-selected]:bg-[var(--primary)] [&_.ant-segmented-item-selected]:text-black [&_.ant-segmented-item-selected]:rounded-none [&_.ant-segmented-item]:rounded-none"
+                                options={[
+                                    { label: <div className="flex items-center gap-1.5 px-2 py-0.5"><KanbanIcon size={14} /> Kanban</div>, value: 'kanban' },
+                                    { label: <div className="flex items-center gap-1.5 px-2 py-0.5"><ListIcon size={14} /> Lista</div>, value: 'list' },
+                                    { label: <div className="flex items-center gap-1.5 px-2 py-0.5"><CalendarIcon size={14} /> Calendário</div>, value: 'calendar' },
+                                ]}
+                            />
+                        </div>
                     </div>
                 </div>
 
@@ -293,31 +422,38 @@ export default function KanbanBoardPage() {
                         <Loader2 className="animate-spin text-[var(--primary)] mb-4" size={48} />
                         <p className="text-[var(--muted-foreground)] font-mono text-sm animate-pulse">Carregando painéis...</p>
                     </div>
-                ) : columns.length === 0 ? (
+                ) : filteredColumns.length === 0 ? (
                     <div className="flex-1 flex items-center justify-center">
                         <div className="text-center max-w-md">
                             <div className="mx-auto w-16 h-16 rounded-full bg-[var(--card)] border border-[var(--card-border)] flex items-center justify-center mb-6">
                                 <LayoutGrid size={28} className="text-[var(--muted-foreground)]" />
                             </div>
                             <h2 className="text-xl font-bold uppercase tracking-wider text-[var(--foreground)] mb-3">
-                                Nenhum Painel Criado
+                                {hasActiveFilters ? "Nenhuma tarefa encontrada" : "Nenhum Painel Criado"}
                             </h2>
                             <p className="text-[var(--muted-foreground)] font-mono text-sm leading-relaxed mb-8">
-                                Este projeto ainda não possui painéis.
+                                {hasActiveFilters ? "Tente limpar os filtros para ver suas tarefas." : "Este projeto ainda não possui painéis."}
                             </p>
-                            <Button variant="primary" onClick={addColumn}>
-                                <Plus size={18} className="mr-2" /> Novo Painel
-                            </Button>
+                            {!hasActiveFilters && (
+                                <Button variant="primary" onClick={addColumn} className="rounded-none font-mono">
+                                    <Plus size={18} className="mr-2" /> Novo Painel
+                                </Button>
+                            )}
                         </div>
                     </div>
+                ) : activeView === 'list' ? (
+                    <ProjectListView columns={filteredColumns} onEditTask={openEditModal} />
+                ) : activeView === 'calendar' ? (
+                    <ProjectCalendarView columns={filteredColumns} onEditTask={openEditModal} />
                 ) : (
                     <div className="flex-1 overflow-x-auto pb-4">
                         <div className="flex gap-6 h-full items-stretch min-w-[1000px]">
                             <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
-                                {columns.map((col) => (
+                                {filteredColumns.map((col) => (
                                     <KanbanColumn
                                         key={col.id}
                                         columnId={col.id}
+                                        filteredTasks={col.tasks}
                                         onRequestAddTask={handleRequestAddTask}
                                         onEditTask={openEditModal}
                                     />

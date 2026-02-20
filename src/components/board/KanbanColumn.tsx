@@ -7,7 +7,7 @@ import { Plus, Trash2, MoreHorizontal, Check, Palette, CheckCircle2 } from 'luci
 import { KanbanCard } from '@/components/board/KanbanCard';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { useMemo, useState, useRef, useEffect, memo } from 'react';
-import { useProjectStore } from '@/store/kanbanStore';
+import { useProjectStore, Task } from '@/store/kanbanStore';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { COLUMN_COLORS } from '@/lib/constants';
@@ -19,13 +19,15 @@ function cn(...inputs: ClassValue[]) {
 export interface KanbanColumnProps {
     columnId: string;
     isOverlay?: boolean;
+    filteredTasks?: Task[];
     onRequestAddTask: (columnId: string) => void;
-    onEditTask: (task: any) => void;
+    onEditTask: (task: Task) => void;
 }
 
 export const KanbanColumn = memo(function KanbanColumn({
     columnId,
     isOverlay,
+    filteredTasks,
     onRequestAddTask,
     onEditTask,
 }: KanbanColumnProps) {
@@ -94,10 +96,12 @@ export const KanbanColumn = memo(function KanbanColumn({
         disabled: !!isOverlay
     });
 
+    const tasks = filteredTasks || column?.tasks || [];
+    const tasksMemo = useMemo(() => tasks, [filteredTasks, column?.tasks]);
+    const taskIds = useMemo(() => tasksMemo.map((task) => task.id), [tasksMemo]);
+
     if (!column) return null;
 
-    const tasks = column.tasks || [];
-    const taskIds = useMemo(() => tasks.map((task) => task.id), [tasks]);
     const columnColor = column.color || 'var(--primary)';
 
     const style = {
