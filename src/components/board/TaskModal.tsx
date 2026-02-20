@@ -550,9 +550,9 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                 >
                     <div className="flex items-center justify-center transition-transform duration-300 group-hover:scale-125">
                         {isSidebarOpen ? (
-                            <ChevronRight size={20} className="group-hover:translate-x-0.5 transition-transform" />
-                        ) : (
                             <ChevronLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
+                        ) : (
+                            <ChevronRight size={20} className="group-hover:translate-x-0.5 transition-transform" />
                         )}
                     </div>
                     <div className="flex items-center justify-center h-48 opacity-50 group-hover:opacity-100 transition-opacity">
