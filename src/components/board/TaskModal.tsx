@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Tabs, Spin } from 'antd';
-import { PanelRightOpen, PanelRightClose } from 'lucide-react';
+import { PanelRightOpen, PanelRightClose, ChevronLeft, ChevronRight } from 'lucide-react';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -504,20 +504,6 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                             <span className="text-[10px] text-[var(--muted-foreground)] font-mono uppercase">ID: {task.id.slice(0, 8)}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                                className={cn(
-                                    "p-2 rounded-none border transition-colors flex items-center gap-2 font-mono text-[10px] tracking-widest uppercase",
-                                    isSidebarOpen
-                                        ? "bg-[var(--primary)] text-black border-[var(--primary)]"
-                                        : "bg-[var(--input-bg)] text-[var(--muted-foreground)] border-[var(--sidebar-border)] hover:border-[var(--primary)]/50 hover:text-[var(--foreground)]"
-                                )}
-                                title="Alternar Histórico"
-                            >
-                                {isSidebarOpen ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />}
-                                <span className="hidden sm:inline">Histórico</span>
-                            </button>
-                            <div className="w-[1px] h-6 bg-[var(--sidebar-border)] mx-1" />
                             <button onClick={onClose} className="p-2 text-[var(--muted-foreground)] hover:text-white transition-colors">
                                 <X size={20} />
                             </button>
@@ -550,6 +536,17 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
 
                 {/* Optional Sidebar */}
                 {isSidebarOpen && atividadesView}
+
+                {/* The Modern Arrow Toggle Button */}
+                {!isSidebarOpen && (
+                    <button
+                        onClick={() => setIsSidebarOpen(true)}
+                        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-6 h-16 bg-[var(--input-bg)] border-y border-l border-[var(--primary)] flex items-center justify-center text-[var(--primary)] hover:bg-[var(--primary)] hover:text-black transition-all rounded-l-md shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.5)] group"
+                        title="Ver Histórico & Logs"
+                    >
+                        <ChevronLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+                    </button>
+                )}
 
             </div>
         </div>,
