@@ -427,12 +427,20 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                         <div key={act.id} className="flex gap-3 text-sm font-mono group">
                             <div className="flex flex-col items-center">
                                 <div className={cn(
-                                    "w-7 h-7 rounded-none flex items-center justify-center shrink-0 border transition-colors",
-                                    act.type === 'comment'
+                                    "w-7 h-7 rounded-none flex items-center justify-center shrink-0 border transition-colors overflow-hidden",
+                                    act.type === 'comment' || act.userName !== 'Sistema'
                                         ? "bg-[var(--primary)] text-black border-[var(--primary)]"
                                         : "bg-[var(--input-bg)] text-[var(--muted-foreground)] border-[var(--sidebar-border)]"
                                 )}>
-                                    {act.type === 'comment' ? <MessageSquare size={12} /> : <Activity size={12} />}
+                                    {act.type === 'comment' || act.userName !== 'Sistema' ? (
+                                        <img
+                                            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(act.userName)}&background=22c55e&color=000000&rounded=false&bold=true&font-size=0.4`}
+                                            alt={act.userName}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <Activity size={12} />
+                                    )}
                                 </div>
                                 <div className="w-[1px] h-full bg-[var(--sidebar-border)] my-1 group-last:hidden" />
                             </div>

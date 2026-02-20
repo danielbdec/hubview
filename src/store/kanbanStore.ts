@@ -1054,7 +1054,18 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     },
 
     addTaskActivity: async (taskId, type, content) => {
-        const currentUser = get().currentUser?.name || 'Sistema';
+        let currentUser = get().currentUser?.name;
+        if (!currentUser && typeof window !== 'undefined') {
+            try {
+                const stored = localStorage.getItem('hubview_user');
+                if (stored) {
+                    const user = JSON.parse(stored);
+                    currentUser = user.name;
+                    get().initializeUser();
+                }
+            } catch { /* ignore */ }
+        }
+        currentUser = currentUser || 'Sistema';
 
         const tempActivity: Activity = {
             id: uuidv4(),
