@@ -409,8 +409,8 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
     );
 
     const atividadesView = (
-        <div className="flex flex-col h-full bg-[var(--sidebar)] border-l border-[var(--sidebar-border)] w-96 shrink-0 transition-all duration-300 transform origin-right shadow-[-10px_0_30px_-10px_rgba(0,0,0,0.5)]">
-            <div className="flex items-center justify-between p-6 border-b border-[var(--sidebar-border)] h-[81px] shrink-0 bg-black/20">
+        <div className="flex flex-col h-full bg-[var(--sidebar)] border-l border-[var(--sidebar-border)] w-[400px] shrink-0 shadow-[-10px_0_30px_-10px_rgba(0,0,0,0.5)] z-10 animate-in slide-in-from-right-8 duration-300">
+            <div className="flex items-center justify-between p-6 border-b border-[var(--sidebar-border)] h-[81px] shrink-0 bg-[var(--background)]/50">
                 <h3 className="text-sm font-bold font-mono tracking-widest text-[var(--foreground)] uppercase">
                     Histórico & Logs
                 </h3>
@@ -483,12 +483,12 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 animate-in fade-in duration-200">
             <div className={cn(
-                "relative max-h-[90vh] overflow-hidden bg-[var(--sidebar)] border border-[var(--primary)]/40 shadow-[4px_4px_0_0_var(--primary)] flex animate-in zoom-in-95 duration-200 rounded-none transition-all duration-300 ease-in-out",
-                isSidebarOpen ? "w-[1000px] max-w-[95vw]" : "w-[600px] max-w-full"
+                "relative max-h-[90vh] overflow-hidden bg-[var(--sidebar)] border border-[var(--primary)]/40 shadow-[4px_4px_0_0_var(--primary)] flex animate-in zoom-in-95 duration-200 rounded-none transition-all duration-300 ease-out",
+                isSidebarOpen ? "w-[1048px] max-w-[95vw]" : "w-[648px] max-w-full"
             )} onClick={(e) => e.stopPropagation()}>
 
-                {/* Main Content Area */}
-                <div className="flex flex-col flex-1 min-w-0">
+                {/* Main Content Area (Fixed Width 600px) */}
+                <div className="flex flex-col w-[600px] shrink-0">
                     {/* Header */}
                     <div className="flex items-center justify-between p-6 border-b border-[var(--sidebar-border)] bg-[var(--sidebar)] shrink-0 h-[81px]">
                         <div className="flex flex-col">
@@ -528,19 +528,28 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                     </div>
                 </div>
 
-                {/* Optional Sidebar */}
-                {isSidebarOpen && atividadesView}
-
-                {/* Modern Edge Arrow Toggle Button */}
+                {/* The Brutalist Vertical Pillar Toggle */}
                 <button
                     onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-5 h-20 bg-[var(--background)] border-y border-l border-[var(--primary)] flex items-center justify-center text-[var(--primary)] hover:bg-[var(--primary)] hover:text-black transition-all rounded-l-sm shadow-[-5px_0_20px_-5px_rgba(0,0,0,0.8)] overflow-hidden group cursor-pointer"
-                    title={isSidebarOpen ? "Ocultar Histórico" : "Ver Histórico & Logs"}
+                    className="w-12 shrink-0 border-l border-[var(--sidebar-border)] flex flex-col items-center justify-center gap-8 bg-[var(--background)] hover:bg-[var(--primary)] text-[var(--muted-foreground)] hover:text-black transition-colors group cursor-pointer z-20 shadow-[-5px_0_15px_-5px_rgba(0,0,0,0.5)]"
+                    title={isSidebarOpen ? "Fechar Histórico" : "Ver Histórico & Logs"}
                 >
-                    <div className="flex items-center justify-center w-full h-full transition-transform duration-300 group-hover:scale-125">
-                        {isSidebarOpen ? <ChevronRight size={14} strokeWidth={3} className="ml-0.5" /> : <ChevronLeft size={14} strokeWidth={3} className="mr-0.5 group-hover:-translate-x-0.5 transition-transform" />}
+                    <div className="flex items-center justify-center transition-transform duration-300 group-hover:scale-125">
+                        {isSidebarOpen ? (
+                            <ChevronRight size={20} className="group-hover:translate-x-0.5 transition-transform" />
+                        ) : (
+                            <ChevronLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
+                        )}
+                    </div>
+                    <div className="flex items-center justify-center h-48 opacity-50 group-hover:opacity-100 transition-opacity">
+                        <span className="font-mono text-[10px] tracking-widest uppercase -rotate-90 whitespace-nowrap">
+                            Histórico & Logs
+                        </span>
                     </div>
                 </button>
+
+                {/* Optional Sidebar */}
+                {isSidebarOpen && atividadesView}
 
             </div>
         </div>,
