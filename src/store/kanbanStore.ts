@@ -52,6 +52,7 @@ export type Activity = {
     type: 'comment' | 'history';
     content: string;
     createdAt: string;
+    userAvatar?: string;
 };
 
 export type TaskCounts = Record<string, { total: number; byColumn: Record<string, number>; byPriority: Record<string, number> }>;
@@ -60,6 +61,7 @@ export type User = {
     id: string;
     name: string;
     email: string;
+    avatar?: string | null;
 };
 
 interface ProjectState {
@@ -1055,12 +1057,14 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
     addTaskActivity: async (taskId, type, content) => {
         let currentUser = get().currentUser?.name;
+        let userAvatar = get().currentUser?.avatar;
         if (!currentUser && typeof window !== 'undefined') {
             try {
                 const stored = localStorage.getItem('hubview_user');
                 if (stored) {
                     const user = JSON.parse(stored);
                     currentUser = user.name;
+                    userAvatar = user.avatar;
                     get().initializeUser();
                 }
             } catch { /* ignore */ }
@@ -1071,6 +1075,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             id: uuidv4(),
             taskId,
             userName: currentUser,
+            userAvatar: userAvatar || undefined,
             type,
             content,
             createdAt: new Date().toISOString()
@@ -1087,6 +1092,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             await api.post('/api/tasks/activities/create', {
                 taskId,
                 userName: currentUser,
+                userAvatar: userAvatar || '',
                 type,
                 content
             });

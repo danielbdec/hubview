@@ -432,7 +432,13 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                                         ? "bg-[var(--primary)] text-black border-[var(--primary)]"
                                         : "bg-[var(--input-bg)] text-[var(--muted-foreground)] border-[var(--sidebar-border)]"
                                 )}>
-                                    {act.type === 'comment' || act.userName !== 'Sistema' ? (
+                                    {act.userAvatar ? (
+                                        <img
+                                            src={act.userAvatar}
+                                            alt={act.userName}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : act.type === 'comment' || act.userName !== 'Sistema' ? (
                                         <img
                                             src={`https://ui-avatars.com/api/?name=${encodeURIComponent(act.userName)}&background=22c55e&color=000000&rounded=false&bold=true&font-size=0.4`}
                                             alt={act.userName}
