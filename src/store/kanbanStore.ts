@@ -45,6 +45,15 @@ export type Project = {
     syncStatus?: 'syncing' | 'synced' | 'error';
 };
 
+export type Activity = {
+    id: string;
+    taskId: string;
+    userName: string;
+    type: 'comment' | 'history';
+    content: string;
+    createdAt: string;
+};
+
 export type TaskCounts = Record<string, { total: number; byColumn: Record<string, number>; byPriority: Record<string, number> }>;
 
 export type User = {
@@ -92,6 +101,12 @@ interface ProjectState {
     // Import/Export (scoped to active project)
     setColumns: (columns: Column[]) => void;
 
+    // Activities
+    taskActivities: Record<string, Activity[]>;
+    isLoadingActivities: boolean;
+    fetchTaskActivities: (taskId: string) => Promise<void>;
+    addTaskActivity: (taskId: string, type: 'comment' | 'history', content: string) => Promise<void>;
+
     // View State
     activeView: 'kanban' | 'list' | 'calendar';
     setActiveView: (view: 'kanban' | 'list' | 'calendar') => void;
@@ -105,6 +120,8 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     isLoadingBoard: false,
     currentUser: null,
     activeView: 'kanban',
+    taskActivities: {},
+    isLoadingActivities: false,
     setActiveView: (view) => set({ activeView: view }),
 
     initializeUser: () => {
@@ -736,6 +753,19 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     },
 
     updateTask: async (taskId, updates) => {
+        const state = get();
+        const activeProject = state.projects.find(p => p.id === state.activeProjectId);
+        if (!activeProject) return;
+
+        let oldTask: Task | null = null;
+        for (const col of activeProject.columns) {
+            const task = col.tasks.find(t => t.id === taskId);
+            if (task) {
+                oldTask = task;
+                break;
+            }
+        }
+
         set((state) => {
             const { activeProjectId, projects } = state;
             if (!activeProjectId) return state;
@@ -805,6 +835,17 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
                     })
                 };
             });
+
+            // Log Automated Activities
+            if (oldTask && updates.priority && updates.priority !== oldTask.priority) {
+                const priorityMap = { low: 'Baixa', medium: 'Média', high: 'Alta' };
+                const oldP = priorityMap[oldTask.priority] || oldTask.priority;
+                const newP = priorityMap[updates.priority as 'low' | 'medium' | 'high'] || updates.priority;
+                get().addTaskActivity(taskId, 'history', `Alterou a prioridade de ${oldP} para ${newP}`);
+            }
+            if (oldTask && updates.assignee && updates.assignee !== oldTask.assignee) {
+                get().addTaskActivity(taskId, 'history', `Alterou o responsável de ${oldTask.assignee || 'Ninguém'} para ${updates.assignee}`);
+            }
         } catch (error) {
             console.error('Error updating task:', error);
             set((state) => {
@@ -961,6 +1002,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             // If moved to different column, update the task's columnId immediately
             if (activeColId !== overColId) {
                 await api.post('/api/tasks/update', { id: activeId, columnId: overColId });
+                get().addTaskActivity(activeId, 'history', `Moveu a tarefa para a etapa ${destCol.title}`);
             }
 
             // Prepare batch of position updates
@@ -990,5 +1032,55 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
                 return p;
             })
         }));
+    },
+
+    fetchTaskActivities: async (taskId) => {
+        set({ isLoadingActivities: true });
+        try {
+            const data = await api.post<Activity[]>('/api/tasks/activities/list', { taskId });
+            if (Array.isArray(data)) {
+                set((state) => ({
+                    taskActivities: {
+                        ...state.taskActivities,
+                        [taskId]: data
+                    }
+                }));
+            }
+        } catch (error) {
+            console.error('Error fetching activities:', error);
+        } finally {
+            set({ isLoadingActivities: false });
+        }
+    },
+
+    addTaskActivity: async (taskId, type, content) => {
+        const currentUser = get().currentUser?.name || 'Sistema';
+
+        const tempActivity: Activity = {
+            id: uuidv4(),
+            taskId,
+            userName: currentUser,
+            type,
+            content,
+            createdAt: new Date().toISOString()
+        };
+
+        set((state) => ({
+            taskActivities: {
+                ...state.taskActivities,
+                [taskId]: [...(state.taskActivities[taskId] || []), tempActivity]
+            }
+        }));
+
+        try {
+            await api.post('/api/tasks/activities/create', {
+                taskId,
+                userName: currentUser,
+                type,
+                content
+            });
+        } catch (error) {
+            console.error('Failed to save activity:', error);
+        }
     }
 }));
