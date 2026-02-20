@@ -73,7 +73,7 @@ export default function ProjectCalendarView({ columns, onEditTask }: ProjectCale
                         {value.date()}
                     </span>
                 </div>
-                <ul className="m-0 p-0 pb-2 list-none flex-1 overflow-y-auto scrollbar-none space-y-1.5">
+                <ul className="m-0 p-0 pb-2 list-none flex-1 overflow-y-auto scrollbar-none space-y-1.5 flex flex-col items-center">
                     {dayTasks.map((task, idx) => (
                         <li key={`${task.id}-${dateStr}-${idx}`} className="w-full flex justify-center" onClick={(e) => { e.stopPropagation(); onEditTask(task); }}>
                             <div className="w-[94%] font-sans leading-tight border-l-[3px] cursor-pointer hover:bg-[var(--card-hover)] hover:-translate-y-0.5 transition-all bg-[var(--background)]/80 backdrop-blur-sm shadow-sm p-1.5 flex flex-col gap-1.5 group/calcard"
@@ -153,6 +153,15 @@ export default function ProjectCalendarView({ columns, onEditTask }: ProjectCale
                 components: {
                     Calendar: {
                         fullBg: 'var(--card)',
+                    },
+                    Radio: {
+                        colorPrimary: 'var(--primary)',
+                        buttonBg: 'transparent',
+                        buttonCheckedBg: 'var(--primary)',
+                        buttonColor: 'var(--muted-foreground)',
+                        buttonSolidCheckedColor: '#000000',
+                        buttonSolidCheckedBg: 'var(--primary)',
+                        buttonSolidCheckedHoverBg: 'var(--primary)',
                     }
                 }
             }}
