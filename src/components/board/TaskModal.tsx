@@ -8,7 +8,7 @@ import { createPortal } from 'react-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { Tabs, Spin, Mentions } from 'antd';
+import { Tabs, Spin, Mentions, ConfigProvider, theme } from 'antd';
 import { PanelRightOpen, PanelRightClose, ChevronLeft, ChevronRight } from 'lucide-react';
 
 function cn(...inputs: ClassValue[]) {
@@ -476,14 +476,16 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                 )}
             </div>
             <div className="shrink-0 pt-4 border-t border-[var(--sidebar-border)] bg-[var(--sidebar)]">
-                <Mentions
-                    value={newActivityContent}
-                    onChange={setNewActivityContent}
-                    placeholder="Adicione um comentário para a equipe (use @ para mencionar)..."
-                    className="w-full h-20 bg-[var(--background)] border border-[var(--input-border)] text-[var(--foreground)] p-3 text-sm focus:outline-none focus:border-[var(--primary)] transition-colors hover:border-[var(--primary)] resize-none font-mono rounded-none mb-3 [&_textarea]:bg-transparent [&_textarea]:text-[var(--foreground)]"
-                    options={users.map(u => ({ value: u.name, label: u.name }))}
-                    autoSize={{ minRows: 3, maxRows: 3 }}
-                />
+                <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
+                    <Mentions
+                        value={newActivityContent}
+                        onChange={setNewActivityContent}
+                        placeholder="Adicione um comentário para a equipe (use @ para mencionar)..."
+                        className="w-full h-20 !bg-[var(--background)] border border-[var(--input-border)] !text-[var(--foreground)] p-3 text-sm focus-within:outline-none focus-within:!border-[var(--primary)] transition-colors hover:border-[var(--primary)] resize-none font-mono rounded-none mb-3"
+                        options={users.map(u => ({ value: u.name, label: u.name }))}
+                        autoSize={{ minRows: 3, maxRows: 3 }}
+                    />
+                </ConfigProvider>
                 <Button
                     variant="primary"
                     className="w-full rounded-none font-mono tracking-widest text-xs h-10"
