@@ -2,7 +2,7 @@
 
 CREATE TABLE TaskActivities (
     id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    taskId UNIQUEIDENTIFIER NOT KEY,
+    taskId UNIQUEIDENTIFIER NOT NULL,
     userName NVARCHAR(100) NOT NULL,
     type NVARCHAR(20) NOT NULL CHECK (type IN ('comment', 'history')),
     content NVARCHAR(MAX) NOT NULL,
