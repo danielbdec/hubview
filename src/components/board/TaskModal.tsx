@@ -482,7 +482,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                         onChange={setNewActivityContent}
                         placeholder="Adicione um comentário para a equipe (use @ para mencionar)..."
                         className="w-full h-20 !bg-[var(--background)] border border-[var(--input-border)] !text-[var(--foreground)] p-3 text-sm focus-within:outline-none focus-within:!border-[var(--primary)] transition-colors hover:border-[var(--primary)] resize-none font-mono rounded-none mb-3"
-                        options={users.map(u => ({ value: u.name, label: u.name }))}
+                        options={users.map(u => ({ value: u.name.replace(/\s+/g, ''), label: u.name }))}
                         autoSize={{ minRows: 3, maxRows: 3 }}
                     />
                 </ConfigProvider>
