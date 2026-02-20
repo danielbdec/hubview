@@ -414,12 +414,6 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                 <h3 className="text-sm font-bold font-mono tracking-widest text-[var(--foreground)] uppercase">
                     Histórico & Logs
                 </h3>
-                <button
-                    onClick={() => setIsSidebarOpen(false)}
-                    className="p-1.5 rounded-none hover:bg-white/5 border border-transparent hover:border-white/10 text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
-                >
-                    <X size={16} />
-                </button>
             </div>
             <div className="flex-1 overflow-y-auto space-y-4 p-6 custom-scrollbar">
                 {isLoadingActivities ? (
@@ -537,16 +531,16 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                 {/* Optional Sidebar */}
                 {isSidebarOpen && atividadesView}
 
-                {/* The Modern Arrow Toggle Button */}
-                {!isSidebarOpen && (
-                    <button
-                        onClick={() => setIsSidebarOpen(true)}
-                        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-6 h-16 bg-[var(--input-bg)] border-y border-l border-[var(--primary)] flex items-center justify-center text-[var(--primary)] hover:bg-[var(--primary)] hover:text-black transition-all rounded-l-md shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.5)] group"
-                        title="Ver Histórico & Logs"
-                    >
-                        <ChevronLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
-                    </button>
-                )}
+                {/* Modern Edge Arrow Toggle Button */}
+                <button
+                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-5 h-20 bg-[var(--background)] border-y border-l border-[var(--primary)] flex items-center justify-center text-[var(--primary)] hover:bg-[var(--primary)] hover:text-black transition-all rounded-l-sm shadow-[-5px_0_20px_-5px_rgba(0,0,0,0.8)] overflow-hidden group cursor-pointer"
+                    title={isSidebarOpen ? "Ocultar Histórico" : "Ver Histórico & Logs"}
+                >
+                    <div className="flex items-center justify-center w-full h-full transition-transform duration-300 group-hover:scale-125">
+                        {isSidebarOpen ? <ChevronRight size={14} strokeWidth={3} className="ml-0.5" /> : <ChevronLeft size={14} strokeWidth={3} className="mr-0.5 group-hover:-translate-x-0.5 transition-transform" />}
+                    </div>
+                </button>
 
             </div>
         </div>,
