@@ -9,6 +9,7 @@ import {
     LayoutDashboard,
     KanbanSquare,
     Settings,
+    Users,
     Menu,
     ChevronLeft,
     LogOut
@@ -23,6 +24,7 @@ function cn(...inputs: ClassValue[]) {
 const menuItems = [
     { icon: LayoutDashboard, label: 'DASHBOARD', href: '/' },
     { icon: KanbanSquare, label: 'PROJETOS', href: '/projects' },
+    { icon: Users, label: 'USUÁRIOS', href: '/users' },
     { icon: Settings, label: 'CONFIGURAÇÕES', href: '/settings' },
 ];
 

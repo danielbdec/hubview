@@ -76,6 +76,8 @@ export type User = {
     id: string;
     name: string;
     email: string;
+    role?: string;
+    createdAt?: string;
     avatar?: string | null;
 };
 
@@ -84,6 +86,12 @@ interface ProjectState {
     activeProjectId: string | null;
     taskCounts: TaskCounts;
     currentUser: User | null;
+
+    // Users Management
+    users: User[];
+    isLoadingUsers: boolean;
+    fetchUsers: () => Promise<void>;
+    registerUser: (userData: { name: string; email: string; password?: string; role?: string }) => Promise<void>;
 
     // Initialization
     initializeUser: () => void;
@@ -148,6 +156,8 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     isLoadingActivities: false,
     notifications: [],
     unreadNotificationsCount: 0,
+    users: [],
+    isLoadingUsers: false,
     setActiveView: (view) => set({ activeView: view }),
 
     initializeUser: () => {
@@ -179,6 +189,32 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             }
         } catch (error) {
             console.error('Failed to fetch notifications', error);
+        }
+    },
+
+    fetchUsers: async () => {
+        set({ isLoadingUsers: true });
+        try {
+            const data = await api.get<any>('/api/users/list');
+            // Check if backend returned { users: [...] } or just an array
+            const userList = Array.isArray(data) ? data : (data.users || []);
+            set({ users: userList });
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        } finally {
+            set({ isLoadingUsers: false });
+        }
+    },
+
+    registerUser: async (userData) => {
+        try {
+            const response = await api.post<any>('/api/users/create', userData);
+            // Refresh the user list after successful registration
+            await get().fetchUsers();
+            return response;
+        } catch (error) {
+            console.error('Error registering user:', error);
+            throw error;
         }
     },
 

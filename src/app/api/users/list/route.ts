@@ -26,10 +26,13 @@ export async function GET() {
         const data = await response.json();
         const users = Array.isArray(data) ? data : [data];
 
-        // Return only id and name for the selector
+        // Return mapped fields including email, role, etc.
         const mapped = users.map((u: any) => ({
             id: u.id,
             name: u.name,
+            email: u.email || '',
+            role: u.role || 'Operador',
+            createdAt: u.createdAt || new Date().toISOString(),
             avatar: u.avatar || '',
         }));
 
