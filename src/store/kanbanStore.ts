@@ -1027,7 +1027,8 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         if (activeColId === overColId) {
             // Same column reorder
             const overTaskIndex = sourceCol.tasks.findIndex(t => t.id === overId);
-            sourceCol.tasks = arrayMove(sourceCol.tasks, activeTaskIndex, overTaskIndex);
+            const newIndex = overTaskIndex >= 0 ? overTaskIndex : sourceCol.tasks.length - 1;
+            sourceCol.tasks = arrayMove(sourceCol.tasks, activeTaskIndex, newIndex);
 
             // Re-assign positions
             sourceCol.tasks = sourceCol.tasks.map((t, i) => ({ ...t, position: i }));
@@ -1065,8 +1066,6 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
         // Sequential Sync Logic
         try {
-            const updatesToSync: Promise<any>[] = [];
-
             // If moved to different column, update the task's columnId immediately
             if (activeColId !== overColId) {
                 await api.post('/api/tasks/update', { id: activeId, columnId: overColId });

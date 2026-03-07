@@ -16,6 +16,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@types/uuid": "^10.0.0",
     "antd": "^6.3.0",
+    "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.19",
     "framer-motion": "^12.34.1",

@@ -143,6 +143,7 @@ export const KanbanColumn = memo(function KanbanColumn({
         <div
             ref={setNodeRef}
             style={style}
+            data-kanban-column-id={!isOverlay ? column.id : undefined}
             className={cn(
                 "w-80 flex-shrink-0 flex flex-col rounded-md border transition-all relative h-full max-h-full shadow-sm",
                 "bg-[var(--column-bg)] border-[var(--card-border)]",

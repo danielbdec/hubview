@@ -19,10 +19,11 @@ import { Plus, RefreshCw, ArrowLeft, LayoutGrid, Loader2, Search, Filter } from 
 import { Button } from '@/components/ui/Button';
 import { KanbanColumn } from '@/components/board/KanbanColumn';
 import { KanbanCard } from '@/components/board/KanbanCard';
+import { CompletionConfetti, type CompletionBurst } from '@/components/board/CompletionConfetti';
 import { TaskModal } from '@/components/board/TaskModal';
 import { createPortal } from 'react-dom';
 import { useProjectStore, Task, Column } from '@/store/kanbanStore';
-import { Segmented, Input, Select, ConfigProvider, theme } from 'antd';
+import { Input, Select, ConfigProvider, theme } from 'antd';
 import ProjectListView from './ProjectListView';
 import ProjectCalendarView from './ProjectCalendarView';
 export default function KanbanBoardPage() {
@@ -33,18 +34,12 @@ export default function KanbanBoardPage() {
     const {
         projects,
         setActiveProject,
-        activeProjectId,
         addColumn,
-        deleteColumn,
-        updateColumnTitle,
-        updateColumnColor,
         addTask,
         updateTask,
         deleteTask,
         moveColumn,
         moveTask,
-        toggleColumnDone,
-        setColumns,
         fetchProjects,
         fetchBoardData,
         isLoadingProjects,
@@ -53,6 +48,7 @@ export default function KanbanBoardPage() {
     } = useProjectStore();
 
     const hasFetchedRef = useRef(false);
+    const dragSourceColumnIdRef = useRef<string | null>(null);
 
     // Fetch projects first (needed on browser reload), then board data
     useEffect(() => {
@@ -87,6 +83,7 @@ export default function KanbanBoardPage() {
     const [editingTask, setEditingTask] = useState<Task | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const [celebrationBurst, setCelebrationBurst] = useState<CompletionBurst | null>(null);
 
     const [filters, setFilters] = useState({
         search: '',
@@ -220,6 +217,28 @@ export default function KanbanBoardPage() {
         }
     };
 
+    const buildCelebrationBurst = (column: Column, fallbackRect?: { left: number; top: number; width: number; height: number }): CompletionBurst | null => {
+        if (typeof window === 'undefined') return null;
+
+        const targetElement = document.querySelector<HTMLElement>(`[data-kanban-column-id="${column.id}"]`);
+        const rect = targetElement?.getBoundingClientRect() || fallbackRect;
+
+        const originX = rect
+            ? rect.left + rect.width / 2
+            : window.innerWidth * 0.72;
+
+        const originY = rect
+            ? Math.max(96, rect.top + Math.min(rect.height * 0.24, 110))
+            : Math.min(window.innerHeight * 0.34, 240);
+
+        return {
+            id: `${Date.now()}-${column.id}`,
+            originX,
+            originY,
+            accent: column.color || '#10b981',
+        };
+    };
+
     // --- Drag and Drop Handlers ---
 
     function handleDragStart(event: DragStartEvent) {
@@ -228,11 +247,13 @@ export default function KanbanBoardPage() {
         const update = active.data.current;
 
         if (update?.type === 'Column') {
+            dragSourceColumnIdRef.current = null;
             setActiveColumn(update.column);
             return;
         }
 
         if (update?.type === 'Task') {
+            dragSourceColumnIdRef.current = findColumn(active.id as string)?.id || null;
             setActiveTask(update.task);
             return;
         }
@@ -264,9 +285,11 @@ export default function KanbanBoardPage() {
     function handleDragEnd(event: DragEndEvent) {
         if (activeView !== 'kanban') return;
         const { active, over } = event;
+        const sourceColumnId = dragSourceColumnIdRef.current;
 
         setActiveColumn(null);
         setActiveTask(null);
+        dragSourceColumnIdRef.current = null;
 
         if (!over) return;
 
@@ -282,11 +305,32 @@ export default function KanbanBoardPage() {
         } else {
             const activeColumn = findColumn(activeId);
             const overColumn = findColumn(overId);
+            const sourceColumn = sourceColumnId ? columns.find((column) => column.id === sourceColumnId) || null : null;
 
             if (activeColumn && overColumn) {
                 moveTask(activeId, overId, activeColumn.id, overColumn.id);
+
+                const shouldCelebrateCompletion = !!(
+                    sourceColumn &&
+                    sourceColumn.id !== overColumn.id &&
+                    sourceColumn.isDone !== true &&
+                    overColumn.isDone === true
+                );
+
+                if (shouldCelebrateCompletion) {
+                    const burst = buildCelebrationBurst(overColumn, over.rect);
+                    if (burst) {
+                        setCelebrationBurst(burst);
+                    }
+                }
             }
         }
+    }
+
+    function handleDragCancel() {
+        dragSourceColumnIdRef.current = null;
+        setActiveColumn(null);
+        setActiveTask(null);
     }
 
     if (!mounted) return null;
@@ -318,6 +362,7 @@ export default function KanbanBoardPage() {
             onDragStart={handleDragStart}
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
         >
             <div className="h-full flex flex-col pt-2 max-w-full overflow-hidden">
                 {/* Header & Control Bar Area */}
@@ -501,6 +546,8 @@ export default function KanbanBoardPage() {
                 onSave={handleSaveTask}
                 onDelete={deleteTask}
             />
+
+            <CompletionConfetti burst={celebrationBurst} />
 
             {
                 createPortal(
