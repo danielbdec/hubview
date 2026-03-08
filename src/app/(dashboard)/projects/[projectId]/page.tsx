@@ -296,33 +296,41 @@ export default function KanbanBoardPage() {
         const activeId = active.id as string;
         const overId = over.id as string;
 
-        if (activeId === overId) return;
-
         const isActiveColumn = active.data.current?.type === 'Column';
+
+        // Check for completion celebration BEFORE early return.
+        // handleDragOver already moves the card across columns during drag,
+        // so by the time handleDragEnd fires, activeId === overId can be true
+        // even though the card crossed columns. We use sourceColumnId (captured
+        // at drag start) to detect cross-column moves to a "done" column.
+        if (!isActiveColumn && sourceColumnId) {
+            const currentColumn = findColumn(activeId);
+            const sourceColumn = columns.find(c => c.id === sourceColumnId) || null;
+
+            if (
+                currentColumn &&
+                sourceColumn &&
+                sourceColumn.id !== currentColumn.id &&
+                sourceColumn.isDone !== true &&
+                currentColumn.isDone === true
+            ) {
+                const burst = buildCelebrationBurst(currentColumn, over.rect);
+                if (burst) {
+                    setCelebrationBurst(burst);
+                }
+            }
+        }
+
+        if (activeId === overId) return;
 
         if (isActiveColumn) {
             moveColumn(activeId, overId);
         } else {
             const activeColumn = findColumn(activeId);
             const overColumn = findColumn(overId);
-            const sourceColumn = sourceColumnId ? columns.find((column) => column.id === sourceColumnId) || null : null;
 
             if (activeColumn && overColumn) {
                 moveTask(activeId, overId, activeColumn.id, overColumn.id);
-
-                const shouldCelebrateCompletion = !!(
-                    sourceColumn &&
-                    sourceColumn.id !== overColumn.id &&
-                    sourceColumn.isDone !== true &&
-                    overColumn.isDone === true
-                );
-
-                if (shouldCelebrateCompletion) {
-                    const burst = buildCelebrationBurst(overColumn, over.rect);
-                    if (burst) {
-                        setCelebrationBurst(burst);
-                    }
-                }
             }
         }
     }
