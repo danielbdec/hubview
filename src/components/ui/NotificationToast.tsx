@@ -18,21 +18,21 @@ interface NotificationToastProps {
 const config: Record<NotificationType, { icon: typeof CheckCircle; gradient: string; border: string; glow: string }> = {
     success: {
         icon: CheckCircle,
-        gradient: 'from-emerald-500/20 via-emerald-500/5 to-transparent',
-        border: 'border-emerald-500/40',
-        glow: 'shadow-[0_0_30px_-5px_rgba(16,185,129,0.4)]',
+        gradient: 'from-emerald-500/30 via-emerald-500/10 to-emerald-900/5',
+        border: 'border-emerald-500/60',
+        glow: 'shadow-[0_0_40px_-5px_rgba(16,185,129,0.5)]',
     },
     error: {
         icon: XCircle,
-        gradient: 'from-rose-500/20 via-rose-500/5 to-transparent',
-        border: 'border-rose-500/40',
-        glow: 'shadow-[0_0_30px_-5px_rgba(244,63,94,0.4)]',
+        gradient: 'from-rose-500/40 via-rose-500/15 to-rose-900/5',
+        border: 'border-rose-500/70',
+        glow: 'shadow-[0_0_40px_-5px_rgba(244,63,94,0.6)]',
     },
     warning: {
         icon: AlertTriangle,
-        gradient: 'from-amber-500/20 via-amber-500/5 to-transparent',
-        border: 'border-amber-500/40',
-        glow: 'shadow-[0_0_30px_-5px_rgba(245,158,11,0.4)]',
+        gradient: 'from-amber-500/30 via-amber-500/10 to-amber-900/5',
+        border: 'border-amber-500/60',
+        glow: 'shadow-[0_0_40px_-5px_rgba(245,158,11,0.5)]',
     },
 };
 
@@ -48,7 +48,7 @@ export default function NotificationToast({
     title,
     message,
     onClose,
-    duration = 4000,
+    duration = 8000,
 }: NotificationToastProps) {
     const { icon: Icon, gradient, border, glow } = config[type];
 
@@ -67,11 +67,12 @@ export default function NotificationToast({
                     exit={{ opacity: 0, y: -20, scale: 0.95 }}
                     transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                     className={`
-                        fixed top-6 right-6 z-[100] 
+                        fixed top-20 right-6 z-[100] 
                         min-w-[340px] max-w-[420px]
-                        bg-[var(--sidebar)] ${border} border
+                        bg-[#0d1117]/95 ${border} border
                         ${glow}
                         backdrop-blur-xl
+                        ring-1 ring-white/5
                     `}
                 >
                     {/* Top accent line */}

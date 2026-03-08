@@ -79,6 +79,7 @@ export type User = {
     role?: string;
     createdAt?: string;
     avatar?: string | null;
+    isActive?: boolean;
 };
 
 interface ProjectState {
@@ -92,6 +93,7 @@ interface ProjectState {
     isLoadingUsers: boolean;
     fetchUsers: () => Promise<void>;
     registerUser: (userData: { name: string; email: string; password?: string; role?: string }) => Promise<void>;
+    deactivateUser: (userId: string) => Promise<void>;
 
     // Initialization
     initializeUser: () => void;
@@ -214,6 +216,19 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             return response;
         } catch (error) {
             console.error('Error registering user:', error);
+            throw error;
+        }
+    },
+
+    deactivateUser: async (userId: string) => {
+        try {
+            await api.post<any>('/api/users/deactivate', { userId });
+            // Mark user as inactive in local state
+            set((state) => ({
+                users: state.users.map(u => u.id === userId ? { ...u, isActive: false } : u)
+            }));
+        } catch (error) {
+            console.error('Error deactivating user:', error);
             throw error;
         }
     },

@@ -241,12 +241,12 @@ export default function DashboardPage() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
-            className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-tech-green/10 border border-tech-green/20"
+            className="hidden md:block"
           >
-            <Zap size={12} className="text-tech-green" />
-            <span className="text-[10px] font-mono font-bold text-tech-green uppercase tracking-wider">
+            <Button variant="status" size="sm">
+              <Zap size={12} />
               Sistema Online
-            </span>
+            </Button>
           </motion.div>
           <Link href="/projects">
             <Button variant="primary" size="md">

@@ -34,6 +34,7 @@ export async function GET() {
             role: u.role || 'Operador',
             createdAt: u.createdAt || new Date().toISOString(),
             avatar: u.avatar || '',
+            isActive: u.isActive !== undefined ? Boolean(u.isActive) : true,
         }));
 
         return NextResponse.json(mapped);
