@@ -522,7 +522,7 @@ export default function KanbanBoardPage() {
                     <ProjectCalendarView columns={filteredColumns} onEditTask={openEditModal} />
                 ) : (
                     <div className="flex-1 overflow-x-auto pb-4">
-                        <div className="flex gap-6 h-full items-stretch min-w-[1000px]">
+                        <div className="flex gap-6 h-full items-stretch min-w-[1220px]">
                             <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
                                 {filteredColumns.map((col) => (
                                     <KanbanColumn

@@ -293,7 +293,16 @@ export default function LoginPage() {
                                                 clipPath: 'polygon(0 0, 100% 0, 100% 75%, 95% 100%, 0 100%)'
                                             }}
                                         >
-                                            <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10" />
+                                            <div
+                                                className="absolute inset-0 opacity-20"
+                                                style={{
+                                                    backgroundImage: `
+                                                        linear-gradient(135deg, rgba(255,255,255,0.14) 0%, transparent 32%),
+                                                        repeating-linear-gradient(90deg, rgba(255,255,255,0.08) 0px, rgba(255,255,255,0.08) 1px, transparent 1px, transparent 11px)
+                                                    `,
+                                                    backgroundSize: '100% 100%, 12px 12px',
+                                                }}
+                                            />
                                             <div className="relative flex items-center justify-center gap-2">
                                                 {isLoading ? (
                                                     <>
@@ -344,4 +353,3 @@ export default function LoginPage() {
         </div>
     );
 }
-

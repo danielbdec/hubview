@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 /**
  * Enhanced Floating Particles with Z-depth simulation
@@ -16,7 +16,7 @@ export function FloatingParticles() {
         if (!ctx) return;
 
         let animationId: number;
-        let particles: Array<{
+        const particles: Array<{
             x: number; y: number; z: number;
             vx: number; vy: number; vz: number;
             size: number; opacity: number; hue: number;
@@ -114,40 +114,131 @@ export function FloatingParticles() {
 }
 
 /**
- * 3D Perspective Grid Floor
+ * Orbital HUD backdrop for the login screen
  */
 export function PerspectiveGrid() {
+    const shouldReduceMotion = useReducedMotion();
+    const ringConfigs = [
+        {
+            size: 900,
+            duration: 34,
+            opacity: 0.2,
+            border: 'rgba(16, 185, 129, 0.16)',
+            mask: 'radial-gradient(circle, transparent 58%, black 58.8%, black 61.8%, transparent 62.8%)',
+            fill: 'repeating-conic-gradient(from 0deg, rgba(16,185,129,0.28) 0deg 9deg, transparent 9deg 24deg)',
+        },
+        {
+            size: 680,
+            duration: 24,
+            opacity: 0.26,
+            border: 'rgba(34, 211, 238, 0.14)',
+            mask: 'radial-gradient(circle, transparent 50%, black 51%, black 54%, transparent 55%)',
+            fill: 'repeating-conic-gradient(from 12deg, rgba(34,211,238,0.22) 0deg 12deg, transparent 12deg 28deg)',
+        },
+        {
+            size: 460,
+            duration: 18,
+            opacity: 0.34,
+            border: 'rgba(255, 255, 255, 0.12)',
+            mask: 'radial-gradient(circle, transparent 44%, black 45%, black 48%, transparent 49%)',
+            fill: 'repeating-conic-gradient(from 0deg, rgba(250,204,21,0.18) 0deg 7deg, transparent 7deg 22deg)',
+        },
+    ];
+
+    const beamConfigs = [
+        { left: '18%', width: 160, delay: 0, duration: 7.5, color: 'rgba(16,185,129,0.14)' },
+        { left: '50%', width: 220, delay: 1.1, duration: 9, color: 'rgba(34,211,238,0.12)' },
+        { left: '78%', width: 180, delay: 2.2, duration: 8.3, color: 'rgba(250,204,21,0.08)' },
+    ];
+
     return (
-        <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden"
-            style={{ perspective: '1000px' }}>
+        <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(18,34,28,0.78),rgba(3,8,6,0.94)_34%,#020403_72%,#010201_100%)]" />
 
-            {/* The Grid Plane */}
             <motion.div
-                className="absolute inset-[-100%]"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 2 }}
+                className="absolute left-1/2 top-1/2 h-[58rem] w-[58rem] -translate-x-1/2 -translate-y-[48%] rounded-full"
                 style={{
-                    transform: 'rotateX(60deg) translateY(-20%)',
-                    background: 'linear-gradient(transparent 0%, rgba(16, 185, 129, 0.05) 100%)',
-                    backgroundImage: `
-                        linear-gradient(0deg, transparent 24%, rgba(16, 185, 129, .15) 25%, rgba(16, 185, 129, .15) 26%, transparent 27%, transparent 74%, rgba(16, 185, 129, .15) 75%, rgba(16, 185, 129, .15) 76%, transparent 77%, transparent),
-                        linear-gradient(90deg, transparent 24%, rgba(16, 185, 129, .15) 25%, rgba(16, 185, 129, .15) 26%, transparent 27%, transparent 74%, rgba(16, 185, 129, .15) 75%, rgba(16, 185, 129, .15) 76%, transparent 77%, transparent)
-                    `,
-                    backgroundSize: '80px 80px',
-                    transformOrigin: '50% 100%',
+                    background: 'radial-gradient(circle, rgba(16,185,129,0.16) 0%, rgba(34,211,238,0.10) 24%, rgba(16,185,129,0.05) 42%, transparent 70%)',
+                    filter: 'blur(30px)',
                 }}
-            >
-                {/* Moving scanline inside the grid */}
-                <motion.div
-                    className="absolute inset-0 bg-gradient-to-t from-emerald-500/10 to-transparent"
-                    animate={{ y: ['0%', '100%'] }}
-                    transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
-                />
-            </motion.div>
+                animate={shouldReduceMotion ? undefined : { scale: [0.96, 1.03, 0.98], opacity: [0.5, 0.85, 0.62] }}
+                transition={shouldReduceMotion ? undefined : { duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+            />
 
-            {/* Horizon Glow / Fog */}
-            <div className="absolute top-0 left-0 right-0 h-2/3 bg-gradient-to-b from-[#030806] via-[#030806]/90 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,transparent_0%,transparent_18%,rgba(16,185,129,0.05)_34%,transparent_62%)] opacity-90" />
+
+            {ringConfigs.map((ring, index) => (
+                <motion.div
+                    key={ring.size}
+                    className="absolute left-1/2 top-1/2 rounded-full border"
+                    style={{
+                        width: ring.size,
+                        height: ring.size,
+                        marginLeft: -ring.size / 2,
+                        marginTop: -ring.size * 0.47,
+                        borderColor: ring.border,
+                        background: ring.fill,
+                        opacity: ring.opacity,
+                        WebkitMaskImage: ring.mask,
+                        maskImage: ring.mask,
+                        boxShadow: index === 2 ? '0 0 40px rgba(16,185,129,0.08)' : undefined,
+                    }}
+                    animate={shouldReduceMotion ? undefined : { rotate: index % 2 === 0 ? 360 : -360, scale: [1, 1.02, 0.99, 1] }}
+                    transition={shouldReduceMotion ? undefined : { duration: ring.duration, repeat: Infinity, ease: 'linear' }}
+                />
+            ))}
+
+            <motion.div
+                className="absolute left-1/2 top-1/2 h-[22rem] w-[22rem] -translate-x-1/2 -translate-y-[52%] rounded-full border border-emerald-400/25"
+                style={{
+                    boxShadow: '0 0 60px rgba(16,185,129,0.12), inset 0 0 40px rgba(34,211,238,0.05)',
+                    background: 'radial-gradient(circle, rgba(255,255,255,0.03) 0%, rgba(16,185,129,0.04) 42%, transparent 78%)',
+                }}
+                animate={shouldReduceMotion ? undefined : { scale: [0.96, 1.03, 0.98], rotate: [0, 10, 0] }}
+                transition={shouldReduceMotion ? undefined : { duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+            />
+
+            {beamConfigs.map((beam) => (
+                <motion.div
+                    key={beam.left}
+                    className="absolute top-[-15%] h-[130%] -translate-x-1/2"
+                    style={{
+                        left: beam.left,
+                        width: beam.width,
+                        background: `linear-gradient(180deg, transparent 0%, ${beam.color} 22%, rgba(255,255,255,0.03) 50%, transparent 88%)`,
+                        filter: 'blur(22px)',
+                    }}
+                    animate={shouldReduceMotion ? undefined : { opacity: [0.12, 0.42, 0.14], x: [0, 24, -18, 0], y: ['-4%', '2%', '-1%', '-4%'] }}
+                    transition={shouldReduceMotion ? undefined : { duration: beam.duration, delay: beam.delay, repeat: Infinity, ease: 'easeInOut' }}
+                />
+            ))}
+
+            <motion.div
+                className="absolute left-1/2 top-[12%] h-[32rem] w-[32rem] -translate-x-1/2 rounded-full"
+                style={{
+                    background: 'conic-gradient(from 180deg, transparent 0deg, rgba(16,185,129,0.18) 54deg, transparent 118deg, rgba(34,211,238,0.16) 200deg, transparent 280deg, rgba(250,204,21,0.10) 328deg, transparent 360deg)',
+                    filter: 'blur(18px)',
+                    opacity: 0.22,
+                }}
+                animate={shouldReduceMotion ? undefined : { rotate: [0, 360] }}
+                transition={shouldReduceMotion ? undefined : { duration: 22, repeat: Infinity, ease: 'linear' }}
+            />
+
+            <div
+                className="absolute inset-0 opacity-[0.16]"
+                style={{
+                    backgroundImage: `
+                        linear-gradient(90deg, transparent 0%, rgba(16,185,129,0.16) 50%, transparent 100%),
+                        linear-gradient(0deg, transparent 0%, rgba(34,211,238,0.12) 50%, transparent 100%)
+                    `,
+                    backgroundSize: '220px 220px, 220px 220px',
+                    maskImage: 'radial-gradient(circle at center, black 0%, rgba(0,0,0,0.8) 38%, transparent 78%)',
+                }}
+            />
+
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,transparent_46%,rgba(2,4,3,0.48)_74%,rgba(1,2,1,0.92)_100%)]" />
+            <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/45 via-[#020403]/25 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-black/70 via-[#020403]/30 to-transparent" />
         </div>
     );
 }

@@ -3,7 +3,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { Plus, Trash2, MoreHorizontal, Check, Palette, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, MoreHorizontal, Palette, CheckCircle2 } from 'lucide-react';
 import { KanbanCard } from '@/components/board/KanbanCard';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { useMemo, useState, useRef, useEffect, memo } from 'react';
@@ -14,6 +14,20 @@ import { COLUMN_COLORS } from '@/lib/constants';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
+}
+
+function hexToRgba(hex: string, alpha: number) {
+    const normalized = hex.replace('#', '').trim();
+
+    if (normalized.length !== 6) {
+        return `rgba(169, 239, 47, ${alpha})`;
+    }
+
+    const r = Number.parseInt(normalized.slice(0, 2), 16);
+    const g = Number.parseInt(normalized.slice(2, 4), 16);
+    const b = Number.parseInt(normalized.slice(4, 6), 16);
+
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 export interface KanbanColumnProps {
@@ -45,26 +59,11 @@ export const KanbanColumn = memo(function KanbanColumn({
     } = useProjectStore();
 
     const [isEditingTitle, setIsEditingTitle] = useState(false);
-    const [titleInput, setTitleInput] = useState('');
+    const [draftTitle, setDraftTitle] = useState<string | null>(null);
     const [showSettings, setShowSettings] = useState(false);
     const [showDeleteColumnConfirm, setShowDeleteColumnConfirm] = useState(false);
     const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
     const settingsRef = useRef<HTMLDivElement>(null);
-
-    const initialMountRef = useRef(true);
-
-    useEffect(() => {
-        if (column && !isEditingTitle) {
-            if (initialMountRef.current) {
-                // To avoid set-state-in-effect lint on initial load
-                initialMountRef.current = false;
-                // eslint-disable-next-line react-hooks/exhaustive-deps
-                setTitleInput(column.title);
-            } else if (titleInput !== column.title) {
-                setTitleInput(column.title);
-            }
-        }
-    }, [column?.title, isEditingTitle, column, titleInput]);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -96,13 +95,13 @@ export const KanbanColumn = memo(function KanbanColumn({
         disabled: !!isOverlay
     });
 
-    const tasks = filteredTasks || column?.tasks || [];
-    const tasksMemo = useMemo(() => tasks, [filteredTasks, column?.tasks]);
-    const taskIds = useMemo(() => tasksMemo.map((task) => task.id), [tasksMemo]);
+    const tasks = useMemo(() => filteredTasks ?? column?.tasks ?? [], [filteredTasks, column?.tasks]);
+    const taskIds = useMemo(() => tasks.map((task) => task.id), [tasks]);
 
     if (!column) return null;
 
     const columnColor = column.color || 'var(--primary)';
+    const titleInput = draftTitle ?? column.title;
 
     const style = {
         transition,
@@ -113,9 +112,8 @@ export const KanbanColumn = memo(function KanbanColumn({
     const handleTitleSubmit = () => {
         if (titleInput.trim()) {
             updateTitleAction(column.id, titleInput);
-        } else {
-            setTitleInput(column.title);
         }
+        setDraftTitle(null);
         setIsEditingTitle(false);
     };
 
@@ -145,7 +143,7 @@ export const KanbanColumn = memo(function KanbanColumn({
             style={style}
             data-kanban-column-id={!isOverlay ? column.id : undefined}
             className={cn(
-                "w-80 flex-shrink-0 flex flex-col rounded-md border transition-all relative h-full max-h-full shadow-sm",
+                "w-[24rem] flex-shrink-0 flex flex-col rounded-md border transition-all relative h-full max-h-full shadow-sm",
                 "bg-[var(--column-bg)] border-[var(--card-border)]",
                 column.isDone === true && "bg-emerald-500/5 border-emerald-500/20",
                 isDragging && "opacity-50 border-[var(--col-color)] border-dashed ring-2 ring-[var(--col-color)] ring-opacity-50",
@@ -170,7 +168,7 @@ export const KanbanColumn = memo(function KanbanColumn({
                     {isEditingTitle ? (
                         <input
                             value={titleInput}
-                            onChange={(e) => setTitleInput(e.target.value)}
+                            onChange={(e) => setDraftTitle(e.target.value)}
                             onBlur={handleTitleSubmit}
                             onKeyDown={(e) => {
                                 e.stopPropagation();
@@ -183,7 +181,10 @@ export const KanbanColumn = memo(function KanbanColumn({
                     ) : (
                         <div className="flex items-center gap-2 min-w-0 w-full">
                             <h3
-                                onClick={() => setIsEditingTitle(true)}
+                                onClick={() => {
+                                    setDraftTitle(column.title);
+                                    setIsEditingTitle(true);
+                                }}
                                 className={cn(
                                     "text-sm font-bold font-mono text-[var(--foreground)] uppercase tracking-wider truncate cursor-text hover:text-[var(--col-color)] transition-colors min-w-0",
                                     column.isDone === true && "text-emerald-600 dark:text-emerald-400"
@@ -192,7 +193,16 @@ export const KanbanColumn = memo(function KanbanColumn({
                             >
                                 {column.title}
                             </h3>
-                            <span className="text-[10px] text-[var(--muted-foreground)] font-mono bg-[var(--background)] px-1.5 py-0.5 rounded-full border border-[var(--card-border)] flex-shrink-0 whitespace-nowrap">
+                            <span
+                                className="column-count-badge inline-flex h-[30px] min-w-[30px] items-center justify-center rounded-full border px-2.5 text-[11px] font-mono font-black tracking-[0.14em] flex-shrink-0 whitespace-nowrap shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset]"
+                                style={{
+                                    background: `linear-gradient(135deg, ${hexToRgba(columnColor, 0.96)} 0%, ${hexToRgba(columnColor, 0.72)} 56%, ${hexToRgba(columnColor, 0.9)} 100%)`,
+                                    borderColor: hexToRgba(columnColor, 0.92),
+                                    color: 'var(--count-badge-foreground)',
+                                    boxShadow: `0 0 0 1px ${hexToRgba('#ffffff', 0.06)} inset, 0 0 18px ${hexToRgba(columnColor, 0.18)}`,
+                                }}
+                                title={`${tasks.length} ${tasks.length === 1 ? 'tarefa' : 'tarefas'}`}
+                            >
                                 {tasks.length}
                             </span>
                         </div>

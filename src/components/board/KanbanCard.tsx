@@ -3,15 +3,14 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Card } from '@/components/ui/Card';
-import { GripVertical, Edit2, Clock, Trash2, User, AlertCircle, AlertTriangle, ArrowDown, CheckSquare } from 'lucide-react';
+import { Edit2, Clock, Trash2, User, AlertCircle, AlertTriangle, ArrowDown, CheckSquare } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { Task } from '@/store/kanbanStore';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
-
-import { Task } from '@/store/kanbanStore';
 
 interface KanbanCardProps {
     task: Task;
@@ -28,6 +27,30 @@ const PriorityIcon = ({ priority }: { priority: string }) => {
         default: return null;
     }
 };
+
+const PRIORITY_LABELS = {
+    high: 'Alta',
+    medium: 'Média',
+    low: 'Baixa',
+} as const;
+
+const PRIORITY_STYLES = {
+    high: 'border-red-500/25 bg-red-500/10 text-red-300',
+    medium: 'border-amber-500/25 bg-amber-500/10 text-amber-300',
+    low: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300',
+} as const;
+
+function formatTaskDate(date?: string) {
+    if (!date) return null;
+
+    const parts = date.split(/[-T]/);
+    if (parts.length >= 3) {
+        const parsedDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        return parsedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    }
+
+    return new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+}
 
 export function KanbanCard({ task, isOverlay, onEdit, onDelete }: KanbanCardProps) {
     const {
@@ -56,10 +79,24 @@ export function KanbanCard({ task, isOverlay, onEdit, onDelete }: KanbanCardProp
             <div
                 ref={setNodeRef}
                 style={style}
-                className="opacity-30 h-[100px] bg-[var(--card)] border border-dashed border-[var(--primary)] rounded-none"
+                className="opacity-30 h-[176px] bg-[var(--card)] border border-dashed border-[var(--primary)] rounded-none"
             />
         );
     }
+
+    const priorityLabel = PRIORITY_LABELS[task.priority];
+    const priorityTone = PRIORITY_STYLES[task.priority];
+    const startDateLabel = formatTaskDate(task.startDate);
+    const endDateLabel = formatTaskDate(task.endDate);
+    const hasTimeline = !!(startDateLabel || endDateLabel);
+    const description = task.description?.trim();
+    const checklistItems = task.checklist || [];
+    const completedChecklistCount = checklistItems.filter((item) => item.completed).length;
+    const hasChecklist = checklistItems.length > 0;
+    const isChecklistDone = hasChecklist && completedChecklistCount === checklistItems.length;
+    const primaryAssignee = task.assignee && task.assignee !== 'Unassigned'
+        ? task.assignee.split(' ')[0]
+        : null;
 
     return (
         <div
@@ -72,7 +109,7 @@ export function KanbanCard({ task, isOverlay, onEdit, onDelete }: KanbanCardProp
                 {...attributes}
                 {...listeners}
                 className={cn(
-                    "p-0 transition-all bg-[var(--card)] border border-[var(--card-border)] rounded-none flex flex-col gap-0 relative group/inner",
+                    "p-0 transition-all bg-[var(--card)] border border-[var(--card-border)] rounded-none flex flex-col gap-0 relative group/inner min-h-[176px] overflow-hidden",
                     // Sharp geometry & active physical tension shadow
                     !isOverlay && "hover:-translate-y-1 hover:translate-x-[-2px] hover:shadow-[4px_4px_0_0_var(--primary)] cursor-grab active:cursor-grabbing hover:border-[var(--primary)]/50",
                     isOverlay && "border border-[var(--primary)] shadow-[8px_8px_0_0_var(--primary)] scale-105 z-50 cursor-grabbing bg-[var(--background)]",
@@ -92,10 +129,12 @@ export function KanbanCard({ task, isOverlay, onEdit, onDelete }: KanbanCardProp
                             'bg-emerald-500'
                 )} />
 
-                <div className="p-3 flex flex-col gap-2.5">
+                <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.05),transparent_38%,transparent)] opacity-80 pointer-events-none" />
+
+                <div className="p-4 flex flex-col gap-3.5 min-h-[175px]">
                     {/* Hover Actions (Absolute Top Right) */}
                     <div className={cn(
-                        "absolute top-2 right-2 flex gap-1 transform translate-x-2 opacity-0 group-hover/inner:translate-x-0 group-hover/inner:opacity-100 transition-all duration-200 z-10 bg-[var(--card)] border border-[var(--border)] rounded-none pl-1 pr-1 py-1"
+                        "absolute top-3 right-3 flex gap-1 transform translate-x-2 opacity-0 group-hover/inner:translate-x-0 group-hover/inner:opacity-100 transition-all duration-200 z-10 bg-[var(--background)]/90 border border-[var(--card-border)] rounded-none pl-1 pr-1 py-1 backdrop-blur-sm"
                     )}>
                         <button
                             onPointerDown={(e) => e.stopPropagation()}
@@ -117,14 +156,59 @@ export function KanbanCard({ task, isOverlay, onEdit, onDelete }: KanbanCardProp
                         )}
                     </div>
 
-                    {/* Tags (Top Row) */}
+                    <div className="flex flex-wrap items-center gap-2 pr-12">
+                        <div
+                            className={cn(
+                                "inline-flex items-center gap-1.5 border px-2.5 py-1 text-[10px] font-mono font-bold uppercase tracking-[0.24em]",
+                                priorityTone
+                            )}
+                            title={`Prioridade: ${priorityLabel}`}
+                        >
+                            <PriorityIcon priority={task.priority} />
+                            <span>{priorityLabel}</span>
+                        </div>
+
+                        {hasChecklist && (
+                            <div
+                                className={cn(
+                                    "inline-flex items-center gap-1.5 border px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.2em]",
+                                    isChecklistDone
+                                        ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-300"
+                                        : "border-white/10 bg-white/5 text-[var(--muted-foreground)]"
+                                )}
+                                title="Progresso do Checklist"
+                            >
+                                <CheckSquare size={11} className={isChecklistDone ? "text-emerald-400" : "text-[var(--muted-foreground)]"} />
+                                <span>
+                                    Checklist {completedChecklistCount}/{checklistItems.length}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="space-y-2">
+                        <p className="text-[16px] font-semibold leading-6 text-[var(--foreground)] break-words pr-8 line-clamp-2 tracking-[-0.01em]">
+                            {task.content}
+                        </p>
+
+                        {description && (
+                            <p className="text-[12px] leading-5 text-[var(--muted-foreground)] break-words pr-3 line-clamp-2">
+                                {description}
+                            </p>
+                        )}
+                    </div>
+
                     {task.tags && task.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 pr-8 mt-1">
+                        <div className="flex flex-wrap gap-2">
                             {task.tags.map((tag, idx) => (
                                 <span
                                     key={`${tag.id}-${idx}`}
-                                    className="text-[9px] font-mono font-bold px-1.5 py-[2px] text-white flex items-center tracking-wider uppercase border border-black/20"
-                                    style={{ backgroundColor: tag.color }}
+                                    className="inline-flex items-center rounded-none border px-2.5 py-1 text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-white shadow-[0_0_12px_rgba(0,0,0,0.12)]"
+                                    style={{
+                                        backgroundColor: `${tag.color}33`,
+                                        borderColor: `${tag.color}66`,
+                                        color: tag.color,
+                                    }}
                                 >
                                     {tag.name}
                                 </span>
@@ -132,73 +216,30 @@ export function KanbanCard({ task, isOverlay, onEdit, onDelete }: KanbanCardProp
                         </div>
                     )}
 
-                    {/* Content - Main Visual Weight */}
-                    <p className="text-[13px] font-medium leading-snug text-[var(--foreground)] break-words pr-2 line-clamp-3">
-                        {task.content}
-                    </p>
-
-                    {/* Footer - Metadata */}
-                    <div className="flex items-center justify-between mt-0.5 pt-2 border-t border-[var(--border)]/30 text-[10px] text-[var(--muted-foreground)]">
-
-                        {/* Left: Priority & Date */}
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-1.5" title={`Prioridade: ${task.priority}`}>
-                                <PriorityIcon priority={task.priority} />
-                                <span className={cn(
-                                    "font-mono uppercase tracking-wider font-bold",
-                                    task.priority === 'high' ? 'text-red-500' :
-                                        task.priority === 'medium' ? 'text-amber-500' : 'text-emerald-500'
-                                )}>
-                                    {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Média' : 'Baixa'}
-                                </span>
-                            </div>
-
-                            {task.checklist && task.checklist.length > 0 && (
-                                <div className="flex items-center gap-1 opacity-80 group-hover/inner:opacity-100 transition-opacity" title="Progresso do Checklist">
-                                    <CheckSquare size={10} className={
-                                        task.checklist.every(item => item.completed) ? "text-emerald-500" : ""
-                                    } />
-                                    <span className={cn(
-                                        "font-mono text-[9px]",
-                                        task.checklist.every(item => item.completed) ? "text-emerald-500 font-bold" : ""
-                                    )}>
-                                        {task.checklist.filter(item => item.completed).length}/{task.checklist.length}
-                                    </span>
-                                </div>
-                            )}
-
-                            {(task.startDate || task.endDate) && (
-                                <div className="flex items-center gap-1 opacity-80 group-hover/inner:opacity-100 transition-opacity" title="Data Prevista (Início - Fim)">
-                                    <Clock size={10} />
-                                    <span className="font-mono text-[9px]">
-                                        {task.startDate ? (() => {
-                                            // Split and create date to avoid UTC/timezone issues
-                                            const parts = task.startDate.split(/[-T]/);
-                                            if (parts.length >= 3) {
-                                                const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-                                                return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-                                            }
-                                            return new Date(task.startDate).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-                                        })() : '...'}
-                                        {' - '}
-                                        {task.endDate ? (() => {
-                                            const parts = task.endDate.split(/[-T]/);
-                                            if (parts.length >= 3) {
-                                                const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-                                                return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-                                            }
-                                            return new Date(task.endDate).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-                                        })() : '...'}
+                    <div className="mt-auto flex flex-wrap items-end justify-between gap-2 border-t border-[var(--card-border)]/60 pt-3 text-[10px] text-[var(--muted-foreground)]">
+                        <div className="flex flex-wrap items-center gap-2">
+                            {hasTimeline && (
+                                <div
+                                    className="inline-flex items-center gap-1.5 border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.18em]"
+                                    title="Data Prevista"
+                                >
+                                    <Clock size={11} className="text-[var(--primary)]" />
+                                    <span>
+                                        {startDateLabel || '..'} - {endDateLabel || '..'}
                                     </span>
                                 </div>
                             )}
                         </div>
 
-                        {/* Right: Assignee */}
-                        {task.assignee && task.assignee !== 'Unassigned' && (
-                            <div className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-none bg-[var(--background)] border border-[var(--border)] group-hover/inner:border-[var(--primary)]/50 transition-colors" title={task.assignee}>
-                                <User size={10} className="text-[var(--primary)]" />
-                                <span className="max-w-[80px] truncate font-mono tracking-tighter">{task.assignee.split(' ')[0]}</span>
+                        {primaryAssignee && (
+                            <div
+                                className="inline-flex items-center gap-1.5 border border-[var(--card-border)] bg-[var(--background)] px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.18em] transition-colors group-hover/inner:border-[var(--primary)]/40"
+                                title={task.assignee}
+                            >
+                                <User size={11} className="text-[var(--primary)]" />
+                                <span className="max-w-[120px] truncate text-[var(--foreground)]">
+                                    {primaryAssignee}
+                                </span>
                             </div>
                         )}
                     </div>
