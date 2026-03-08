@@ -10,6 +10,7 @@ import {
     DecodingText,
     CinematicIntro
 } from '@/components/auth/LoginEffects';
+import { Spinner } from '@/components/ui/Spinner';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -306,7 +307,7 @@ export default function LoginPage() {
                                             <div className="relative flex items-center justify-center gap-2">
                                                 {isLoading ? (
                                                     <>
-                                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                        <Spinner size="sm" tone="light" />
                                                         <span className="text-xs font-bold tracking-[0.2em] font-mono">AUTENTICANDO...</span>
                                                     </>
                                                 ) : (

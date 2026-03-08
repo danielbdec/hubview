@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
+import { Spinner } from '@/components/ui/Spinner';
 
 /**
  * Enhanced Floating Particles with Z-depth simulation
@@ -298,7 +299,9 @@ export function CinematicIntro({ onComplete }: { onComplete: () => void }) {
                     transition={{ duration: 0.5 }}
                     className="mb-4"
                 >
-                    <div className="w-16 h-16 border-2 border-emerald-500/50 rounded-full border-t-emerald-400 animate-spin mx-auto" />
+                    <div className="mx-auto flex h-28 w-28 items-center justify-center">
+                        <Spinner size="lg" tone="light" />
+                    </div>
                 </motion.div>
 
                 <motion.p

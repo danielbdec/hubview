@@ -3,11 +3,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { LoadingState } from '@/components/ui/LoadingState';
+import { Spinner } from '@/components/ui/Spinner';
 import {
     User,
     Camera,
     Save,
-    Loader2,
     CheckCircle,
     Calendar,
     Mail,
@@ -265,16 +266,17 @@ export default function SettingsPage() {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center h-[60vh]">
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex items-center gap-3 text-[var(--muted-foreground)]"
-                >
-                    <Loader2 className="animate-spin" size={20} />
-                    <span className="font-mono text-sm">CARREGANDO PERFIL...</span>
-                </motion.div>
-            </div>
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+            >
+                <LoadingState
+                    eyebrow="Profile Sync"
+                    title="Carregando perfil"
+                    description="Recuperando identidade, avatar e preferencias da sua conta."
+                    className="min-h-[60vh]"
+                />
+            </motion.div>
         );
     }
 
@@ -560,7 +562,7 @@ export default function SettingsPage() {
                         className="flex items-center gap-2 px-6 py-3 bg-[#00E87B] text-black font-mono text-sm font-bold uppercase tracking-wider rounded disabled:opacity-50 transition-all duration-200 hover:bg-[#00cc6a] hover:shadow-[0_0_20px_rgba(0,232,123,0.3)] active:bg-[#00b35e] active:scale-[0.98]"
                     >
                         {isSaving ? (
-                            <Loader2 size={16} className="animate-spin" />
+                            <Spinner size="sm" tone="current" />
                         ) : (
                             <Save size={16} />
                         )}

@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Plus, MoreVertical, FolderOpen, LayoutGrid, Edit3, Power, Archive, RefreshCw, Loader2 } from 'lucide-react';
+import { Plus, MoreVertical, FolderOpen, LayoutGrid, Edit3, Power, Archive, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { LoadingState } from '@/components/ui/LoadingState';
 import { useProjectStore, Project } from '@/store/kanbanStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import EditProjectModal from '@/components/board/EditProjectModal';
@@ -283,10 +284,11 @@ export default function ProjectsPage() {
             </div>
 
             {isLoadingProjects ? (
-                <div className="flex flex-col items-center justify-center py-32">
-                    <Loader2 className="animate-spin text-[var(--primary)] mb-4" size={48} />
-                    <p className="text-[var(--muted-foreground)] font-mono text-sm animate-pulse">Carregando projetos...</p>
-                </div>
+                <LoadingState
+                    eyebrow="Project Registry"
+                    title="Carregando projetos"
+                    description="Reunindo cards, status e contadores do workspace."
+                />
             ) : filteredProjects.length === 0 ? (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}

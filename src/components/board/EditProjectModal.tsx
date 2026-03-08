@@ -150,13 +150,8 @@ export default function EditProjectModal({ project, isOpen, onClose, onSave }: E
                             <Button variant="ghost" onClick={onClose} disabled={saving}>
                                 Cancelar
                             </Button>
-                            <Button variant="primary" onClick={handleSave} disabled={saving || !title.trim()}>
-                                {saving ? (
-                                    <span className="flex items-center gap-2">
-                                        <span className="h-3 w-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                        Salvando...
-                                    </span>
-                                ) : (
+                            <Button variant="primary" onClick={handleSave} disabled={!title.trim()} isLoading={saving}>
+                                {saving ? 'Salvando...' : (
                                     <span className="flex items-center gap-2">
                                         <Save size={14} /> Salvar Alterações
                                     </span>

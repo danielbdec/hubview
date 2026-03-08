@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useProjectStore } from '@/store/kanbanStore';
-import { Users, Plus, Loader2, ShieldAlert, Mail, Calendar, KeyRound, User as UserIcon, UserX, UserCheck } from 'lucide-react';
+import { Users, Plus, ShieldAlert, Mail, Calendar, KeyRound, User as UserIcon, UserX, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { LoadingState } from '@/components/ui/LoadingState';
 import NotificationToast, { NotificationType } from '@/components/ui/NotificationToast';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -166,10 +167,11 @@ export default function UsersPage() {
 
             {/* Users List */}
             {isLoadingUsers ? (
-                <div className="flex flex-col items-center justify-center py-32">
-                    <Loader2 className="animate-spin text-[var(--primary)] mb-4" size={48} />
-                    <p className="text-[var(--muted-foreground)] font-mono text-sm animate-pulse">Carregando usuários...</p>
-                </div>
+                <LoadingState
+                    eyebrow="Access Registry"
+                    title="Carregando usuarios"
+                    description="Sincronizando perfis, papeis e estados de acesso."
+                />
             ) : filteredUsers.length === 0 ? (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -356,8 +358,7 @@ export default function UsersPage() {
                             <Button variant="ghost" onClick={() => setIsCreateModalOpen(false)} disabled={isSubmitting}>
                                 Cancelar
                             </Button>
-                            <Button variant="primary" onClick={handleCreateUser} disabled={isSubmitting}>
-                                {isSubmitting ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
+                            <Button variant="primary" onClick={handleCreateUser} isLoading={isSubmitting}>
                                 {isSubmitting ? 'Registrando...' : 'Criar Conta'}
                             </Button>
                         </div>
@@ -394,9 +395,13 @@ export default function UsersPage() {
                             <Button variant="ghost" onClick={() => setDeactivatingUser(null)} disabled={isDeactivating}>
                                 Cancelar
                             </Button>
-                            <Button variant="danger" onClick={handleDeactivateUser} disabled={isDeactivating}>
-                                {isDeactivating ? <Loader2 size={16} className="animate-spin mr-2" /> : <UserX size={16} className="mr-2" />}
-                                {isDeactivating ? 'Desativando...' : 'Confirmar'}
+                            <Button variant="danger" onClick={handleDeactivateUser} isLoading={isDeactivating}>
+                                {isDeactivating ? 'Desativando...' : (
+                                    <>
+                                        <UserX size={16} className="mr-2" />
+                                        Confirmar
+                                    </>
+                                )}
                             </Button>
                         </div>
                     </div>

@@ -6,6 +6,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Plus, Trash2, MoreHorizontal, Palette, CheckCircle2 } from 'lucide-react';
 import { KanbanCard } from '@/components/board/KanbanCard';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { Spinner } from '@/components/ui/Spinner';
 import { useMemo, useState, useRef, useEffect, memo } from 'react';
 import { useProjectStore, Task } from '@/store/kanbanStore';
 import { clsx, type ClassValue } from 'clsx';
@@ -211,7 +212,7 @@ export const KanbanColumn = memo(function KanbanColumn({
 
                 <div className="flex items-center gap-1 pl-2">
                     {column.syncStatus === 'syncing' && (
-                        <span className="animate-spin h-3 w-3 border-2 border-[var(--primary)] border-t-transparent rounded-full mr-1" title="Sincronizando..." />
+                        <Spinner size="sm" className="mr-1" title="Sincronizando..." />
                     )}
 
                     <div className="relative" ref={settingsRef}>

@@ -15,8 +15,9 @@ import {
     DragEndEvent,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates, SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
-import { Plus, RefreshCw, ArrowLeft, LayoutGrid, Loader2, Search, Filter } from 'lucide-react';
+import { Plus, RefreshCw, ArrowLeft, LayoutGrid, Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { LoadingState } from '@/components/ui/LoadingState';
 import { KanbanColumn } from '@/components/board/KanbanColumn';
 import { KanbanCard } from '@/components/board/KanbanCard';
 import { CompletionConfetti, type CompletionBurst } from '@/components/board/CompletionConfetti';
@@ -347,10 +348,12 @@ export default function KanbanBoardPage() {
         // Still loading — show spinner instead of 'not found'
         if (isLoadingProjects || isLoadingBoard) {
             return (
-                <div className="flex flex-col items-center justify-center h-full">
-                    <Loader2 className="animate-spin text-[var(--primary)] mb-4" size={48} />
-                    <p className="text-[var(--muted-foreground)] font-mono text-sm animate-pulse">Carregando projeto...</p>
-                </div>
+                <LoadingState
+                    className="h-full min-h-[28rem]"
+                    eyebrow="Board Hydration"
+                    title="Carregando projeto"
+                    description="Reconstruindo colunas, tarefas e estado de arraste."
+                />
             );
         }
         return (
@@ -501,10 +504,12 @@ export default function KanbanBoardPage() {
 
 
                 {isLoadingBoard ? (
-                    <div className="flex-1 flex flex-col items-center justify-center">
-                        <Loader2 className="animate-spin text-[var(--primary)] mb-4" size={48} />
-                        <p className="text-[var(--muted-foreground)] font-mono text-sm animate-pulse">Carregando painéis...</p>
-                    </div>
+                    <LoadingState
+                        className="flex-1 min-h-[28rem]"
+                        eyebrow="Board Sync"
+                        title="Carregando paineis"
+                        description="Atualizando colunas, filtros e a leitura operacional deste projeto."
+                    />
                 ) : filteredColumns.length === 0 ? (
                     <div className="flex-1 flex items-center justify-center">
                         <div className="text-center max-w-md">

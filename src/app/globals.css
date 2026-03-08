@@ -139,6 +139,31 @@ body {
   box-shadow: 0 0 20px -5px rgba(169, 239, 47, 0.1);
 }
 
+.hubview-spinner {
+  --hubview-spinner-size: 56px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--hubview-spinner-size);
+  height: var(--hubview-spinner-size);
+  isolation: isolate;
+  will-change: transform, opacity;
+}
+
+.hubview-spinner__svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.hubview-spinner__track {
+  fill: none;
+}
+
+.hubview-spinner__track--inner {
+}
+
 .column-count-badge {
   animation: column-count-pulse 3.4s ease-in-out infinite;
   transform-origin: center;

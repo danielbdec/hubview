@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, X } from 'lucide-react';
+import { Spinner } from '@/components/ui/Spinner';
 
 interface ConfirmModalProps {
     isOpen: boolean;
@@ -116,7 +117,7 @@ export default function ConfirmModal({
                                 >
                                     {isLoading ? (
                                         <span className="flex items-center justify-center gap-2">
-                                            <span className="h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            <Spinner size="sm" tone="light" />
                                             Processando...
                                         </span>
                                     ) : (
