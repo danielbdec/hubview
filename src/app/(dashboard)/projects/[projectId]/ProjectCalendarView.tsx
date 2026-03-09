@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { Calendar, ConfigProvider, theme } from 'antd';
+import { useMemo } from 'react';
+import { Calendar, ConfigProvider, theme as antdTheme } from 'antd';
 import ptBR from 'antd/locale/pt_BR';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
@@ -9,6 +9,8 @@ import { Column, Task } from '@/store/kanbanStore';
 import { AlertCircle, AlertTriangle, ArrowDown, User, CheckSquare } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { useTheme } from '@/components/ui/ThemeProvider';
+import { getReadableTextColor } from '@/lib/color';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -32,6 +34,7 @@ interface ProjectCalendarViewProps {
 }
 
 export default function ProjectCalendarView({ columns, onEditTask }: ProjectCalendarViewProps) {
+    const { theme: themeMode } = useTheme();
     const tasksByDate = useMemo(() => {
         const map = new Map<string, (Task & { columnColor: string })[]>();
         columns.forEach(col => {
@@ -76,7 +79,7 @@ export default function ProjectCalendarView({ columns, onEditTask }: ProjectCale
                 <ul className="m-0 p-0 pb-2 list-none flex-1 overflow-y-auto scrollbar-none space-y-1.5 flex flex-col items-center w-full">
                     {dayTasks.map((task, idx) => (
                         <li key={`${task.id}-${dateStr}-${idx}`} className="w-full flex justify-center" onClick={(e) => { e.stopPropagation(); onEditTask(task); }}>
-                            <div className="w-[96%] font-sans leading-tight border-l-[3px] cursor-pointer hover:bg-[var(--card-hover)] hover:-translate-y-0.5 transition-all bg-[var(--background)]/80 backdrop-blur-sm shadow-sm p-1.5 flex flex-col gap-1.5 group/calcard"
+                            <div className="group/calcard flex w-[96%] cursor-pointer flex-col gap-1.5 border-l-[3px] bg-[var(--card)] p-1.5 font-sans leading-tight shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[var(--card-hover)]"
                                 style={{ borderColor: task.columnColor, color: 'var(--foreground)' }}
                                 title={task.content}
                             >
@@ -88,8 +91,8 @@ export default function ProjectCalendarView({ columns, onEditTask }: ProjectCale
                                         {task.tags.slice(0, 2).map((tag, tagIdx) => (
                                             <span
                                                 key={`${tag.id}-${tagIdx}`}
-                                                className="text-[8px] font-mono font-bold px-1 py-[1px] text-white flex items-center tracking-wider uppercase border border-black/20 truncate max-w-[60px]"
-                                                style={{ backgroundColor: tag.color }}
+                                                className="flex max-w-[60px] items-center truncate border border-black/10 px-1 py-[1px] text-[8px] font-mono font-bold uppercase tracking-wider"
+                                                style={{ backgroundColor: tag.color, color: getReadableTextColor(tag.color) }}
                                             >
                                                 {tag.name}
                                             </span>
@@ -99,7 +102,7 @@ export default function ProjectCalendarView({ columns, onEditTask }: ProjectCale
                                 )}
 
                                 {/* Footer Options */}
-                                <div className="flex items-center justify-between pt-1 border-t border-[var(--border)]/10">
+                                <div className="flex items-center justify-between border-t border-[var(--card-border)] pt-1">
                                     <div className="flex items-center gap-1.5">
                                         <PriorityIcon priority={task.priority} />
                                         {task.checklist && task.checklist.length > 0 && (
@@ -118,7 +121,7 @@ export default function ProjectCalendarView({ columns, onEditTask }: ProjectCale
                                     </div>
 
                                     {task.assignee && task.assignee !== 'Unassigned' && (
-                                        <div className="flex items-center gap-1 px-1 py-0.5 rounded-none bg-[var(--background)] border border-[var(--border)] group-hover/calcard:border-[var(--primary)]/30" title={task.assignee}>
+                                        <div className="flex items-center gap-1 rounded-none border border-[var(--card-border)] bg-[var(--background)] px-1 py-0.5 group-hover/calcard:border-[var(--primary)]" title={task.assignee}>
                                             <User size={8} className="text-[var(--primary)]" />
                                             <span className="max-w-[40px] truncate font-mono tracking-tighter text-[9px] text-[var(--muted-foreground)]">{task.assignee.split(' ')[0]}</span>
                                         </div>
@@ -136,9 +139,9 @@ export default function ProjectCalendarView({ columns, onEditTask }: ProjectCale
         <ConfigProvider
             locale={ptBR}
             theme={{
-                algorithm: theme.darkAlgorithm,
+                algorithm: themeMode === 'light' ? antdTheme.defaultAlgorithm : antdTheme.darkAlgorithm,
                 token: {
-                    fontFamily: 'var(--font-geist-sans)',
+                    fontFamily: 'var(--font-sans)',
                     colorBgContainer: 'var(--card)',
                     colorBorderSecondary: 'var(--card-border)',
                     colorSplit: 'var(--card-border)',
@@ -166,7 +169,7 @@ export default function ProjectCalendarView({ columns, onEditTask }: ProjectCale
                 }
             }}
         >
-            <div className="flex-1 overflow-auto bg-[var(--card)] p-4 border border-[var(--card-border)] rounded-none brutalist-calendar [&_.ant-radio-button-wrapper-checked]:!text-black [&_.ant-radio-button-wrapper-checked]:!font-bold">
+            <div className="brutalist-calendar flex-1 overflow-auto rounded-none border border-[var(--card-border)] bg-[var(--card)] p-4 shadow-[var(--surface-shadow-soft)] [&_.ant-radio-button-wrapper-checked]:!font-bold [&_.ant-radio-button-wrapper-checked]:!text-black">
                 <Calendar
                     cellRender={(current, info) => {
                         if (info.type === 'date') return dateCellRender(current);

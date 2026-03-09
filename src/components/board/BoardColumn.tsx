@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Card, Typography, Button, Dropdown, MenuProps, Input } from 'antd';
+import { useState } from 'react';
+import { Button, Dropdown, MenuProps, Input } from 'antd';
 import { MoreHorizontal, Plus, Trash2 } from 'lucide-react';
 import { useBoardStore } from '@/store/boardStore';
 import BoardCard from './BoardCard';
@@ -63,20 +63,20 @@ const BoardColumn: React.FC<BoardColumnProps> = ({ id, title, cardIds, projectId
     ];
 
     return (
-        <div ref={setNodeRef} style={style} className="w-80 flex-shrink-0 h-full max-h-full flex flex-col bg-[#112240]/40 backdrop-blur-xl rounded-2xl border border-white/5 shadow-xl mr-6 transition-colors">
+        <div ref={setNodeRef} style={style} className="mr-6 flex h-full max-h-full w-80 flex-shrink-0 flex-col rounded-2xl border border-[var(--card-border)] bg-[var(--card)] shadow-[var(--surface-shadow-soft)] backdrop-blur-xl transition-colors">
             {/* Header */}
             <div
                 {...attributes}
                 {...listeners}
-                className="p-4 flex justify-between items-center cursor-grab active:cursor-grabbing border-b border-white/5 group/header"
+                className="group/header flex cursor-grab items-center justify-between border-b border-[var(--card-border)] p-4 active:cursor-grabbing"
             >
-                <h3 className="text-gray-200 font-bold text-base truncate flex-1 tracking-wide">
+                <h3 className="flex-1 truncate text-base font-bold tracking-wide text-[var(--foreground)]">
                     {title}
                 </h3>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                    <span className="bg-black/20 px-2 py-0.5 rounded-full font-mono">{cardIds.length}</span>
+                <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
+                    <span className="rounded-full bg-[var(--column-bg)] px-2 py-0.5 font-mono">{cardIds.length}</span>
                     <Dropdown menu={{ items: menuItems }} trigger={['click']}>
-                        <button type="button" className="text-gray-500 hover:text-white transition-colors p-1 rounded hover:bg-white/5" onPointerDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+                        <button type="button" className="rounded p-1 text-[var(--muted-foreground)] transition-colors hover:bg-[var(--card-hover)] hover:text-[var(--foreground)]" onPointerDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
                             <MoreHorizontal size={16} />
                         </button>
                     </Dropdown>
@@ -97,11 +97,11 @@ const BoardColumn: React.FC<BoardColumnProps> = ({ id, title, cardIds, projectId
             {/* Footer / Add Card */}
             <div className="p-3 pt-0">
                 {isAddingCard ? (
-                    <div className="bg-[#1e293b] p-3 rounded-xl shadow-lg border border-amber-500/30 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="rounded-xl border border-[var(--card-border)] bg-[var(--sidebar)] p-3 shadow-[var(--surface-shadow-soft)] animate-in fade-in zoom-in-95 duration-200">
                         <Input.TextArea
                             autoFocus
                             placeholder="Título do cartão..."
-                            className="mb-3 !resize-none !bg-black/20 !border-white/10 !text-gray-200 placeholder:text-gray-600 focus:!border-amber-500/50 focus:!shadow-none"
+                            className="mb-3 !resize-none !border-[var(--input-border)] !bg-[var(--input-bg)] !text-[var(--foreground)] placeholder:!text-[var(--muted-foreground)] focus:!border-[var(--primary)] focus:!shadow-none"
                             value={newCardContent}
                             onChange={(e) => setNewCardContent(e.target.value)}
                             onPressEnter={(e) => {
@@ -113,16 +113,16 @@ const BoardColumn: React.FC<BoardColumnProps> = ({ id, title, cardIds, projectId
                             rows={3}
                         />
                         <div className="flex items-center gap-2 justify-end">
-                            <Button type="text" size="small" onClick={() => setIsAddingCard(false)} className="text-gray-400 hover:text-white">Cancelar</Button>
-                            <Button type="primary" size="small" onClick={handleAddCard} className="bg-amber-500 hover:bg-amber-400 text-black font-bold border-none shadow-amber-500/20 shadow-lg">Adicionar</Button>
+                            <Button type="text" size="small" onClick={() => setIsAddingCard(false)} className="!text-[var(--muted-foreground)] hover:!text-[var(--foreground)]">Cancelar</Button>
+                            <Button type="primary" size="small" onClick={handleAddCard} className="!border-none !bg-[var(--primary)] !text-[var(--primary-foreground)] shadow-lg shadow-[rgba(132,204,22,0.18)] hover:!bg-[var(--primary-hover)]">Adicionar</Button>
                         </div>
                     </div>
                 ) : (
                     <button
-                        className="w-full flex items-center justify-start gap-2 text-gray-400 hover:text-amber-400 hover:bg-white/5 p-2.5 rounded-lg transition-all duration-200 group/btn"
+                        className="group/btn flex w-full items-center justify-start gap-2 rounded-lg p-2.5 text-[var(--muted-foreground)] transition-all duration-200 hover:bg-[var(--card-hover)] hover:text-[var(--primary)]"
                         onClick={() => setIsAddingCard(true)}
                     >
-                        <Plus size={18} className="text-gray-600 group-hover/btn:text-amber-400 transition-colors" />
+                        <Plus size={18} className="text-[var(--muted-foreground)] transition-colors group-hover/btn:text-[var(--primary)]" />
                         <span className="font-medium">Adicionar cartão</span>
                     </button>
                 )}

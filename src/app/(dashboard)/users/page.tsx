@@ -10,6 +10,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 type TabType = 'active' | 'inactive';
 
+function getErrorMessage(error: unknown, fallback: string) {
+    return error instanceof Error && error.message ? error.message : fallback;
+}
+
 export default function UsersPage() {
     const { users, isLoadingUsers, fetchUsers, registerUser, deactivateUser } = useProjectStore();
     const [mounted, setMounted] = useState(false);
@@ -52,6 +56,7 @@ export default function UsersPage() {
     const activeUsers = useMemo(() => users.filter(u => u.isActive !== false), [users]);
     const inactiveUsers = useMemo(() => users.filter(u => u.isActive === false), [users]);
     const filteredUsers = activeTab === 'active' ? activeUsers : inactiveUsers;
+    const adminUsers = useMemo(() => users.filter(u => (u.role || '').toLowerCase().includes('admin')).length, [users]);
 
     const handleCreateUser = async () => {
         if (!formData.name || !formData.email || !formData.password) {
@@ -67,8 +72,8 @@ export default function UsersPage() {
             setFormData({ name: '', email: '', password: '', role: 'Operador' });
             setIsCreateModalOpen(false);
             showNotification('success', 'Usuário Criado', `"${formData.name}" registrado com sucesso.`);
-        } catch (error: any) {
-            showNotification('error', 'Erro no Cadastro', error?.message || 'Não foi possível cadastrar o usuário. Verifique se o e-mail já existe.');
+        } catch (error: unknown) {
+            showNotification('error', 'Erro no Cadastro', getErrorMessage(error, 'Não foi possível cadastrar o usuário. Verifique se o e-mail já existe.'));
         } finally {
             setIsSubmitting(false);
         }
@@ -81,8 +86,8 @@ export default function UsersPage() {
             await deactivateUser(deactivatingUser.id);
             showNotification('success', 'Usuário Desativado', `"${deactivatingUser.name}" foi desativado com sucesso.`);
             setDeactivatingUser(null);
-        } catch (error: any) {
-            showNotification('error', 'Erro ao Desativar', error?.message || 'Não foi possível desativar o usuário.');
+        } catch (error: unknown) {
+            showNotification('error', 'Erro ao Desativar', getErrorMessage(error, 'Não foi possível desativar o usuário.'));
         } finally {
             setIsDeactivating(false);
         }
@@ -102,7 +107,7 @@ export default function UsersPage() {
     };
 
     return (
-        <div className="container mx-auto max-w-7xl py-8">
+        <div className="page-light-atmosphere container mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
             <NotificationToast
                 isOpen={notification.isOpen}
                 type={notification.type}
@@ -112,29 +117,53 @@ export default function UsersPage() {
             />
 
             {/* Header */}
-            <div className="flex items-center justify-between mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold uppercase tracking-tight text-[var(--foreground)] mb-2 flex items-center gap-3">
+            <div className="light-page-hero mb-6 flex flex-col gap-4 px-4 py-5 sm:mb-8 sm:gap-6 sm:px-6 sm:py-6 lg:px-7 lg:py-7 xl:flex-row xl:items-center xl:justify-between">
+                <div className="max-w-2xl">
+                    <span className="light-muted-chip inline-flex items-center gap-2 px-3 py-1 text-[10px] font-mono font-semibold uppercase tracking-[0.24em]">
+                        <Users size={11} />
+                        Access Registry
+                    </span>
+                    <h1 className="mt-3 flex items-center gap-3 text-2xl font-black uppercase tracking-tight text-[var(--foreground)] sm:mt-4 sm:text-3xl">
                         <Users className="text-[var(--primary)]" size={28} />
                         Gestão de Usuários
                     </h1>
-                    <p className="text-[var(--muted-foreground)] font-mono text-sm border-l-2 border-[var(--primary)] pl-3 ml-1">
-                        Gerencie acessos, papéis e visualize a equipe registrada na plataforma.
+                    <p className="mt-2 max-w-2xl text-[14px] leading-6 text-[var(--muted-foreground)] sm:mt-3 sm:text-[15px] sm:leading-7">
+                        Gerencie acessos, papéis e acompanhe rapidamente quem está ativo, arquivado ou com permissão administrativa.
                     </p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <Button variant="primary" onClick={() => setIsCreateModalOpen(true)} disabled={isLoadingUsers}>
-                        <Plus size={18} className="mr-2" /> Novo Usuário
-                    </Button>
+                <div className="grid w-full gap-3 sm:grid-cols-2 xl:flex xl:w-auto xl:flex-wrap">
+                    <div className="light-page-kpi min-w-0 px-4 py-4 sm:min-w-[152px] sm:px-5">
+                        <span className="text-[10px] font-mono uppercase tracking-[0.24em] text-slate-500">Equipe</span>
+                        <div className="mt-3 flex items-end justify-between gap-3">
+                            <strong className="text-4xl font-black tracking-[-0.08em] text-slate-950">{users.length}</strong>
+                            <span className="rounded-full bg-lime-100 px-2.5 py-1 text-[10px] font-mono font-semibold uppercase tracking-[0.18em] text-lime-700">
+                                total
+                            </span>
+                        </div>
+                    </div>
+                    <div className="light-page-kpi light-page-kpi--contrast min-w-0 px-4 py-4 sm:min-w-[172px] sm:px-5">
+                        <span className="text-[10px] font-mono uppercase tracking-[0.24em] text-slate-400">Admins</span>
+                        <div className="mt-3 flex items-end justify-between gap-3">
+                            <strong className="text-4xl font-black tracking-[-0.08em] text-white">{adminUsers}</strong>
+                            <span className="light-dark-chip px-2.5 py-1 text-[10px] font-mono font-semibold uppercase tracking-[0.18em]">
+                                governança
+                            </span>
+                        </div>
+                    </div>
+                    <div className="col-span-full flex w-full flex-col gap-3 sm:flex-row sm:items-center xl:w-auto xl:self-end">
+                        <Button variant="primary" onClick={() => setIsCreateModalOpen(true)} disabled={isLoadingUsers} className="w-full sm:w-auto">
+                            <Plus size={18} className="mr-2" /> Novo Usuário
+                        </Button>
+                    </div>
                 </div>
             </div>
 
             {/* Tabs */}
-            <div className="flex items-center gap-1 mb-6 border-b border-[var(--card-border)]">
+            <div className="light-tabbar mb-6 flex w-full flex-wrap items-center gap-1 sm:w-auto sm:inline-flex">
                 <button
                     onClick={() => setActiveTab('active')}
-                    className={`flex items-center gap-2 px-5 py-3 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 border-b-2 cursor-pointer ${activeTab === 'active'
-                            ? 'text-emerald-400 border-emerald-400'
+                    className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full border px-4 py-3 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 sm:flex-none sm:px-5 ${activeTab === 'active'
+                            ? 'bg-[linear-gradient(135deg,rgba(236,253,245,0.96),rgba(255,255,255,0.94))] text-emerald-500 border-emerald-200 shadow-[0_12px_24px_rgba(15,23,42,0.08)]'
                             : 'text-[var(--muted-foreground)] border-transparent hover:text-[var(--foreground)] hover:border-[var(--card-border)]'
                         }`}
                 >
@@ -149,8 +178,8 @@ export default function UsersPage() {
                 </button>
                 <button
                     onClick={() => setActiveTab('inactive')}
-                    className={`flex items-center gap-2 px-5 py-3 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 border-b-2 cursor-pointer ${activeTab === 'inactive'
-                            ? 'text-rose-400 border-rose-400'
+                    className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full border px-4 py-3 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 sm:flex-none sm:px-5 ${activeTab === 'inactive'
+                            ? 'bg-[linear-gradient(135deg,rgba(255,241,242,0.95),rgba(255,255,255,0.94))] text-rose-500 border-rose-200 shadow-[0_12px_24px_rgba(15,23,42,0.08)]'
                             : 'text-[var(--muted-foreground)] border-transparent hover:text-[var(--foreground)] hover:border-[var(--card-border)]'
                         }`}
                 >
@@ -176,7 +205,7 @@ export default function UsersPage() {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex flex-col items-center justify-center py-20 border border-dashed border-[var(--card-border)] rounded-lg bg-[var(--card)]/30"
+                    className="light-page-panel flex flex-col items-center justify-center py-20 border border-dashed border-[var(--card-border)] bg-[var(--card)]/30"
                 >
                     <div className="p-4 bg-[var(--card-hover)] rounded-full mb-4 ring-1 ring-[var(--primary)]/20">
                         {activeTab === 'active' ? (
@@ -213,7 +242,7 @@ export default function UsersPage() {
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.95 }}
                                     transition={{ duration: 0.2 }}
-                                    className={`group relative bg-[var(--card)] border border-[var(--card-border)] hover:border-[var(--card-hover)] p-6 transition-all duration-300 hover:shadow-[0_0_30px_-10px_rgba(var(--primary),0.1)] flex flex-col backdrop-blur-sm ${isInactive ? 'opacity-60' : ''}`}
+                                    className={`light-page-card group relative bg-[var(--card)] border border-[var(--card-border)] hover:border-[var(--card-hover)] p-6 transition-all duration-300 hover:shadow-[0_0_30px_-10px_rgba(var(--primary),0.1)] flex flex-col backdrop-blur-sm ${isInactive ? 'opacity-60' : ''}`}
                                 >
                                     {/* Tech corner accents */}
                                     <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-[var(--card-border)] group-hover:border-[var(--primary)] transition-colors" />
@@ -228,7 +257,7 @@ export default function UsersPage() {
 
                                     {/* Header */}
                                     <div className="flex items-start gap-4 mb-6">
-                                        <div className={`h-12 w-12 rounded-none bg-[var(--card-hover)] border border-[var(--card-border)] flex items-center justify-center shrink-0 ${isInactive ? 'grayscale' : ''}`}>
+                                        <div className={`light-soft-tile h-12 w-12 rounded-2xl border border-[var(--card-border)] flex items-center justify-center shrink-0 ${isInactive ? 'grayscale' : ''}`}>
                                             {user.avatar ? (
                                                 <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
                                             ) : (
@@ -289,8 +318,8 @@ export default function UsersPage() {
 
             {/* Create User Modal */}
             {isCreateModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-                    <div className="bg-[var(--sidebar)] border border-[var(--primary)] w-full max-w-md p-6 relative shadow-2xl animate-in zoom-in-95">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-[color:var(--overlay-bg)] p-4 backdrop-blur-sm animate-in fade-in">
+                    <div className="relative w-full max-w-md border border-[var(--card-border)] bg-[var(--sidebar)] p-6 shadow-[var(--surface-shadow)] animate-in zoom-in-95">
                         <div className="absolute top-0 right-0 w-16 h-1 border-t-2 border-[var(--primary)]" />
 
                         <h2 className="text-2xl font-black text-[var(--foreground)] mb-6 uppercase tracking-wider flex items-center gap-2">
@@ -368,8 +397,8 @@ export default function UsersPage() {
 
             {/* Deactivation Confirmation Modal */}
             {deactivatingUser && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-                    <div className="bg-[var(--sidebar)] border border-rose-500/50 w-full max-w-sm p-6 relative shadow-2xl animate-in zoom-in-95">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-[color:var(--overlay-bg)] p-4 backdrop-blur-sm animate-in fade-in">
+                    <div className="relative w-full max-w-sm border border-rose-500/40 bg-[var(--sidebar)] p-6 shadow-[var(--surface-shadow)] animate-in zoom-in-95">
                         <div className="absolute top-0 right-0 w-16 h-1 border-t-2 border-rose-500" />
 
                         <div className="flex items-center gap-3 mb-4">

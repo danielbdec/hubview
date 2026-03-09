@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
     DndContext,
@@ -24,10 +24,19 @@ import { CompletionConfetti, type CompletionBurst } from '@/components/board/Com
 import { TaskModal } from '@/components/board/TaskModal';
 import { createPortal } from 'react-dom';
 import { useProjectStore, Task, Column } from '@/store/kanbanStore';
-import { Input, Select, ConfigProvider, theme } from 'antd';
+import { Input, Select, ConfigProvider, theme as antdTheme } from 'antd';
+import { useTheme } from '@/components/ui/ThemeProvider';
+import { useHydrated } from '@/hooks/useHydrated';
 import ProjectListView from './ProjectListView';
 import ProjectCalendarView from './ProjectCalendarView';
+
+type EditingTask = Task & {
+    _columnId?: string;
+};
+
 export default function KanbanBoardPage() {
+    const { theme: themeMode } = useTheme();
+    const mounted = useHydrated();
     const params = useParams();
     const router = useRouter();
     const projectId = params.projectId as string;
@@ -50,6 +59,7 @@ export default function KanbanBoardPage() {
 
     const hasFetchedRef = useRef(false);
     const dragSourceColumnIdRef = useRef<string | null>(null);
+    const celebrationBurstRef = useRef(0);
 
     // Fetch projects first (needed on browser reload), then board data
     useEffect(() => {
@@ -64,7 +74,7 @@ export default function KanbanBoardPage() {
         } else {
             fetchBoardData(projectId);
         }
-    }, [projectId]);
+    }, [fetchBoardData, fetchProjects, projectId, projects.length, setActiveProject]);
 
     const activeProject = projects.find(p => p.id === projectId);
 
@@ -78,12 +88,16 @@ export default function KanbanBoardPage() {
 
     // Derived state from active project
     const columns = activeProject?.columns || [];
+    const totalTasks = columns.reduce((sum, column) => sum + (column.tasks?.length || 0), 0);
+    const completedColumns = columns.filter((column) => column.isDone === true).length;
+    const completedTasks = columns.reduce((sum, column) => (
+        column.isDone ? sum + (column.tasks?.length || 0) : sum
+    ), 0);
 
     const [activeColumn, setActiveColumn] = useState<Column | null>(null);
     const [activeTask, setActiveTask] = useState<Task | null>(null);
-    const [editingTask, setEditingTask] = useState<Task | null>(null);
+    const [editingTask, setEditingTask] = useState<EditingTask | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [mounted, setMounted] = useState(false);
     const [celebrationBurst, setCelebrationBurst] = useState<CompletionBurst | null>(null);
 
     const [filters, setFilters] = useState({
@@ -93,12 +107,8 @@ export default function KanbanBoardPage() {
         tags: [] as string[]
     });
 
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
     // Extract unique assignees and tags
-    const { uniqueAssignees, uniqueTags } = useMemo(() => {
+    const { uniqueAssignees, uniqueTags } = (() => {
         const assignees = new Set<string>();
         const tagsMap = new Map<string, { id: string, name: string, color: string }>();
 
@@ -115,10 +125,10 @@ export default function KanbanBoardPage() {
             uniqueAssignees: Array.from(assignees).sort(),
             uniqueTags: Array.from(tagsMap.values())
         };
-    }, [columns]);
+    })();
 
     // Filter logic
-    const filteredColumns = useMemo(() => {
+    const filteredColumns = (() => {
         const hasFilters = filters.search || filters.priority.length > 0 || filters.assignees.length > 0 || filters.tags.length > 0;
         if (!hasFilters) return columns;
 
@@ -138,12 +148,12 @@ export default function KanbanBoardPage() {
                 return matchSearch && matchPriority && matchAssignee && matchTags;
             })
         }));
-    }, [columns, filters]);
+    })();
 
     const hasActiveFilters = !!(filters.search || filters.priority.length || filters.assignees.length || filters.tags.length);
     const clearFilters = () => setFilters({ search: '', priority: [], assignees: [], tags: [] });
 
-    const columnIds = useMemo(() => filteredColumns.map((col) => col.id), [filteredColumns]);
+    const columnIds = filteredColumns.map((col) => col.id);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -174,7 +184,7 @@ export default function KanbanBoardPage() {
             tags: [],
             priority: 'medium',
         };
-        setEditingTask({ ...newTask, _columnId: columnId } as any);
+        setEditingTask({ ...newTask, _columnId: columnId });
         setIsModalOpen(true);
     };
 
@@ -187,7 +197,7 @@ export default function KanbanBoardPage() {
         const isNew = taskId === 'temp';
 
         if (isNew) {
-            const columnId = (editingTask as any)?._columnId;
+            const columnId = editingTask?._columnId;
             if (!columnId) return;
 
             const content = updates.content || 'Nova Tarefa';
@@ -218,7 +228,11 @@ export default function KanbanBoardPage() {
         }
     };
 
-    const buildCelebrationBurst = (column: Column, fallbackRect?: { left: number; top: number; width: number; height: number }): CompletionBurst | null => {
+    const buildCelebrationBurst = (
+        burstId: string,
+        column: Column,
+        fallbackRect?: { left: number; top: number; width: number; height: number }
+    ): CompletionBurst | null => {
         if (typeof window === 'undefined') return null;
 
         const targetElement = document.querySelector<HTMLElement>(`[data-kanban-column-id="${column.id}"]`);
@@ -233,7 +247,7 @@ export default function KanbanBoardPage() {
             : Math.min(window.innerHeight * 0.34, 240);
 
         return {
-            id: `${Date.now()}-${column.id}`,
+            id: burstId,
             originX,
             originY,
             accent: column.color || '#10b981',
@@ -315,7 +329,12 @@ export default function KanbanBoardPage() {
                 sourceColumn.isDone !== true &&
                 currentColumn.isDone === true
             ) {
-                const burst = buildCelebrationBurst(currentColumn, over.rect);
+                celebrationBurstRef.current += 1;
+                const burst = buildCelebrationBurst(
+                    `${currentColumn.id}-${celebrationBurstRef.current}`,
+                    currentColumn,
+                    over.rect
+                );
                 if (burst) {
                     setCelebrationBurst(burst);
                 }
@@ -357,7 +376,7 @@ export default function KanbanBoardPage() {
             );
         }
         return (
-            <div className="flex flex-col items-center justify-center h-full text-gray-500">
+            <div className="flex h-full flex-col items-center justify-center text-[var(--muted-foreground)]">
                 <p>Projeto não encontrado.</p>
                 <Button variant="ghost" onClick={() => router.push('/projects')} className="mt-4">
                     Voltar para Projetos
@@ -375,21 +394,21 @@ export default function KanbanBoardPage() {
             onDragEnd={handleDragEnd}
             onDragCancel={handleDragCancel}
         >
-            <div className="h-full flex flex-col pt-2 max-w-full overflow-hidden">
+            <div className="page-light-atmosphere flex h-full max-w-full flex-col overflow-hidden px-3 pb-3 pt-2 sm:px-4 lg:px-6">
                 {/* Header & Control Bar Area */}
                 <ConfigProvider
                     theme={{
-                        algorithm: theme.darkAlgorithm,
+                        algorithm: themeMode === 'light' ? antdTheme.defaultAlgorithm : antdTheme.darkAlgorithm,
                         token: {
                             colorBgContainer: 'transparent',
                             colorBorder: 'var(--input-border)',
                             colorText: 'var(--foreground)',
                             colorTextPlaceholder: 'var(--muted-foreground)',
                             borderRadius: 0,
-                            fontFamily: 'var(--font-geist-sans)',
+                            fontFamily: 'var(--font-sans)',
                             colorPrimary: 'var(--primary)',
                             controlItemBgActive: 'var(--card-hover)',
-                            colorBgElevated: '#0a0a0a',
+                            colorBgElevated: 'var(--sidebar)',
                         },
                         components: {
                             Select: {
@@ -408,43 +427,73 @@ export default function KanbanBoardPage() {
                         }
                     }}
                 >
-                    <div className="flex flex-col gap-4 mb-6">
+                    <div className="mb-5 flex flex-col gap-3">
                         {/* Top Header */}
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <Button variant="ghost" size="sm" onClick={() => router.push('/projects')} className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] pr-0 pl-1">
+                        <div className="light-page-hero flex flex-col gap-2.5 px-3 py-3 sm:px-3.5 xl:flex-row xl:items-center xl:justify-between">
+                            <div className="flex min-w-0 items-start gap-3">
+                                <Button variant="ghost" size="sm" onClick={() => router.push('/projects')} className="mt-0.5 h-7 pl-1 pr-0 text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
                                     <ArrowLeft size={16} />
                                 </Button>
                                 <div>
-                                    <h1 className="text-2xl font-bold uppercase tracking-tight text-[var(--foreground)] mb-1 leading-none shadow-none truncate max-w-[400px]">
+                                    <span className="light-muted-chip inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[9px] font-mono font-semibold uppercase tracking-[0.22em]">
+                                        <LayoutGrid size={10} />
+                                        Flow Control
+                                    </span>
+                                    <h1 className="mt-1.5 max-w-[460px] truncate text-[0.98rem] font-black uppercase leading-none tracking-tight text-[var(--foreground)] shadow-none sm:text-[1.05rem]">
                                         {activeProject.title}
                                     </h1>
-                                    <p className="text-[var(--muted-foreground)] font-mono text-xs">
+                                    <p className="mt-1 hidden max-w-xl text-[11px] leading-4 text-[var(--muted-foreground)] lg:block">
+                                        Visualize paineis, acompanhe gargalos e opere o board com filtros rápidos no tema claro.
+                                    </p>
+                                    <p className="mt-1 text-[9px] font-mono text-[var(--muted-foreground)] sm:text-[10px]">
                                         STATUS_FLUXO: <span className="text-yellow-500 font-bold">ATIVO</span> | <span className="opacity-50 tracking-widest">ID: {activeProject.id.slice(0, 8)}</span>
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3 shrink-0">
-                                {/* Segmented view switcher moved to global header */}
+                            <div className="grid w-full shrink-0 grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
+                                <div className="light-page-kpi min-w-0 px-3 py-2 sm:min-w-[104px]">
+                                    <span className="text-[9px] font-mono uppercase tracking-[0.22em] text-slate-500">Painéis</span>
+                                    <div className="mt-1.5 flex items-end justify-between gap-2">
+                                        <strong className="text-[1.4rem] font-black tracking-[-0.08em] text-slate-950">{columns.length}</strong>
+                                        <span className="rounded-full bg-lime-100 px-2 py-1 text-[9px] font-mono font-semibold uppercase tracking-[0.16em] text-lime-700">
+                                            estrutura
+                                        </span>
+                                    </div>
+                                </div>
 
-                                <Button variant="ghost" size="sm" onClick={handleRefresh} title="Atualizar Board" className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)] rounded-none border border-transparent hover:border-[var(--card-border)] h-[32px]">
-                                    <RefreshCw size={16} className={isLoadingBoard ? 'animate-spin text-[var(--primary)]' : ''} />
-                                </Button>
+                                <div className="light-page-kpi light-page-kpi--contrast min-w-0 px-3 py-2 sm:min-w-[122px]">
+                                    <span className="text-[9px] font-mono uppercase tracking-[0.22em] text-slate-400">Conclusão</span>
+                                    <div className="mt-1.5 flex items-end justify-between gap-2">
+                                        <strong className="text-[1.4rem] font-black tracking-[-0.08em] text-white">{completedTasks}</strong>
+                                        <span className="light-dark-chip px-2 py-1 text-[9px] font-mono font-semibold uppercase tracking-[0.16em]">
+                                            {completedColumns} done
+                                        </span>
+                                    </div>
+                                </div>
 
-                                <Button variant="primary" size="sm" onClick={addColumn} disabled={isLoadingBoard || activeView !== 'kanban'} className="rounded-none font-mono tracking-widest uppercase text-[10px] min-w-[140px] h-[32px]">
-                                    <Plus size={16} className="mr-2" /> Novo Painel
-                                </Button>
+                                <div className="col-span-full flex w-full items-center gap-2 sm:w-auto sm:self-end">
+                                    <div className="light-page-kpi flex-1 px-3 py-2 sm:flex-none">
+                                        <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-slate-500">Tarefas</span>
+                                        <strong className="mt-1 block text-[1.15rem] font-black tracking-[-0.06em] text-slate-950">{totalTasks}</strong>
+                                    </div>
+                                    <Button variant="ghost" size="sm" onClick={handleRefresh} title="Atualizar Board" className="light-page-kpi h-[34px] rounded-full border border-transparent px-3 text-[var(--muted-foreground)] hover:border-[var(--card-border)] hover:bg-[var(--card-hover)] hover:text-[var(--foreground)]">
+                                        <RefreshCw size={15} className={isLoadingBoard ? 'animate-spin text-[var(--primary)]' : ''} />
+                                    </Button>
+                                    <Button variant="primary" size="sm" onClick={addColumn} disabled={isLoadingBoard || activeView !== 'kanban'} className="h-[34px] min-w-[122px] flex-1 rounded-full font-mono text-[9px] uppercase tracking-[0.22em] sm:flex-none">
+                                        <Plus size={15} className="mr-1.5" /> Novo Painel
+                                    </Button>
+                                </div>
                             </div>
                         </div>
 
                         {/* Control Bar */}
-                        <div className="flex items-center justify-between bg-[var(--sidebar)]/80 p-2 border-y border-[var(--sidebar-border)] backdrop-blur-sm -mx-6 px-6">
-                            <div className="flex items-center gap-3 flex-1 overflow-x-auto scrollbar-none py-1">
+                        <div className="light-toolbar flex flex-col gap-2 px-3 py-2.5 backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between sm:px-3.5">
+                            <div className="scrollbar-none flex flex-1 items-center gap-3 overflow-x-auto py-0.5">
                                 <Input
                                     placeholder="Buscar tarefas..."
                                     prefix={<Search size={14} className="text-[var(--muted-foreground)]" />}
-                                    className="w-64 rounded-none bg-[var(--input-bg)] border-[var(--input-border)] text-[var(--foreground)] hover:border-[var(--primary)] focus:border-[var(--primary)] h-8 text-sm"
+                                    className="h-8 w-[min(16rem,70vw)] rounded-none border-[var(--input-border)] bg-[var(--input-bg)] text-sm text-[var(--foreground)] hover:border-[var(--primary)] focus:border-[var(--primary)] sm:w-64"
                                     value={filters.search}
                                     onChange={e => setFilters(f => ({ ...f, search: e.target.value }))}
                                 />
@@ -454,7 +503,7 @@ export default function KanbanBoardPage() {
                                     allowClear
                                     placeholder="Prioridade"
                                     maxTagCount="responsive"
-                                    className="min-w-[140px] [&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-[var(--input-bg)] [&_.ant-select-selector]:!border-[var(--input-border)] [&_.ant-select-selector]:!min-h-[32px] font-mono text-xs shadow-none hover:[&_.ant-select-selector]:!border-[var(--primary)]"
+                                    className="min-w-[132px] [&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-[var(--input-bg)] [&_.ant-select-selector]:!border-[var(--input-border)] [&_.ant-select-selector]:!min-h-[32px] font-mono text-xs shadow-none hover:[&_.ant-select-selector]:!border-[var(--primary)] sm:min-w-[140px]"
                                     value={filters.priority}
                                     onChange={v => setFilters(f => ({ ...f, priority: v }))}
                                     options={[
@@ -462,7 +511,7 @@ export default function KanbanBoardPage() {
                                         { label: 'Média', value: 'medium' },
                                         { label: 'Baixa', value: 'low' },
                                     ]}
-                                    classNames={{ popup: { root: '!rounded-none border border-[var(--input-border)] !bg-[#0a0a0a] [&_.ant-select-item]:!rounded-none [&_.ant-select-item-option-selected]:!font-bold [&_.ant-select-item]:!font-mono [&_.ant-select-item]:!text-xs' } }}
+                                    classNames={{ popup: { root: '!rounded-none border border-[var(--input-border)] !bg-[var(--sidebar)] [&_.ant-select-item]:!rounded-none [&_.ant-select-item-option-selected]:!font-bold [&_.ant-select-item]:!font-mono [&_.ant-select-item]:!text-[var(--foreground)] [&_.ant-select-item]:!text-xs' } }}
                                 />
 
                                 <Select
@@ -470,11 +519,11 @@ export default function KanbanBoardPage() {
                                     allowClear
                                     placeholder="Responsável"
                                     maxTagCount="responsive"
-                                    className="min-w-[160px] [&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-[var(--input-bg)] [&_.ant-select-selector]:!border-[var(--input-border)] [&_.ant-select-selector]:!min-h-[32px] font-mono text-xs shadow-none hover:[&_.ant-select-selector]:!border-[var(--primary)]"
+                                    className="min-w-[146px] [&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-[var(--input-bg)] [&_.ant-select-selector]:!border-[var(--input-border)] [&_.ant-select-selector]:!min-h-[32px] font-mono text-xs shadow-none hover:[&_.ant-select-selector]:!border-[var(--primary)] sm:min-w-[160px]"
                                     value={filters.assignees}
                                     onChange={v => setFilters(f => ({ ...f, assignees: v }))}
                                     options={uniqueAssignees.map(a => ({ label: a, value: a }))}
-                                    classNames={{ popup: { root: '!rounded-none border border-[var(--input-border)] !bg-[#0a0a0a] [&_.ant-select-item]:!rounded-none [&_.ant-select-item-option-selected]:!font-bold [&_.ant-select-item]:!font-mono [&_.ant-select-item]:!text-xs' } }}
+                                    classNames={{ popup: { root: '!rounded-none border border-[var(--input-border)] !bg-[var(--sidebar)] [&_.ant-select-item]:!rounded-none [&_.ant-select-item-option-selected]:!font-bold [&_.ant-select-item]:!font-mono [&_.ant-select-item]:!text-[var(--foreground)] [&_.ant-select-item]:!text-xs' } }}
                                 />
 
                                 <Select
@@ -482,11 +531,11 @@ export default function KanbanBoardPage() {
                                     allowClear
                                     placeholder="Tags"
                                     maxTagCount="responsive"
-                                    className="min-w-[160px] [&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-[var(--input-bg)] [&_.ant-select-selector]:!border-[var(--input-border)] [&_.ant-select-selector]:!min-h-[32px] font-mono text-xs shadow-none hover:[&_.ant-select-selector]:!border-[var(--primary)]"
+                                    className="min-w-[146px] [&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-[var(--input-bg)] [&_.ant-select-selector]:!border-[var(--input-border)] [&_.ant-select-selector]:!min-h-[32px] font-mono text-xs shadow-none hover:[&_.ant-select-selector]:!border-[var(--primary)] sm:min-w-[160px]"
                                     value={filters.tags}
                                     onChange={v => setFilters(f => ({ ...f, tags: v }))}
                                     options={uniqueTags.map(t => ({ label: t.name, value: t.name }))}
-                                    classNames={{ popup: { root: '!rounded-none border border-[var(--input-border)] !bg-[#0a0a0a] [&_.ant-select-item]:!rounded-none [&_.ant-select-item-option-selected]:!font-bold [&_.ant-select-item]:!font-mono [&_.ant-select-item]:!text-xs' } }}
+                                    classNames={{ popup: { root: '!rounded-none border border-[var(--input-border)] !bg-[var(--sidebar)] [&_.ant-select-item]:!rounded-none [&_.ant-select-item-option-selected]:!font-bold [&_.ant-select-item]:!font-mono [&_.ant-select-item]:!text-[var(--foreground)] [&_.ant-select-item]:!text-xs' } }}
                                 />
 
                                 {hasActiveFilters && (

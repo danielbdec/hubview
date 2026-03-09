@@ -58,7 +58,7 @@ export default function ConfirmModal({
                     className="fixed inset-0 z-[100] flex items-center justify-center p-4"
                 >
                     <div
-                        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+                        className="absolute inset-0 bg-[color:var(--overlay-bg)] backdrop-blur-sm"
                         onClick={!isLoading ? onCancel : undefined}
                     />
 
@@ -67,7 +67,7 @@ export default function ConfirmModal({
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.92, y: 10 }}
                         transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                        className="relative w-full max-w-sm bg-[var(--sidebar)] border border-[var(--card-border)] shadow-2xl shadow-black/50"
+                        className="relative w-full max-w-sm border border-[var(--card-border)] bg-[var(--sidebar)] shadow-[var(--surface-shadow)]"
                     >
                         <button
                             onClick={onCancel}

@@ -69,10 +69,11 @@ export default function NotificationToast({
                     className={`
                         fixed top-20 right-6 z-[100] 
                         min-w-[340px] max-w-[420px]
-                        bg-[#0d1117]/95 ${border} border
+                        bg-[var(--sidebar)] ${border} border
                         ${glow}
                         backdrop-blur-xl
-                        ring-1 ring-white/5
+                        ring-1 ring-[var(--card-border)]
+                        shadow-[var(--surface-shadow-soft)]
                     `}
                 >
                     {/* Top accent line */}

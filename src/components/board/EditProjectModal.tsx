@@ -51,7 +51,7 @@ export default function EditProjectModal({ project, isOpen, onClose, onSave }: E
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-[color:var(--overlay-bg)] p-4 backdrop-blur-sm"
                     onClick={onClose}
                     onKeyDown={handleKeyDown}
                 >
@@ -60,7 +60,7 @@ export default function EditProjectModal({ project, isOpen, onClose, onSave }: E
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.92, y: 20 }}
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                        className="bg-[var(--sidebar)] border border-[var(--primary)] w-full max-w-lg relative shadow-2xl shadow-[var(--primary)]/5"
+                        className="relative w-full max-w-lg border border-[var(--card-border)] bg-[var(--sidebar)] shadow-[var(--surface-shadow)]"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}

@@ -1,17 +1,19 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Input, Dropdown, MenuProps, Typography, Skeleton } from 'antd';
 import { ArrowLeft, Plus, MoreVertical, Trash2 } from 'lucide-react';
 import { useBoardStore } from '@/store/boardStore';
 import BoardColumn from '@/components/board/BoardColumn';
-import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor, TouchSensor, DragStartEvent, DragEndEvent, DragOverEvent, closestCorners } from '@dnd-kit/core';
-import { SortableContext, horizontalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor, TouchSensor, DragEndEvent, DragOverEvent, closestCorners } from '@dnd-kit/core';
+import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
+import { useHydrated } from '@/hooks/useHydrated';
 
 const { Title } = Typography;
 
 export default function ProjectBoard() {
+    const mounted = useHydrated();
     const params = useParams();
     const router = useRouter();
     const projectId = params.id as string;
@@ -23,16 +25,8 @@ export default function ProjectBoard() {
     const moveCard = useBoardStore((state) => state.moveCard);
     const moveColumn = useBoardStore((state) => state.moveColumn);
 
-    const [mounted, setMounted] = useState(false);
     const [isAddingColumn, setIsAddingColumn] = useState(false);
     const [newColumnTitle, setNewColumnTitle] = useState('');
-
-    // DnD State
-    const [activeId, setActiveId] = useState<string | null>(null);
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
 
     const project = projects[projectId];
 
@@ -78,9 +72,7 @@ export default function ProjectBoard() {
     // For now, enable visual drag but logic needs store support for strict arrayMove.
     // We need to implement proper onDragEnd updating the store.
 
-    function handleDragStart(event: DragStartEvent) {
-        setActiveId(event.active.id as string);
-    }
+    function handleDragStart() { }
 
     function handleDragOver(event: DragOverEvent) {
         const { active, over } = event;
@@ -93,8 +85,6 @@ export default function ProjectBoard() {
 
         const isActiveACard = active.data.current?.type === 'Card';
         const isOverACard = over.data.current?.type === 'Card';
-        const isOverAColumn = over.data.current?.type === 'Column';
-
         if (!isActiveACard) return;
 
         // Dropping a Card over another Card
@@ -114,7 +104,6 @@ export default function ProjectBoard() {
     function handleDragEnd(event: DragEndEvent) {
         const { active, over } = event;
         if (!over) {
-            setActiveId(null);
             return;
         }
 
@@ -130,27 +119,27 @@ export default function ProjectBoard() {
             moveCard(activeId, overId);
         }
 
-        setActiveId(null);
     }
 
 
 
     return (
-        <main className="h-screen flex flex-col bg-[#0a192f] overflow-hidden relative">
-            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
+        <main className="relative flex h-screen flex-col overflow-hidden bg-[var(--background)]">
+            <div className="pointer-events-none absolute inset-0 bg-tech-grid opacity-[0.05]" />
 
             {/* Navbar */}
-            <header className="h-16 bg-[#112240]/80 backdrop-blur-md border-b border-white/5 flex items-center px-6 justify-between text-white shrink-0 z-10">
+            <header className="z-10 flex h-16 shrink-0 items-center justify-between border-b border-[var(--header-border)] bg-[var(--header)] px-6 text-[var(--foreground)] backdrop-blur-md">
                 <div className="flex items-center gap-4">
                     <Button
                         type="text"
-                        icon={<ArrowLeft size={18} className="text-white" />}
+                        icon={<ArrowLeft size={18} className="text-[var(--foreground)]" />}
+                        className="!text-[var(--foreground)] hover:!text-[var(--primary)]"
                         onClick={() => router.push('/')}
                     />
-                    <Title level={4} style={{ margin: 0, color: 'white' }}>{project.title}</Title>
+                    <Title level={4} style={{ margin: 0, color: 'var(--foreground)' }}>{project.title}</Title>
                 </div>
                 <Dropdown menu={{ items: menuItems }} trigger={['click']}>
-                    <Button type="text" icon={<MoreVertical size={18} className="text-white" />} />
+                    <Button type="text" icon={<MoreVertical size={18} className="text-[var(--foreground)]" />} className="!text-[var(--foreground)] hover:!text-[var(--primary)]" />
                 </Dropdown>
             </header>
 
@@ -185,28 +174,28 @@ export default function ProjectBoard() {
                         <div className="w-80 flex-shrink-0 ml-2">
                             {!isAddingColumn ? (
                                 <button
-                                    className="w-full bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 rounded-2xl p-4 flex items-center gap-2 text-gray-400 hover:text-white transition-all duration-200 group h-auto"
+                                    className="group h-auto flex w-full items-center gap-2 rounded-2xl border border-[var(--card-border)] bg-[var(--card)] p-4 text-[var(--muted-foreground)] transition-all duration-200 hover:border-[var(--primary)] hover:bg-[var(--card-hover)] hover:text-[var(--foreground)]"
                                     onClick={() => setIsAddingColumn(true)}
                                 >
-                                    <div className="bg-white/10 p-2 rounded-lg group-hover:bg-amber-500/20 group-hover:text-amber-400 transition-colors">
+                                    <div className="rounded-lg bg-[var(--column-bg)] p-2 transition-colors group-hover:bg-[color:color-mix(in_srgb,var(--primary)_16%,transparent)] group-hover:text-[var(--primary)]">
                                         <Plus size={20} />
                                     </div>
                                     <span className="font-semibold text-lg">Adicionar outra lista</span>
                                 </button>
                             ) : (
-                                <div className="bg-[#112240]/60 backdrop-blur-xl p-3 rounded-2xl border border-white/10 shadow-xl animate-in fade-in zoom-in-95 duration-200">
+                                <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--sidebar)] p-3 shadow-[var(--surface-shadow-soft)] backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200">
                                     <Input
                                         autoFocus
                                         placeholder="Título da lista..."
-                                        className="mb-3 !bg-black/20 !border-white/10 !text-white placeholder:text-gray-500 focus:!border-amber-500/50 focus:!shadow-none h-10 rounded-lg"
+                                        className="mb-3 h-10 rounded-lg !border-[var(--input-border)] !bg-[var(--input-bg)] !text-[var(--foreground)] placeholder:!text-[var(--muted-foreground)] focus:!border-[var(--primary)] focus:!shadow-none"
                                         value={newColumnTitle}
                                         onChange={(e) => setNewColumnTitle(e.target.value)}
                                         onPressEnter={handleAddColumn}
                                         maxLength={50}
                                     />
                                     <div className="flex items-center gap-2">
-                                        <Button type="primary" onClick={handleAddColumn} className="bg-amber-500 hover:bg-amber-400 text-black font-bold border-none shadow-amber-500/20 shadow-lg">Adicionar lista</Button>
-                                        <Button type="text" size="small" onClick={() => setIsAddingColumn(false)} className="text-gray-400 hover:text-white">X</Button>
+                                        <Button type="primary" onClick={handleAddColumn} className="!border-none !bg-[var(--primary)] !text-[var(--primary-foreground)] shadow-lg shadow-[rgba(132,204,22,0.18)] hover:!bg-[var(--primary-hover)]">Adicionar lista</Button>
+                                        <Button type="text" size="small" onClick={() => setIsAddingColumn(false)} className="!text-[var(--muted-foreground)] hover:!text-[var(--foreground)]">X</Button>
                                     </div>
                                 </div>
                             )}

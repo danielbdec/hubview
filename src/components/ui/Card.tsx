@@ -20,11 +20,11 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
                     // Sharp corners
                     'rounded-none',
                     {
-                        'bg-white/5 border border-white/10 backdrop-blur-sm': variant === 'default', // Slight transparency
-                        'bg-black/40 border border-white/5 backdrop-blur-md': variant === 'glass',
-                        'bg-transparent border border-dashed border-white/20': variant === 'outline',
+                        'bg-[var(--card)] border border-[var(--card-border)] backdrop-blur-sm': variant === 'default',
+                        'bg-[var(--sidebar)] border border-[var(--card-border)] backdrop-blur-xl shadow-[var(--surface-shadow-soft)]': variant === 'glass',
+                        'bg-transparent border border-dashed border-[var(--card-border)]': variant === 'outline',
                     },
-                    'group hover:border-white/20', // Hover effect
+                    'group hover:border-[var(--primary)]',
                     className
                 )}
                 {...props}
@@ -32,7 +32,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
                 {/* Tech Decoration: Top-right corner cut/accent */}
                 <div className="absolute top-0 right-0 p-2 opacity-50 group-hover:opacity-100 transition-opacity">
                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M0 0H10V10L0 0Z" fill="var(--tech-green, #A9EF2F)" />
+                        <path d="M0 0H10V10L0 0Z" fill="var(--primary)" />
                     </svg>
                 </div>
 

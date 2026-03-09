@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Plus, MoreVertical, FolderOpen, LayoutGrid, Edit3, Power, Archive, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { LoadingState } from '@/components/ui/LoadingState';
@@ -15,8 +14,7 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 type TabFilter = 'active' | 'inactive';
 
 export default function ProjectsPage() {
-    const router = useRouter();
-    const { projects, addProject, updateProjectAPI, inactivateProject, fetchProjects, fetchTaskCounts, taskCounts, isLoadingProjects } = useProjectStore();
+    const { projects, addProject, updateProjectAPI, inactivateProject, fetchProjects, taskCounts, isLoadingProjects } = useProjectStore();
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [newProjectTitle, setNewProjectTitle] = useState('');
     const [newProjectDesc, setNewProjectDesc] = useState('');
@@ -59,6 +57,7 @@ export default function ProjectsPage() {
 
     const activeCount = useMemo(() => projects.filter(p => p.status !== 'inactive').length, [projects]);
     const inactiveCount = useMemo(() => projects.filter(p => p.status === 'inactive').length, [projects]);
+    const pausedCount = useMemo(() => projects.filter(p => p.status === 'paused').length, [projects]);
 
     useEffect(() => {
         setMounted(true);
@@ -159,7 +158,7 @@ export default function ProjectsPage() {
     };
 
     return (
-        <div className="container mx-auto max-w-7xl py-8">
+        <div className="page-light-atmosphere container mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
             {/* Notification Toast */}
             <NotificationToast
                 isOpen={notification.isOpen}
@@ -192,39 +191,74 @@ export default function ProjectsPage() {
                 onCancel={() => setInactivateTarget(null)}
             />
 
-            <div className="flex items-center justify-between mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold uppercase tracking-tight text-[var(--foreground)] mb-2">
+            <div className="light-page-hero mb-6 flex flex-col gap-4 px-4 py-5 sm:mb-8 sm:gap-6 sm:px-6 sm:py-6 lg:px-7 lg:py-7 xl:flex-row xl:items-center xl:justify-between">
+                <div className="max-w-2xl">
+                    <span className="light-muted-chip inline-flex items-center gap-2 px-3 py-1 text-[10px] font-mono font-semibold uppercase tracking-[0.24em]">
+                        <FolderOpen size={11} />
+                        Workspace Registry
+                    </span>
+                    <h1 className="mt-3 text-2xl font-black uppercase tracking-tight text-[var(--foreground)] sm:mt-4 sm:text-3xl">
                         Painel de Projetos
                     </h1>
-                    <p className="text-[var(--muted-foreground)] font-mono text-sm">
-                        Selecione um projeto para gerenciar suas tarefas e fluxos.
+                    <p className="mt-2 max-w-2xl text-[14px] leading-6 text-[var(--muted-foreground)] sm:mt-3 sm:text-[15px] sm:leading-7">
+                        Visualize o portfólio ativo, entre nos fluxos mais recentes e acompanhe o ritmo operacional de cada projeto.
                     </p>
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                        <span className="light-muted-chip px-3 py-1 text-[10px] font-mono font-semibold uppercase tracking-[0.18em]">
+                            {activeCount} ativos
+                        </span>
+                        <span className="rounded-full border border-sky-200/70 bg-[linear-gradient(135deg,rgba(240,249,255,0.94),rgba(255,255,255,0.9))] px-3 py-1 text-[10px] font-mono font-semibold uppercase tracking-[0.18em] text-slate-500">
+                            {pausedCount} pausados
+                        </span>
+                    </div>
                 </div>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={handleRefresh}
-                        disabled={isRefreshing || isLoadingProjects}
-                        className="p-2.5 border border-[var(--card-border)] bg-[var(--card)] hover:bg-[var(--card-hover)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all duration-200 disabled:opacity-50"
-                        title="Atualizar lista"
-                    >
-                        <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
-                    </button>
-                    <Button variant="primary" onClick={() => setIsCreateModalOpen(true)} disabled={isLoadingProjects}>
-                        <Plus size={18} className="mr-2" /> Novo Projeto
-                    </Button>
+
+                <div className="grid w-full gap-3 sm:grid-cols-2 xl:flex xl:w-auto xl:flex-wrap">
+                    <div className="light-page-kpi min-w-0 px-4 py-4 sm:min-w-[150px] sm:px-5">
+                        <span className="text-[10px] font-mono uppercase tracking-[0.24em] text-slate-500">Projetos</span>
+                        <div className="mt-3 flex items-end justify-between gap-3">
+                            <strong className="text-4xl font-black tracking-[-0.08em] text-slate-950">{projects.length}</strong>
+                            <span className="rounded-full bg-lime-100 px-2.5 py-1 text-[10px] font-mono font-semibold uppercase tracking-[0.18em] text-lime-700">
+                                ativos
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="light-page-kpi light-page-kpi--contrast min-w-0 px-4 py-4 sm:min-w-[170px] sm:px-5">
+                        <span className="text-[10px] font-mono uppercase tracking-[0.24em] text-slate-400">Arquivados</span>
+                        <div className="mt-3 flex items-end justify-between gap-3">
+                            <strong className="text-4xl font-black tracking-[-0.08em] text-white">{inactiveCount}</strong>
+                            <span className="light-dark-chip px-2.5 py-1 text-[10px] font-mono font-semibold uppercase tracking-[0.18em]">
+                                histórico
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="col-span-full flex w-full flex-col gap-3 sm:flex-row sm:items-center xl:w-auto xl:self-end">
+                        <button
+                            onClick={handleRefresh}
+                            disabled={isRefreshing || isLoadingProjects}
+                            className="light-page-kpi flex w-full items-center justify-center p-3 text-[var(--muted-foreground)] transition-all duration-200 hover:text-[var(--foreground)] disabled:opacity-50 sm:w-auto"
+                            title="Atualizar lista"
+                        >
+                            <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
+                        </button>
+                        <Button variant="primary" onClick={() => setIsCreateModalOpen(true)} disabled={isLoadingProjects} className="w-full sm:w-auto">
+                            <Plus size={18} className="mr-2" /> Novo Projeto
+                        </Button>
+                    </div>
                 </div>
             </div>
 
             {/* ═══ Filter Tabs ═══ */}
-            <div className="flex items-center gap-1 mb-8 border-b border-[var(--card-border)]">
+            <div className="light-tabbar mb-6 flex w-full flex-wrap items-center gap-1 sm:mb-8 sm:w-auto sm:inline-flex">
                 <button
                     onClick={() => setActiveTab('active')}
                     className={`
-                        relative px-5 py-3 text-xs font-mono uppercase tracking-widest transition-all duration-200
+                        relative flex-1 justify-center rounded-full border px-4 py-3 text-xs font-mono uppercase tracking-widest transition-all duration-200 sm:flex-none sm:px-5
                         ${activeTab === 'active'
-                            ? 'text-[var(--primary)] font-bold'
-                            : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+                            ? 'border-lime-200 bg-[linear-gradient(135deg,rgba(246,253,232,0.96),rgba(255,255,255,0.94))] text-[var(--primary)] font-bold shadow-[0_12px_24px_rgba(15,23,42,0.08)]'
+                            : 'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
                         }
                     `}
                 >
@@ -241,22 +275,15 @@ export default function ProjectsPage() {
                             {activeCount}
                         </span>
                     </span>
-                    {activeTab === 'active' && (
-                        <motion.div
-                            layoutId="tab-indicator"
-                            className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--primary)]"
-                            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                        />
-                    )}
                 </button>
 
                 <button
                     onClick={() => setActiveTab('inactive')}
                     className={`
-                        relative px-5 py-3 text-xs font-mono uppercase tracking-widest transition-all duration-200
+                        relative flex-1 justify-center rounded-full border px-4 py-3 text-xs font-mono uppercase tracking-widest transition-all duration-200 sm:flex-none sm:px-5
                         ${activeTab === 'inactive'
-                            ? 'text-rose-400 font-bold'
-                            : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+                            ? 'border-rose-200 bg-[linear-gradient(135deg,rgba(255,241,242,0.95),rgba(255,255,255,0.94))] text-rose-400 font-bold shadow-[0_12px_24px_rgba(15,23,42,0.08)]'
+                            : 'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
                         }
                     `}
                 >
@@ -273,13 +300,6 @@ export default function ProjectsPage() {
                             {inactiveCount}
                         </span>
                     </span>
-                    {activeTab === 'inactive' && (
-                        <motion.div
-                            layoutId="tab-indicator"
-                            className="absolute bottom-0 left-0 right-0 h-[2px] bg-rose-400"
-                            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                        />
-                    )}
                 </button>
             </div>
 
@@ -293,7 +313,7 @@ export default function ProjectsPage() {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex flex-col items-center justify-center py-20 border border-dashed border-[var(--card-border)] rounded-lg bg-[var(--card)]/30"
+                    className="light-page-panel flex flex-col items-center justify-center py-20 border border-dashed border-[var(--card-border)] bg-[var(--card)]/30"
                 >
                     <div className="p-4 bg-[var(--card-hover)] rounded-full mb-4 ring-1 ring-[var(--primary)]/20">
                         {activeTab === 'active' ? (
@@ -323,7 +343,6 @@ export default function ProjectsPage() {
                         {filteredProjects.map((project) => {
                             const counts = taskCounts[project.id];
                             const totalTasks = counts?.total || 0;
-                            const highPriority = counts?.byPriority?.high || 0;
                             // Sum tasks from columns marked as isDone
                             const projCols = project.columns || [];
                             let completedTasks = 0;
@@ -407,7 +426,7 @@ export default function ProjectsPage() {
                                     transition={{ duration: 0.2 }}
                                 >
                                     <Link href={isInactive ? '#' : `/projects/${project.id}`} className={isInactive ? 'pointer-events-none' : ''}>
-                                        <div className={`group relative bg-[var(--card)] border border-[var(--card-border)] hover:border-[var(--card-hover)] p-6 h-full transition-all duration-300 hover:shadow-[0_0_30px_-10px_rgba(var(--primary),0.1)] flex flex-col backdrop-blur-sm ${isInactive ? 'opacity-60' : ''}`}>
+                                        <div className={`light-page-card group relative bg-[var(--card)] border border-[var(--card-border)] hover:border-[var(--card-hover)] p-6 h-full transition-all duration-300 hover:shadow-[0_0_30px_-10px_rgba(var(--primary),0.1)] flex flex-col backdrop-blur-sm ${isInactive ? 'opacity-60' : ''}`}>
                                             {/* Tech corner accents */}
                                             <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-[var(--card-border)] group-hover:border-[var(--primary)] transition-colors" />
                                             <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-[var(--card-border)] group-hover:border-[var(--primary)] transition-colors" />
@@ -415,7 +434,7 @@ export default function ProjectsPage() {
                                             {/* Header & Status */}
                                             <div className="flex justify-between items-start mb-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="p-2 bg-[var(--card-hover)] rounded-none">
+                                                    <div className="light-soft-tile p-2 rounded-2xl">
                                                         <FolderOpen className="text-[var(--primary)]" size={20} />
                                                     </div>
                                                     <div className="flex flex-col">
@@ -452,7 +471,7 @@ export default function ProjectsPage() {
                                                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                                                     exit={{ opacity: 0, y: -8, scale: 0.95 }}
                                                                     transition={{ duration: 0.15 }}
-                                                                    className="absolute right-0 top-8 z-50 w-48 bg-[var(--sidebar)] border border-[var(--card-border)] shadow-xl shadow-black/30"
+                                                                    className="light-page-card absolute right-0 top-8 z-50 w-48 bg-[var(--sidebar)]"
                                                                 >
                                                                     <button
                                                                         onClick={(e) => handleOpenEdit(e, project)}
@@ -486,27 +505,33 @@ export default function ProjectsPage() {
                                                     <span className={`${taskStatusColor} border px-1.5 py-0.5 text-[10px] font-bold`}>{taskStatus}</span>
                                                     <span className="text-[var(--primary)] font-bold">{progress}%</span>
                                                 </div>
-                                                <div className="h-1.5 w-full bg-[var(--card-hover)] overflow-hidden">
+                                                <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--card-hover)]">
                                                     <div
                                                         className="h-full bg-[var(--primary)] transition-all duration-500 ease-out relative"
                                                         style={{ width: `${progress}%` }}
                                                     >
-                                                        <div className="absolute right-0 top-0 bottom-0 w-1 bg-white/50 shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
+                                                        <div
+                                                            className="absolute bottom-0 right-0 top-0 w-1"
+                                                            style={{
+                                                                background: 'color-mix(in srgb, white 56%, var(--primary))',
+                                                                boxShadow: '0 0 10px color-mix(in srgb, var(--primary) 44%, white)',
+                                                            }}
+                                                        />
                                                     </div>
                                                 </div>
                                             </div>
 
                                             {/* Stats Grid */}
                                             <div className="grid grid-cols-3 gap-2 mt-auto pt-4 border-t border-[var(--card-border)]">
-                                                <div className="flex flex-col items-center p-2 bg-[var(--card-hover)]/30 hover:bg-[var(--card-hover)] transition-colors cursor-default">
+                                                <div className="light-soft-tile flex flex-col items-center p-2 transition-colors cursor-default">
                                                     <span className="text-[10px] font-mono text-[var(--muted-foreground)] uppercase">Total</span>
                                                     <span className="text-sm font-bold font-mono text-[var(--foreground)]">{totalTasks}</span>
                                                 </div>
-                                                <div className="flex flex-col items-center p-2 bg-[var(--card-hover)]/30 hover:bg-[var(--card-hover)] transition-colors cursor-default">
+                                                <div className="light-soft-tile flex flex-col items-center p-2 transition-colors cursor-default">
                                                     <span className="text-[10px] font-mono text-[var(--muted-foreground)] uppercase">Em And.</span>
                                                     <span className="text-sm font-bold font-mono text-yellow-500">{inProgressTasks}</span>
                                                 </div>
-                                                <div className="flex flex-col items-center p-2 bg-[var(--card-hover)]/30 hover:bg-[var(--card-hover)] transition-colors cursor-default">
+                                                <div className="light-soft-tile flex flex-col items-center p-2 transition-colors cursor-default">
                                                     <span className="text-[10px] font-mono text-[var(--muted-foreground)] uppercase">Feito</span>
                                                     <span className="text-sm font-bold font-mono text-[var(--primary)]">{completedTasks}</span>
                                                 </div>
@@ -522,8 +547,8 @@ export default function ProjectsPage() {
 
             {/* Create Project Modal */}
             {isCreateModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-                    <div className="bg-[var(--sidebar)] border border-[var(--primary)] w-full max-w-md p-6 relative shadow-2xl animate-in zoom-in-95">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-[color:var(--overlay-bg)] p-4 backdrop-blur-sm animate-in fade-in">
+                    <div className="relative w-full max-w-md border border-[var(--card-border)] bg-[var(--sidebar)] p-6 shadow-[var(--surface-shadow)] animate-in zoom-in-95">
                         <h2 className="text-xl font-bold text-[var(--foreground)] mb-6 uppercase tracking-wider">Novo Projeto</h2>
 
                         <div className="space-y-4">

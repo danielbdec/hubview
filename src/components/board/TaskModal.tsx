@@ -1,23 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Save, Trash2, CheckSquare, Plus, Eye, EyeOff, User, ChevronDown, Check, MessageSquare, Activity, ArrowRight } from 'lucide-react';
+import { X, Save, Trash2, CheckSquare, Plus, Eye, EyeOff, User, ChevronDown, Check, Activity, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { useTheme } from '@/components/ui/ThemeProvider';
 import { createPortal } from 'react-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { Tabs, Spin, Mentions, ConfigProvider, theme } from 'antd';
-import { PanelRightOpen, PanelRightClose, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Spin, Mentions, ConfigProvider, theme as antdTheme } from 'antd';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { getReadableTextColor } from '@/lib/color';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
 import { Task, useProjectStore } from '@/store/kanbanStore';
-
-type ChecklistItem = NonNullable<Task['checklist']>[number];
 
 interface UserOption {
     id: string;
@@ -34,6 +34,7 @@ interface TaskModalProps {
 }
 
 export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModalProps) {
+    const { theme: themeMode } = useTheme();
     const [mounted, setMounted] = useState(false);
     const [formData, setFormData] = useState<Partial<Task>>({});
     const [newChecklistItem, setNewChecklistItem] = useState('');
@@ -96,7 +97,6 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                 } catch { /* ignore */ }
             }
 
-            // eslint-disable-next-line react-hooks/exhaustive-deps
             setFormData({
                 content: task.content,
                 description: task.description || '',
@@ -179,15 +179,15 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                     <select
                         value={formData.assignee || ''}
                         onChange={(e) => setFormData({ ...formData, assignee: e.target.value })}
-                        className="w-full h-10 pl-9 pr-8 bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--foreground)] text-sm focus:outline-none focus:border-[var(--primary)] transition-colors rounded-none appearance-none cursor-pointer [color-scheme:dark]"
-                        style={{ colorScheme: 'dark' }}
+                        className="w-full h-10 cursor-pointer appearance-none rounded-none border border-[var(--input-border)] bg-[var(--input-bg)] pl-9 pr-8 text-sm text-[var(--foreground)] transition-colors focus:border-[var(--primary)] focus:outline-none"
+                        style={{ colorScheme: themeMode }}
                     >
-                        <option value="" className="bg-[#1a1a2e] text-white">Sem responsável</option>
+                        <option value="">Sem responsável</option>
                         {isLoadingUsers ? (
-                            <option disabled className="bg-[#1a1a2e] text-zinc-400">Carregando...</option>
+                            <option disabled>Carregando...</option>
                         ) : (
                             users.map((u) => (
-                                <option key={u.id} value={u.name} className="bg-[#1a1a2e] text-white">
+                                <option key={u.id} value={u.name}>
                                     {u.name}
                                 </option>
                             ))
@@ -309,7 +309,8 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                         type="date"
                         value={formData.startDate ? formData.startDate.split('T')[0] : ''}
                         onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                        className="bg-[var(--input-bg)] border-[var(--input-border)] text-[var(--foreground)] focus:border-[var(--primary)] text-sm [color-scheme:dark] dark:[color-scheme:dark]"
+                        className="bg-[var(--input-bg)] border-[var(--input-border)] text-[var(--foreground)] text-sm focus:border-[var(--primary)]"
+                        style={{ colorScheme: themeMode }}
                     />
                 </div>
                 <div className="space-y-2">
@@ -318,7 +319,8 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                         type="date"
                         value={formData.endDate ? formData.endDate.split('T')[0] : ''}
                         onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                        className="bg-[var(--input-bg)] border-[var(--input-border)] text-[var(--foreground)] focus:border-[var(--primary)] text-sm [color-scheme:dark] dark:[color-scheme:dark]"
+                        className="bg-[var(--input-bg)] border-[var(--input-border)] text-[var(--foreground)] text-sm focus:border-[var(--primary)]"
+                        style={{ colorScheme: themeMode }}
                     />
                 </div>
             </div>
@@ -333,8 +335,8 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                         {formData.tags.map((tag) => (
                             <span
                                 key={tag.id}
-                                className="px-2 py-1 text-[10px] font-mono font-bold flex items-center gap-1 text-white border border-black/20 uppercase tracking-widest"
-                                style={{ backgroundColor: tag.color }}
+                                className="flex items-center gap-1 border border-black/10 px-2 py-1 text-[10px] font-mono font-bold uppercase tracking-widest"
+                                style={{ backgroundColor: tag.color, color: getReadableTextColor(tag.color) }}
                             >
                                 {tag.name}
                                 <button
@@ -342,7 +344,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                                         ...formData,
                                         tags: formData.tags?.filter(t => t.id !== tag.id)
                                     })}
-                                    className="hover:text-black/50 transition-colors ml-1"
+                                    className="ml-1 transition-colors hover:opacity-70"
                                     title="Remover tag"
                                 >
                                     <X size={12} />
@@ -396,13 +398,13 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                 <label className="text-xs font-mono text-[var(--primary)] uppercase tracking-wider">Prioridade</label>
                 <select
                     value={formData.priority}
-                    onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
-                    className="w-full h-10 bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--foreground)] px-3 text-sm focus:outline-none focus:border-[var(--primary)] transition-colors rounded-none [color-scheme:dark]"
-                    style={{ colorScheme: 'dark' }}
+                    onChange={(e) => setFormData({ ...formData, priority: e.target.value as Task['priority'] })}
+                    className="h-10 w-full rounded-none border border-[var(--input-border)] bg-[var(--input-bg)] px-3 text-sm text-[var(--foreground)] transition-colors focus:border-[var(--primary)] focus:outline-none"
+                    style={{ colorScheme: themeMode }}
                 >
-                    <option value="low" className="bg-[#1a1a2e] text-white">BAIXA</option>
-                    <option value="medium" className="bg-[#1a1a2e] text-white">MÉDIA</option>
-                    <option value="high" className="bg-[#1a1a2e] text-white">ALTA</option>
+                    <option value="low">BAIXA</option>
+                    <option value="medium">MÉDIA</option>
+                    <option value="high">ALTA</option>
                 </select>
             </div>
         </div>
@@ -465,7 +467,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                                 <div className={cn(
                                     "p-3 rounded-none border",
                                     act.type === 'comment'
-                                        ? "bg-[var(--input-bg)] border-[var(--input-border)] text-white"
+                                        ? "bg-[var(--input-bg)] border-[var(--input-border)] text-[var(--foreground)]"
                                         : "bg-transparent border-transparent text-[var(--muted-foreground)] text-xs -translate-x-3"
                                 )}>
                                     {act.content}
@@ -476,7 +478,20 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                 )}
             </div>
             <div className="shrink-0 pt-4 border-t border-[var(--sidebar-border)] bg-[var(--sidebar)]">
-                <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
+                <ConfigProvider
+                    theme={{
+                        algorithm: themeMode === 'light' ? antdTheme.defaultAlgorithm : antdTheme.darkAlgorithm,
+                        token: {
+                            colorPrimary: 'var(--primary)',
+                            colorText: 'var(--foreground)',
+                            colorTextPlaceholder: 'var(--muted-foreground)',
+                            colorBgContainer: 'var(--background)',
+                            colorBorder: 'var(--input-border)',
+                            colorBgElevated: 'var(--sidebar)',
+                            borderRadius: 0,
+                        },
+                    }}
+                >
                     <Mentions
                         value={newActivityContent}
                         onChange={setNewActivityContent}
@@ -499,9 +514,9 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
     );
 
     return createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[color:var(--overlay-bg)] p-4 backdrop-blur-sm animate-in fade-in duration-200">
             <div className={cn(
-                "relative max-h-[90vh] overflow-hidden bg-[var(--sidebar)] border border-[var(--primary)]/40 shadow-[4px_4px_0_0_var(--primary)] flex animate-in zoom-in-95 duration-200 rounded-none transition-all duration-300 ease-out",
+                "relative flex max-h-[90vh] overflow-hidden rounded-none border border-[var(--card-border)] bg-[var(--sidebar)] shadow-[var(--surface-shadow)] animate-in zoom-in-95 duration-200 transition-all duration-300 ease-out",
                 isSidebarOpen ? "w-[1048px] max-w-[95vw]" : "w-[648px] max-w-full"
             )} onClick={(e) => e.stopPropagation()}>
 
@@ -516,7 +531,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                             <span className="text-[10px] text-[var(--muted-foreground)] font-mono uppercase">ID: {task.id.slice(0, 8)}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <button onClick={onClose} className="p-2 text-[var(--muted-foreground)] hover:text-white transition-colors">
+                            <button onClick={onClose} className="p-2 text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]">
                                 <X size={20} />
                             </button>
                         </div>

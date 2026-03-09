@@ -281,7 +281,7 @@ export default function SettingsPage() {
     }
 
     return (
-        <div className="max-w-3xl mx-auto space-y-8">
+        <div className="page-light-atmosphere mx-auto max-w-3xl space-y-8 px-4 py-1 sm:px-6 lg:px-8">
             {/* Hidden canvas for crop processing */}
             <canvas ref={canvasRef} className="hidden" />
 
@@ -292,13 +292,13 @@ export default function SettingsPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+                        className="fixed inset-0 z-[100] flex items-center justify-center bg-[color:var(--overlay-bg)] backdrop-blur-sm"
                     >
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
-                            className="bg-[var(--card)] border border-[var(--card-border)] p-6 w-[360px] flex flex-col items-center gap-5"
+                            className="flex w-[360px] flex-col items-center gap-5 border border-[var(--card-border)] bg-[var(--sidebar)] p-6 shadow-[var(--surface-shadow)]"
                         >
                             <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-[var(--foreground)]">
                                 Enquadrar Foto
@@ -331,10 +331,10 @@ export default function SettingsPage() {
                                 />
                                 {/* Grid overlay */}
                                 <div className="absolute inset-0 pointer-events-none">
-                                    <div className="absolute top-1/3 left-0 right-0 h-[1px] bg-white/15" />
-                                    <div className="absolute top-2/3 left-0 right-0 h-[1px] bg-white/15" />
-                                    <div className="absolute left-1/3 top-0 bottom-0 w-[1px] bg-white/15" />
-                                    <div className="absolute left-2/3 top-0 bottom-0 w-[1px] bg-white/15" />
+                                    <div className="absolute top-1/3 left-0 right-0 h-[1px] bg-[var(--card-border)]" />
+                                    <div className="absolute top-2/3 left-0 right-0 h-[1px] bg-[var(--card-border)]" />
+                                    <div className="absolute left-1/3 top-0 bottom-0 w-[1px] bg-[var(--card-border)]" />
+                                    <div className="absolute left-2/3 top-0 bottom-0 w-[1px] bg-[var(--card-border)]" />
                                 </div>
                             </div>
 
@@ -348,7 +348,7 @@ export default function SettingsPage() {
                                     step="0.05"
                                     value={zoom}
                                     onChange={(e) => setZoom(parseFloat(e.target.value))}
-                                    className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--primary)] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(0,232,123,0.4)]"
+                                    className="h-1 w-full cursor-pointer appearance-none rounded-full bg-[var(--column-bg)] [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--primary)] [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(132,204,22,0.28)]"
                                 />
                                 <ZoomIn size={14} className="text-[var(--muted-foreground)] shrink-0" />
                             </div>
@@ -360,14 +360,14 @@ export default function SettingsPage() {
                             <div className="flex gap-3 w-full">
                                 <button
                                     onClick={handleCropCancel}
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border border-white/20 text-[var(--muted-foreground)] hover:text-white hover:border-white/40 font-mono text-xs uppercase tracking-wider transition-all"
+                                    className="flex-1 flex items-center justify-center gap-2 border border-[var(--card-border)] px-4 py-2.5 font-mono text-xs uppercase tracking-wider text-[var(--muted-foreground)] transition-all hover:border-[var(--primary)] hover:text-[var(--foreground)]"
                                 >
                                     <X size={14} />
                                     Cancelar
                                 </button>
                                 <button
                                     onClick={handleCropConfirm}
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#00E87B] text-black font-mono text-xs font-bold uppercase tracking-wider hover:bg-[#00cc6a] transition-all"
+                                    className="flex-1 flex items-center justify-center gap-2 bg-[var(--primary)] px-4 py-2.5 font-mono text-xs font-bold uppercase tracking-wider text-[var(--primary-foreground)] transition-all hover:bg-[var(--primary-hover)]"
                                 >
                                     <CheckIcon size={14} />
                                     Confirmar
@@ -382,25 +382,57 @@ export default function SettingsPage() {
             <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex items-center justify-between"
+                className="light-page-hero flex flex-col gap-4 px-4 py-5 sm:gap-6 sm:px-6 sm:py-6 lg:px-7 lg:py-7 md:flex-row md:items-center md:justify-between"
             >
                 <div>
-                    <h1 className="text-2xl font-bold uppercase tracking-tight text-[var(--foreground)] mb-1">
+                    <span className="light-muted-chip inline-flex items-center gap-2 px-3 py-1 text-[10px] font-mono font-semibold uppercase tracking-[0.24em]">
+                        <Shield size={11} />
+                        Identity Settings
+                    </span>
+                    <h1 className="mb-1 text-xl font-bold uppercase tracking-tight text-[var(--foreground)] sm:text-2xl">
                         Configurações
                     </h1>
-                    <p className="text-[var(--muted-foreground)] font-mono text-sm">
-                        PERFIL_USUARIO · DADOS_PESSOAIS
+                    <p className="mt-2 max-w-xl text-[14px] leading-6 text-[var(--muted-foreground)] sm:mt-3 sm:text-[15px] sm:leading-7">
+                        Atualize dados pessoais, avatar e identidade visual da sua conta sem sair do fluxo do produto.
                     </p>
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                        <span className="rounded-full border border-sky-200/70 bg-[linear-gradient(135deg,rgba(240,249,255,0.94),rgba(255,255,255,0.9))] px-3 py-1 text-[10px] font-mono font-semibold uppercase tracking-[0.18em] text-slate-500">
+                            {profile?.email || 'sem e-mail'}
+                        </span>
+                        <span className="light-muted-chip px-3 py-1 text-[10px] font-mono font-semibold uppercase tracking-[0.18em]">
+                            {profile?.role || 'perfil'}
+                        </span>
+                    </div>
                 </div>
-                <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => router.back()}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-white/5 border border-white/20 text-white hover:bg-red-500/20 hover:border-red-400/50 hover:text-red-300 font-mono text-xs uppercase tracking-wider transition-all duration-200 rounded"
-                >
-                    <X size={16} />
-                    Fechar
-                </motion.button>
+                <div className="grid w-full gap-3 sm:grid-cols-2 md:flex md:w-auto md:flex-wrap">
+                    <div className="light-page-kpi min-w-0 px-4 py-4 sm:min-w-[150px] sm:px-5">
+                        <span className="text-[10px] font-mono uppercase tracking-[0.24em] text-slate-500">Perfil</span>
+                        <div className="mt-3 flex items-end justify-between gap-3">
+                            <strong className="text-2xl font-black tracking-[-0.06em] text-slate-950">{profile?.name?.split(' ')[0] || 'Conta'}</strong>
+                            <span className="rounded-full bg-lime-100 px-2.5 py-1 text-[10px] font-mono font-semibold uppercase tracking-[0.18em] text-lime-700">
+                                ativo
+                            </span>
+                        </div>
+                    </div>
+                    <div className="light-page-kpi light-page-kpi--contrast min-w-0 px-4 py-4 sm:min-w-[172px] sm:px-5">
+                        <span className="text-[10px] font-mono uppercase tracking-[0.24em] text-slate-400">Conta</span>
+                        <div className="mt-3 flex items-end justify-between gap-3">
+                            <strong className="text-2xl font-black tracking-[-0.06em] text-white">Segura</strong>
+                            <span className="light-dark-chip px-2.5 py-1 text-[10px] font-mono font-semibold uppercase tracking-[0.18em]">
+                                perfil
+                            </span>
+                        </div>
+                    </div>
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => router.back()}
+                        className="light-page-kpi col-span-full flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 font-mono text-xs uppercase tracking-wider text-[var(--foreground)] transition-all duration-200 hover:border-red-400/50 hover:bg-red-500/10 hover:text-red-400 sm:w-auto md:self-end"
+                    >
+                        <X size={16} />
+                        Fechar
+                    </motion.button>
+                </div>
             </motion.div>
 
             {/* Profile Card */}
@@ -408,7 +440,7 @@ export default function SettingsPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="relative border border-[var(--card-border)] bg-[var(--card)] p-8 overflow-hidden"
+                className="light-page-panel relative overflow-hidden border border-[var(--card-border)] bg-[var(--card)] p-5 sm:p-8"
             >
                 {/* Decorative corner accents */}
                 <div className="absolute top-0 left-0 w-5 h-5 border-t-2 border-l-2 border-[var(--primary)] opacity-40" />
@@ -437,8 +469,9 @@ export default function SettingsPage() {
                                 )}
 
                                 {/* Overlay on hover */}
-                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Camera size={24} className="text-white" />
+                                <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
+                                    <div className="absolute inset-0 bg-[color:var(--overlay-bg)]" />
+                                    <Camera size={24} className="relative z-10 text-white" />
                                 </div>
                             </div>
 
@@ -492,7 +525,7 @@ export default function SettingsPage() {
                                 type="date"
                                 value={birthDate}
                                 onChange={(e) => setBirthDate(e.target.value)}
-                                className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--foreground)] font-mono text-sm focus:outline-none focus:border-[var(--primary)] transition-colors [color-scheme:dark]"
+                                className="w-full border border-[var(--input-border)] bg-[var(--input-bg)] px-4 py-3 font-mono text-sm text-[var(--foreground)] transition-colors focus:border-[var(--primary)] focus:outline-none"
                             />
                         </div>
 
@@ -559,7 +592,7 @@ export default function SettingsPage() {
                     <button
                         onClick={handleSave}
                         disabled={isSaving}
-                        className="flex items-center gap-2 px-6 py-3 bg-[#00E87B] text-black font-mono text-sm font-bold uppercase tracking-wider rounded disabled:opacity-50 transition-all duration-200 hover:bg-[#00cc6a] hover:shadow-[0_0_20px_rgba(0,232,123,0.3)] active:bg-[#00b35e] active:scale-[0.98]"
+                        className="flex items-center gap-2 rounded bg-[var(--primary)] px-6 py-3 font-mono text-sm font-bold uppercase tracking-wider text-[var(--primary-foreground)] transition-all duration-200 hover:bg-[var(--primary-hover)] hover:shadow-[0_0_20px_rgba(132,204,22,0.24)] active:scale-[0.98] disabled:opacity-50"
                     >
                         {isSaving ? (
                             <Spinner size="sm" tone="current" />
@@ -576,7 +609,7 @@ export default function SettingsPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="border border-[var(--card-border)] bg-[var(--card)] p-6"
+                className="light-page-panel border border-[var(--card-border)] bg-[var(--card)] p-6"
             >
                 <h3 className="text-sm font-bold uppercase tracking-wider text-[var(--foreground)] mb-4 font-mono">
                     Informações da Conta

@@ -1,19 +1,28 @@
-import React, { useMemo } from 'react';
-import { Table, Tag, Progress, Tooltip } from 'antd';
+import { useMemo } from 'react';
+import { Table, Progress, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { Column, Task } from '@/store/kanbanStore';
 import { AlertCircle, AlertTriangle, ArrowDown, User, CheckCircle2 } from 'lucide-react';
 import dayjs from 'dayjs';
-import { ConfigProvider, theme } from 'antd';
+import { ConfigProvider, theme as antdTheme } from 'antd';
+import { useTheme } from '@/components/ui/ThemeProvider';
+import { getReadableTextColor } from '@/lib/color';
 
 interface ProjectListViewProps {
     columns: Column[];
     onEditTask: (task: Task) => void;
 }
 
+type TaskRow = Task & {
+    columnName: string;
+    columnColor: string;
+    columnDone: boolean;
+};
+
 export default function ProjectListView({ columns, onEditTask }: ProjectListViewProps) {
-    const flatData = useMemo(() => {
-        const tasks: (Task & { columnName: string, columnColor: string, columnDone: boolean })[] = [];
+    const { theme: themeMode } = useTheme();
+    const flatData = useMemo<TaskRow[]>(() => {
+        const tasks: TaskRow[] = [];
         columns.forEach(col => {
             col.tasks.forEach(task => {
                 tasks.push({
@@ -27,7 +36,7 @@ export default function ProjectListView({ columns, onEditTask }: ProjectListView
         return tasks;
     }, [columns]);
 
-    const tableColumns: ColumnsType<any> = [
+    const tableColumns: ColumnsType<TaskRow> = [
         {
             title: 'TÍTULO',
             dataIndex: 'content',
@@ -60,7 +69,7 @@ export default function ProjectListView({ columns, onEditTask }: ProjectListView
                 return <span className="text-emerald-500 font-mono text-xs uppercase flex items-center gap-1"><ArrowDown size={12} /> Baixa</span>;
             },
             sorter: (a, b) => {
-                const map: any = { low: 1, medium: 2, high: 3 };
+                const map: Record<Task['priority'], number> = { low: 1, medium: 2, high: 3 };
                 return (map[a.priority] || 0) - (map[b.priority] || 0);
             }
         },
@@ -82,7 +91,11 @@ export default function ProjectListView({ columns, onEditTask }: ProjectListView
             render: (tags: { id: string, name: string, color: string }[]) => (
                 <div className="flex gap-1 flex-wrap">
                     {tags?.map(t => (
-                        <span key={t.id} className="px-1.5 py-0.5 text-[9px] font-mono border border-black/20 text-white uppercase tracking-widest leading-none rounded-none" style={{ backgroundColor: t.color }}>
+                        <span
+                            key={t.id}
+                            className="rounded-none border border-black/10 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-widest leading-none"
+                            style={{ backgroundColor: t.color, color: getReadableTextColor(t.color) }}
+                        >
                             {t.name}
                         </span>
                     ))}
@@ -118,7 +131,7 @@ export default function ProjectListView({ columns, onEditTask }: ProjectListView
             render: (_, record) => {
                 if (!record.checklist || record.checklist.length === 0) return null;
                 const total = record.checklist.length;
-                const completed = record.checklist.filter((i: any) => i.completed).length;
+                const completed = record.checklist.filter((item) => item.completed).length;
                 const percent = Math.round((completed / total) * 100);
                 return (
                     <Tooltip title={`${completed}/${total} itens concluídos`}>
@@ -138,23 +151,26 @@ export default function ProjectListView({ columns, onEditTask }: ProjectListView
     return (
         <ConfigProvider
             theme={{
-                algorithm: theme.darkAlgorithm,
+                algorithm: themeMode === 'light' ? antdTheme.defaultAlgorithm : antdTheme.darkAlgorithm,
                 token: {
-                    fontFamily: 'var(--font-geist-sans)',
+                    fontFamily: 'var(--font-sans)',
                     colorBgContainer: 'var(--card)',
                     colorBorderSecondary: 'var(--card-border)',
+                    colorBgElevated: 'var(--sidebar)',
+                    colorText: 'var(--foreground)',
+                    colorTextSecondary: 'var(--muted-foreground)',
                     borderRadius: 0,
                 },
                 components: {
                     Table: {
-                        headerBg: 'var(--sidebar)',
+                        headerBg: 'var(--column-bg)',
                         headerColor: 'var(--muted-foreground)',
                         rowHoverBg: 'var(--card-hover)',
                     }
                 }
             }}
         >
-            <div className="flex-1 overflow-auto bg-[var(--card)] p-4 border border-[var(--card-border)] rounded-none">
+            <div className="flex-1 overflow-auto rounded-none border border-[var(--card-border)] bg-[var(--card)] p-4 shadow-[var(--surface-shadow-soft)]">
                 <Table
                     columns={tableColumns}
                     dataSource={flatData}

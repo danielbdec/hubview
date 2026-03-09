@@ -18,7 +18,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                 {label && (
                     <label
                         htmlFor={id}
-                        className="block text-xs font-mono text-gray-400 mb-1 uppercase tracking-wider"
+                        className="block text-xs font-mono text-[var(--muted-foreground)] mb-1 uppercase tracking-wider"
                     >
                         {label}
                     </label>
@@ -28,9 +28,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                         ref={ref}
                         id={id}
                         className={cn(
-                            'w-full bg-white/5 border border-white/10 text-white placeholder-gray-500',
+                            'w-full bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]',
                             'h-10 px-4 font-mono text-sm leading-none',
-                            'focus:outline-none focus:border-tech-green focus:bg-white/10 transition-all duration-200',
+                            'focus:outline-none focus:border-[var(--primary)] focus:bg-[var(--card-hover)] transition-all duration-200',
                             'rounded-none', // Sharp corners
                             'disabled:opacity-50 disabled:cursor-not-allowed',
                             error && 'border-tech-red focus:border-tech-red',
@@ -39,7 +39,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                         {...props}
                     />
                     {/* Active indicator line */}
-                    <div className="absolute bottom-0 left-0 h-[1px] w-0 bg-tech-green transition-all duration-300 group-focus-within:w-full" />
+                    <div className="absolute bottom-0 left-0 h-[1px] w-0 bg-[var(--primary)] transition-all duration-300 group-focus-within:w-full" />
                 </div>
 
                 {error && (

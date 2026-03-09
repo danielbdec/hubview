@@ -1,13 +1,14 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { Bell, User } from 'lucide-react';
+import { User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { useTheme } from '@/components/ui/ThemeProvider';
 import { useProjectStore } from '@/store/kanbanStore';
-import { Segmented, ConfigProvider, theme } from 'antd';
+import { Segmented, ConfigProvider, theme as antdTheme } from 'antd';
 import { KanbanIcon, ListIcon, CalendarIcon } from 'lucide-react';
 import { NotificationDropdown } from './NotificationDropdown';
 
@@ -22,6 +23,7 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 
 export function Header() {
     const pathname = usePathname();
+    const { theme: themeMode } = useTheme();
     const { projects, activeView, setActiveView } = useProjectStore();
     const segments = pathname.split('/').filter(Boolean);
 
@@ -66,16 +68,19 @@ export function Header() {
                     <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:flex">
                         <ConfigProvider
                             theme={{
-                                algorithm: theme.darkAlgorithm,
+                                algorithm: themeMode === 'light' ? antdTheme.defaultAlgorithm : antdTheme.darkAlgorithm,
                                 token: {
                                     colorPrimary: 'var(--primary)',
                                     fontFamily: 'var(--font-geist-sans)',
+                                    colorText: 'var(--foreground)',
+                                    colorTextSecondary: 'var(--muted-foreground)',
+                                    colorBgElevated: 'var(--sidebar)',
                                 },
                                 components: {
                                     Segmented: {
                                         itemSelectedBg: 'var(--primary)',
                                         itemSelectedColor: '#000000',
-                                        trackBg: 'var(--sidebar)', // match header background roughly
+                                        trackBg: 'var(--sidebar)',
                                         itemHoverBg: 'var(--card-hover)',
                                         itemHoverColor: 'var(--foreground)',
                                         controlPaddingHorizontal: 12

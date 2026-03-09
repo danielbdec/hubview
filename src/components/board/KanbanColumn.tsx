@@ -231,7 +231,7 @@ export const KanbanColumn = memo(function KanbanColumn({
 
                         {showSettings && (
                             <div
-                                className="absolute right-0 top-full mt-1 w-56 z-[70] p-3 bg-zinc-900/95 backdrop-blur-sm border border-zinc-800 rounded-lg shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+                                className="absolute right-0 top-full z-[70] mt-1 w-56 rounded-2xl border border-[var(--card-border)] bg-[var(--sidebar)] p-3 shadow-[var(--surface-shadow)] backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200"
                                 onClick={(e) => e.stopPropagation()}
                                 onPointerDown={(e) => e.stopPropagation()}
                             >

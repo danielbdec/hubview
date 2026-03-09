@@ -7,6 +7,7 @@ import { Edit2, Clock, Trash2, User, AlertCircle, AlertTriangle, ArrowDown, Chec
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Task } from '@/store/kanbanStore';
+import { useTheme } from '@/components/ui/ThemeProvider';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -53,6 +54,7 @@ function formatTaskDate(date?: string) {
 }
 
 export function KanbanCard({ task, isOverlay, onEdit, onDelete }: KanbanCardProps) {
+    const { theme: themeMode } = useTheme();
     const {
         setNodeRef,
         attributes,
@@ -85,7 +87,13 @@ export function KanbanCard({ task, isOverlay, onEdit, onDelete }: KanbanCardProp
     }
 
     const priorityLabel = PRIORITY_LABELS[task.priority];
-    const priorityTone = PRIORITY_STYLES[task.priority];
+    const priorityTone = themeMode === 'light'
+        ? {
+            high: 'border-red-500/20 bg-red-500/10 text-red-600',
+            medium: 'border-amber-500/20 bg-amber-500/10 text-amber-700',
+            low: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-700',
+        }[task.priority]
+        : PRIORITY_STYLES[task.priority];
     const startDateLabel = formatTaskDate(task.startDate);
     const endDateLabel = formatTaskDate(task.endDate);
     const hasTimeline = !!(startDateLabel || endDateLabel);
@@ -174,7 +182,7 @@ export function KanbanCard({ task, isOverlay, onEdit, onDelete }: KanbanCardProp
                                     "inline-flex items-center gap-1.5 border px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.2em]",
                                     isChecklistDone
                                         ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-300"
-                                        : "border-white/10 bg-white/5 text-[var(--muted-foreground)]"
+                                        : "border-[var(--card-border)] bg-[var(--input-bg)] text-[var(--muted-foreground)]"
                                 )}
                                 title="Progresso do Checklist"
                             >
@@ -220,7 +228,7 @@ export function KanbanCard({ task, isOverlay, onEdit, onDelete }: KanbanCardProp
                         <div className="flex flex-wrap items-center gap-2">
                             {hasTimeline && (
                                 <div
-                                    className="inline-flex items-center gap-1.5 border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.18em]"
+                                    className="inline-flex items-center gap-1.5 border border-[var(--card-border)] bg-[var(--input-bg)] px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.18em]"
                                     title="Data Prevista"
                                 >
                                     <Clock size={11} className="text-[var(--primary)]" />
