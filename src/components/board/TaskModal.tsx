@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Save, Trash2, CheckSquare, Plus, Eye, EyeOff, User, ChevronDown, Check, Activity, ArrowRight } from 'lucide-react';
+import { X, Save, Trash2, User, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useTheme } from '@/components/ui/ThemeProvider';
@@ -9,9 +9,10 @@ import { createPortal } from 'react-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { Spin, Mentions, ConfigProvider, theme as antdTheme } from 'antd';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getReadableTextColor } from '@/lib/color';
+import { TaskChecklist, type ChecklistItem } from './TaskChecklist';
+import { TaskActivitySidebar } from './TaskActivitySidebar';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -37,11 +38,8 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
     const { theme: themeMode } = useTheme();
     const [mounted, setMounted] = useState(false);
     const [formData, setFormData] = useState<Partial<Task>>({});
-    const [newChecklistItem, setNewChecklistItem] = useState('');
-    const [hideCompleted, setHideCompleted] = useState(false);
     const [users, setUsers] = useState<UserOption[]>([]);
     const [isLoadingUsers, setIsLoadingUsers] = useState(false);
-    const [newActivityContent, setNewActivityContent] = useState('');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const { taskActivities, isLoadingActivities, fetchTaskActivities, addTaskActivity } = useProjectStore();
@@ -85,7 +83,6 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
 
     useEffect(() => {
         if (task) {
-            // Get logged-in user name from localStorage for default assignee
             let defaultAssignee = task.assignee || '';
             if (!defaultAssignee) {
                 try {
@@ -124,44 +121,17 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
         }
     };
 
-    const addChecklistItem = () => {
-        if (!newChecklistItem.trim()) return;
-        const currentChecklist = formData.checklist || [];
-        const newItem = {
-            id: uuidv4(),
-            text: newChecklistItem,
-            completed: false,
-            position: currentChecklist.length
-        };
-        setFormData({ ...formData, checklist: [...currentChecklist, newItem] });
-        setNewChecklistItem('');
+    const handleAddComment = async (content: string) => {
+        await addTaskActivity(task.id, 'comment', content);
     };
 
-    const toggleChecklistItem = (itemId: string) => {
-        const currentChecklist = formData.checklist || [];
-        const updatedChecklist = currentChecklist.map(item =>
-            item.id === itemId ? { ...item, completed: !item.completed } : item
-        );
-        setFormData({ ...formData, checklist: updatedChecklist });
+    const handleChecklistChange = (checklist: ChecklistItem[]) => {
+        setFormData({ ...formData, checklist });
     };
-
-    const deleteChecklistItem = (itemId: string) => {
-        const currentChecklist = formData.checklist || [];
-        setFormData({ ...formData, checklist: currentChecklist.filter(item => item.id !== itemId) });
-    };
-
-    const handleAddComment = async () => {
-        if (!newActivityContent.trim() || !task) return;
-        await addTaskActivity(task.id, 'comment', newActivityContent);
-        setNewActivityContent('');
-    };
-
-    const checklistTotal = formData.checklist?.length || 0;
-    const checklistCompleted = formData.checklist?.filter(i => i.completed).length || 0;
-    const progress = checklistTotal === 0 ? 0 : Math.round((checklistCompleted / checklistTotal) * 100);
 
     const detalhesView = (
         <div className="space-y-6 pt-2 h-[60vh] overflow-y-auto px-6 pb-6 custom-scrollbar">
+            {/* Título */}
             <div className="space-y-2">
                 <label className="text-xs font-mono text-[var(--primary)] uppercase tracking-wider">Título</label>
                 <Input
@@ -172,6 +142,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                 />
             </div>
 
+            {/* Responsável */}
             <div className="space-y-2">
                 <label className="text-xs font-mono text-[var(--primary)] uppercase tracking-wider">Responsável</label>
                 <div className="relative">
@@ -187,9 +158,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                             <option disabled>Carregando...</option>
                         ) : (
                             users.map((u) => (
-                                <option key={u.id} value={u.name}>
-                                    {u.name}
-                                </option>
+                                <option key={u.id} value={u.name}>{u.name}</option>
                             ))
                         )}
                     </select>
@@ -197,7 +166,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                 </div>
             </div>
 
-            {/* Description */}
+            {/* Descrição */}
             <div className="space-y-2">
                 <label className="text-xs font-mono text-[var(--primary)] uppercase tracking-wider">Descrição</label>
                 <textarea
@@ -208,100 +177,13 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                 />
             </div>
 
-            {/* Checklist Section */}
-            <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-[var(--primary)]">
-                        <CheckSquare size={16} />
-                        <label className="text-xs font-mono uppercase tracking-wider">Checklist</label>
-                    </div>
-                    {checklistTotal > 0 && (
-                        <button
-                            onClick={() => setHideCompleted(!hideCompleted)}
-                            className="text-[10px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] uppercase tracking-wider flex items-center gap-1 transition-colors"
-                        >
-                            {hideCompleted ? <Eye size={12} /> : <EyeOff size={12} />}
-                            {hideCompleted ? 'Mostrar itens marcados' : 'Ocultar itens marcados'}
-                        </button>
-                    )}
-                </div>
+            {/* Checklist (componente extraído) */}
+            <TaskChecklist
+                checklist={formData.checklist || []}
+                onChange={handleChecklistChange}
+            />
 
-                {/* Progress Bar */}
-                {checklistTotal > 0 && (
-                    <div className="flex items-center gap-3 mb-4">
-                        <span className={cn(
-                            "text-xs font-mono min-w-[40px] font-bold tracking-tight",
-                            progress === 100 ? "text-[var(--primary)]" : "text-[var(--muted-foreground)]"
-                        )}>
-                            {progress}%
-                        </span>
-                        <div className="flex-1 h-3 bg-[var(--input-border)] rounded-none overflow-hidden border border-black/20">
-                            <div
-                                className={cn(
-                                    "h-full transition-all duration-300 ease-out",
-                                    progress === 100 ? "bg-[var(--primary)]" : "bg-[var(--muted-foreground)]"
-                                )}
-                                style={{ width: `${progress}%` }}
-                            />
-                        </div>
-                    </div>
-                )}
-
-                {/* List Items */}
-                <div className="space-y-2">
-                    {formData.checklist?.map((item) => {
-                        if (hideCompleted && item.completed) return null;
-                        return (
-                            <div key={item.id} className="flex items-start gap-3 group/item p-1 hover:bg-[var(--input-bg)]/50 transition-colors">
-                                <button
-                                    type="button"
-                                    onClick={() => toggleChecklistItem(item.id)}
-                                    className={cn(
-                                        "mt-0.5 w-4 h-4 rounded-none border flex-shrink-0 flex items-center justify-center transition-none",
-                                        item.completed
-                                            ? "bg-[var(--primary)] border-[var(--primary)]"
-                                            : "bg-[var(--input-bg)] border-[var(--input-border)] hover:border-[var(--primary)]/50"
-                                    )}
-                                >
-                                    {item.completed && <Check size={12} className="text-black stroke-[3]" />}
-                                </button>
-                                <div className={cn(
-                                    "flex-1 text-xs font-mono tracking-tight transition-none pt-0.5",
-                                    item.completed ? "text-[var(--muted-foreground)] opacity-50 line-through" : "text-[var(--foreground)]"
-                                )}>
-                                    {item.text}
-                                </div>
-                                <button
-                                    onClick={() => deleteChecklistItem(item.id)}
-                                    className="text-[var(--muted-foreground)] hover:text-red-500 hover:bg-red-500/10 p-1 opacity-0 group-hover/item:opacity-100 transition-none"
-                                >
-                                    <Trash2 size={14} />
-                                </button>
-                            </div>
-                        );
-                    })}
-                </div>
-
-                {/* Add Item Input */}
-                <div className="flex mt-3 shadow-sm border border-[var(--input-border)] focus-within:border-[var(--primary)] focus-within:ring-1 focus-within:ring-[var(--primary)]">
-                    <input
-                        value={newChecklistItem}
-                        onChange={(e) => setNewChecklistItem(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && addChecklistItem()}
-                        placeholder="Adicionar nova subtarefa..."
-                        className="flex-1 bg-[var(--input-bg)] border-none text-[var(--foreground)] h-10 px-3 text-sm focus:ring-0 focus:outline-none placeholder:text-[var(--muted-foreground)]/50"
-                    />
-                    <button
-                        onClick={addChecklistItem}
-                        disabled={!newChecklistItem.trim()}
-                        className="px-4 bg-[var(--background)] hover:bg-[var(--primary)] text-[var(--primary)] hover:text-black border-l border-[var(--input-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center font-mono text-xs uppercase tracking-wider"
-                    >
-                        <Plus size={16} className="mr-1.5" /> Adicionar
-                    </button>
-                </div>
-            </div>
-
-            {/* Dates Section */}
+            {/* Datas */}
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <label className="text-xs font-mono text-[var(--primary)] uppercase tracking-wider">Data Início Prevista</label>
@@ -325,11 +207,10 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                 </div>
             </div>
 
-            {/* Tag Management */}
+            {/* Tags */}
             <div className="space-y-3">
                 <label className="text-xs font-mono text-[var(--primary)] uppercase tracking-wider">Tags</label>
 
-                {/* Existing Tags */}
                 {formData.tags && formData.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-2 p-2 border border-[var(--input-border)] bg-[var(--input-bg)]/30 rounded-none">
                         {formData.tags.map((tag) => (
@@ -354,7 +235,6 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                     </div>
                 )}
 
-                {/* Add New Tag */}
                 <div className="flex flex-col gap-2">
                     <label className="text-[10px] text-[var(--muted-foreground)] uppercase tracking-wider">Adicionar Nova Tag</label>
                     <div className="flex gap-2 items-center p-2 border border-[var(--input-border)] bg-[var(--input-bg)] rounded-none">
@@ -393,7 +273,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                 </div>
             </div>
 
-            {/* Priority */}
+            {/* Prioridade */}
             <div className="space-y-2">
                 <label className="text-xs font-mono text-[var(--primary)] uppercase tracking-wider">Prioridade</label>
                 <select
@@ -410,109 +290,6 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
         </div>
     );
 
-    const atividadesView = (
-        <div className="flex flex-col h-full bg-[var(--sidebar)] border-l border-[var(--sidebar-border)] w-[400px] shrink-0 shadow-[-10px_0_30px_-10px_rgba(0,0,0,0.5)] z-10 animate-in slide-in-from-right-8 duration-300">
-            <div className="flex items-center justify-between p-6 border-b border-[var(--sidebar-border)] h-[81px] shrink-0 bg-[var(--background)]/50">
-                <h3 className="text-sm font-bold font-mono tracking-widest text-[var(--foreground)] uppercase">
-                    Histórico & Logs
-                </h3>
-            </div>
-            <div className="flex-1 overflow-y-auto space-y-4 p-6 custom-scrollbar">
-                {isLoadingActivities ? (
-                    <div className="flex justify-center items-center h-full"><Spin /></div>
-                ) : activities.length === 0 ? (
-                    <div className="text-center text-[var(--muted-foreground)] text-xs font-mono py-8 h-full flex items-center justify-center">
-                        Nenhuma atividade registrada na tarefa.
-                    </div>
-                ) : (
-                    activities.map((act) => (
-                        <div key={act.id} className="flex gap-3 text-sm font-mono group">
-                            <div className="flex flex-col items-center">
-                                <div className={cn(
-                                    "w-7 h-7 rounded-none flex items-center justify-center shrink-0 border transition-colors overflow-hidden",
-                                    act.type === 'comment' || act.userName !== 'Sistema'
-                                        ? "bg-[var(--primary)] text-black border-[var(--primary)]"
-                                        : "bg-[var(--input-bg)] text-[var(--muted-foreground)] border-[var(--sidebar-border)]"
-                                )}>
-                                    {act.userAvatar ? (
-                                        <img
-                                            src={act.userAvatar}
-                                            alt={act.userName}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    ) : act.type === 'comment' || act.userName !== 'Sistema' ? (
-                                        <img
-                                            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(act.userName)}&background=22c55e&color=000000&rounded=false&bold=true&font-size=0.4`}
-                                            alt={act.userName}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    ) : (
-                                        <Activity size={12} />
-                                    )}
-                                </div>
-                                <div className="w-[1px] h-full bg-[var(--sidebar-border)] my-1 group-last:hidden" />
-                            </div>
-                            <div className="flex-1 pb-4">
-                                <div className="flex items-center gap-2 mb-1.5">
-                                    <span className={cn(
-                                        "font-bold",
-                                        act.type === 'comment' ? "text-[var(--primary)]" : "text-[var(--foreground)]"
-                                    )}>
-                                        {act.userName}
-                                    </span>
-                                    <span className="text-[10px] text-[var(--muted-foreground)] opacity-70">
-                                        {new Date(act.createdAt).toLocaleString('pt-BR')}
-                                    </span>
-                                </div>
-                                <div className={cn(
-                                    "p-3 rounded-none border",
-                                    act.type === 'comment'
-                                        ? "bg-[var(--input-bg)] border-[var(--input-border)] text-[var(--foreground)]"
-                                        : "bg-transparent border-transparent text-[var(--muted-foreground)] text-xs -translate-x-3"
-                                )}>
-                                    {act.content}
-                                </div>
-                            </div>
-                        </div>
-                    ))
-                )}
-            </div>
-            <div className="shrink-0 pt-4 border-t border-[var(--sidebar-border)] bg-[var(--sidebar)]">
-                <ConfigProvider
-                    theme={{
-                        algorithm: themeMode === 'light' ? antdTheme.defaultAlgorithm : antdTheme.darkAlgorithm,
-                        token: {
-                            colorPrimary: 'var(--primary)',
-                            colorText: 'var(--foreground)',
-                            colorTextPlaceholder: 'var(--muted-foreground)',
-                            colorBgContainer: 'var(--background)',
-                            colorBorder: 'var(--input-border)',
-                            colorBgElevated: 'var(--sidebar)',
-                            borderRadius: 0,
-                        },
-                    }}
-                >
-                    <Mentions
-                        value={newActivityContent}
-                        onChange={setNewActivityContent}
-                        placeholder="Adicione um comentário para a equipe (use @ para mencionar)..."
-                        className="w-full h-20 !bg-[var(--background)] border border-[var(--input-border)] !text-[var(--foreground)] p-3 text-sm focus-within:outline-none focus-within:!border-[var(--primary)] transition-colors hover:border-[var(--primary)] resize-none font-mono rounded-none mb-3"
-                        options={users.map(u => ({ value: u.name.replace(/\s+/g, ''), label: u.name }))}
-                        autoSize={{ minRows: 3, maxRows: 3 }}
-                    />
-                </ConfigProvider>
-                <Button
-                    variant="primary"
-                    className="w-full rounded-none font-mono tracking-widest text-xs h-10"
-                    onClick={handleAddComment}
-                    disabled={!newActivityContent.trim() || isLoadingActivities}
-                >
-                    <ArrowRight size={16} className="mr-2" /> ENVIAR COMENTÁRIO
-                </Button>
-            </div>
-        </div>
-    );
-
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[color:var(--overlay-bg)] p-4 backdrop-blur-sm animate-in fade-in duration-200">
             <div className={cn(
@@ -520,7 +297,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                 isSidebarOpen ? "w-[1048px] max-w-[95vw]" : "w-[648px] max-w-full"
             )} onClick={(e) => e.stopPropagation()}>
 
-                {/* Main Content Area (Fixed Width 600px) */}
+                {/* Main Content Area */}
                 <div className="flex flex-col w-[600px] shrink-0">
                     {/* Header */}
                     <div className="flex items-center justify-between p-6 border-b border-[var(--sidebar-border)] bg-[var(--sidebar)] shrink-0 h-[81px]">
@@ -537,7 +314,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                         </div>
                     </div>
 
-                    {/* Body - Details View */}
+                    {/* Body */}
                     <div className="flex-1 bg-[var(--background)]">
                         {detalhesView}
                     </div>
@@ -561,7 +338,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                     </div>
                 </div>
 
-                {/* The Brutalist Vertical Pillar Toggle */}
+                {/* Sidebar Toggle Pillar */}
                 <button
                     onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                     className="w-12 shrink-0 border-l border-[var(--sidebar-border)] flex flex-col items-center justify-center gap-8 bg-[var(--background)] hover:bg-[var(--primary)] text-[var(--muted-foreground)] hover:text-black transition-colors group cursor-pointer z-20 shadow-[-5px_0_15px_-5px_rgba(0,0,0,0.5)]"
@@ -581,9 +358,15 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                     </div>
                 </button>
 
-                {/* Optional Sidebar */}
-                {isSidebarOpen && atividadesView}
-
+                {/* Activity Sidebar (componente extraído) */}
+                {isSidebarOpen && (
+                    <TaskActivitySidebar
+                        activities={activities}
+                        isLoading={isLoadingActivities}
+                        users={users}
+                        onAddComment={handleAddComment}
+                    />
+                )}
             </div>
         </div>,
         document.body

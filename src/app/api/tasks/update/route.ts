@@ -1,40 +1,17 @@
-import { NextResponse } from 'next/server';
-
-const N8N_BASE = process.env.N8N_API_URL;
-const API_KEY = process.env.N8N_API_KEY;
+import { validateRequired, sanitizeStrings, forwardToN8N } from '@/lib/apiHelper';
 
 export async function POST(request: Request) {
-    if (!N8N_BASE) {
-        return NextResponse.json(
-            { error: 'N8N_API_URL não configurada' },
-            { status: 500 }
-        );
-    }
-
     try {
         const body = await request.json();
+        const sanitized = sanitizeStrings(body);
 
-        // Webhook: hubview-tasks-update
-        const response = await fetch(`${N8N_BASE}/hubview-tasks-update`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
-            },
-            body: JSON.stringify(body),
-        });
+        const validationError = validateRequired(sanitized, ['taskId']);
+        if (validationError) return validationError;
 
-        if (!response.ok) {
-            throw new Error(`n8n retornou status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        return NextResponse.json(data);
+        return await forwardToN8N('hubview-tasks-update', sanitized);
     } catch (error) {
         console.error('Erro ao atualizar tarefa:', error);
-        return NextResponse.json(
-            { error: 'Falha ao atualizar tarefa' },
-            { status: 502 }
-        );
+        const { NextResponse } = await import('next/server');
+        return NextResponse.json({ error: 'Falha ao atualizar tarefa' }, { status: 502 });
     }
 }

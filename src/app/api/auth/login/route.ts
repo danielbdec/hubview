@@ -43,18 +43,41 @@ export async function POST(request: Request) {
             );
         }
 
-        // Return user data (frontend will store in localStorage/cookie)
-        return NextResponse.json({
+        const userData = {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            avatar: user.avatar,
+            birthDate: user.birthDate,
+        };
+
+        // Create response with HttpOnly cookie
+        const res = NextResponse.json({
             success: true,
-            user: {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                role: user.role,
-                avatar: user.avatar,
-                birthDate: user.birthDate,
-            }
+            user: userData,
         });
+
+        // Set HttpOnly secure cookie with user session data
+        res.cookies.set('hubview_auth', user.id, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 7, // 7 days
+        });
+
+        // Set a separate non-httpOnly cookie with user data for client-side access
+        // (name, avatar, role - non-sensitive data only)
+        res.cookies.set('hubview_user', JSON.stringify(userData), {
+            httpOnly: false,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 7,
+        });
+
+        return res;
     } catch (error) {
         console.error('Login error:', error);
         return NextResponse.json(

@@ -3,6 +3,7 @@
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { ThemeProvider } from '@/components/ui/ThemeProvider';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export default function DashboardLayout({
     children,
@@ -30,7 +31,9 @@ export default function DashboardLayout({
                     <Header />
 
                     <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 relative z-10 scrollbar-hide">
-                        {children}
+                        <ErrorBoundary>
+                            {children}
+                        </ErrorBoundary>
                     </main>
                 </div>
             </div>

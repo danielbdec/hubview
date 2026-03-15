@@ -23,10 +23,10 @@ export default function LoginPage() {
     const [focusedField, setFocusedField] = useState<string | null>(null);
     const [showContent, setShowContent] = useState(false);
 
-    // Check if already logged in
+    // Check if already logged in (read from cookie instead of localStorage)
     useEffect(() => {
-        const user = localStorage.getItem('hubview_user');
-        if (user) {
+        const hasAuth = document.cookie.includes('hubview_user=');
+        if (hasAuth) {
             router.push('/');
         }
     }, [router]);
@@ -51,9 +51,9 @@ export default function LoginPage() {
                 return;
             }
 
-            // Store user in localStorage + set auth cookie for middleware
+            // Cookies are now set by the server (HttpOnly for auth, readable for user data)
+            // Keep localStorage as fallback for client components that need user data
             localStorage.setItem('hubview_user', JSON.stringify(data.user));
-            document.cookie = `hubview_auth=${data.user.id}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
 
             setIsSuccess(true);
 

@@ -1,7 +1,10 @@
 import type { ThemeConfig } from 'antd';
+import { theme } from 'antd';
 
-const theme: ThemeConfig = {
-    algorithm: require('antd').darkAlgorithm,
+const { darkAlgorithm } = theme;
+
+const themeConfig: ThemeConfig = {
+    algorithm: darkAlgorithm,
     token: {
         fontSize: 14,
         colorPrimary: '#fbbf24', // Gold
@@ -34,4 +37,4 @@ const theme: ThemeConfig = {
     },
 };
 
-export default theme;
+export default themeConfig;

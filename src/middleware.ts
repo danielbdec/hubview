@@ -2,28 +2,48 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Routes that don't require authentication
-const PUBLIC_ROUTES = ['/login', '/api/auth'];
+const PUBLIC_ROUTES = ['/login', '/api/auth/login', '/api/auth/logout'];
 
 export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
-    // Allow public routes and static assets
+    // Allow static assets
     if (
-        PUBLIC_ROUTES.some(route => pathname.startsWith(route)) ||
         pathname.startsWith('/_next') ||
-        pathname.startsWith('/api/') ||
-        pathname.includes('.') // static files
+        pathname.includes('.') // static files (favicon, images, etc.)
     ) {
         return NextResponse.next();
     }
 
-    // Check for auth cookie (set by client-side after login)
+    // Allow public routes
+    if (PUBLIC_ROUTES.some(route => pathname === route || pathname.startsWith(route + '/'))) {
+        return NextResponse.next();
+    }
+
+    // Check for HttpOnly auth cookie
     const authCookie = request.cookies.get('hubview_auth');
 
-    if (!authCookie) {
-        // Redirect to login
+    if (!authCookie?.value) {
+        // API routes: return 401
+        if (pathname.startsWith('/api/')) {
+            return NextResponse.json(
+                { error: 'Não autenticado' },
+                { status: 401 }
+            );
+        }
+
+        // Page routes: redirect to login
         const loginUrl = new URL('/login', request.url);
         return NextResponse.redirect(loginUrl);
+    }
+
+    // Inject userId into request headers for API routes
+    if (pathname.startsWith('/api/')) {
+        const requestHeaders = new Headers(request.headers);
+        requestHeaders.set('x-user-id', authCookie.value);
+        return NextResponse.next({
+            request: { headers: requestHeaders },
+        });
     }
 
     return NextResponse.next();

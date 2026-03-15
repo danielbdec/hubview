@@ -33,9 +33,11 @@ export function Sidebar() {
     const pathname = usePathname();
     const router = useRouter();
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        // Clear server-side HttpOnly cookies via API
+        await fetch('/api/auth/logout', { method: 'POST' });
+        // Clear client-side data
         localStorage.removeItem('hubview_user');
-        document.cookie = 'hubview_auth=; path=/; max-age=0';
         router.push('/login');
     };
 

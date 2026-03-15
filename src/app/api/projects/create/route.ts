@@ -1,39 +1,17 @@
-import { NextResponse } from 'next/server';
-
-const N8N_BASE = process.env.N8N_API_URL;
-const API_KEY = process.env.N8N_API_KEY;
+import { validateRequired, sanitizeStrings, forwardToN8N } from '@/lib/apiHelper';
 
 export async function POST(request: Request) {
-    if (!N8N_BASE) {
-        return NextResponse.json(
-            { error: 'N8N_API_URL não configurada' },
-            { status: 500 }
-        );
-    }
-
     try {
         const body = await request.json();
+        const sanitized = sanitizeStrings(body);
 
-        const response = await fetch(`${N8N_BASE}/hubview-projeto-inclui`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
-            },
-            body: JSON.stringify(body),
-        });
+        const validationError = validateRequired(sanitized, ['title']);
+        if (validationError) return validationError;
 
-        if (!response.ok) {
-            throw new Error(`n8n retornou status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        return NextResponse.json(data);
+        return await forwardToN8N('hubview-projeto-inclui', sanitized);
     } catch (error) {
         console.error('Erro ao criar projeto:', error);
-        return NextResponse.json(
-            { error: 'Falha ao criar projeto' },
-            { status: 502 }
-        );
+        const { NextResponse } = await import('next/server');
+        return NextResponse.json({ error: 'Falha ao criar projeto' }, { status: 502 });
     }
 }
