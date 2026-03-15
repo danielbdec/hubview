@@ -431,9 +431,12 @@ export default function KanbanBoardPage() {
                         {/* Top Header */}
                         <div className="light-page-hero flex flex-col gap-2.5 px-3 py-3 sm:px-3.5 xl:flex-row xl:items-center xl:justify-between">
                             <div className="flex min-w-0 items-start gap-3">
-                                <Button variant="ghost" size="sm" onClick={() => router.push('/projects')} className="mt-0.5 h-7 pl-1 pr-0 text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
-                                    <ArrowLeft size={16} />
-                                </Button>
+                                <button
+                                    onClick={() => router.push('/projects')}
+                                    className="group/back mt-0.5 flex h-8 w-8 items-center justify-center rounded-full border border-[var(--card-border)] bg-[var(--card)] text-[var(--muted-foreground)] transition-all duration-300 hover:border-[var(--primary)]/50 hover:bg-[var(--primary)]/10 hover:text-[var(--primary)] hover:shadow-[0_0_16px_rgba(169,239,47,0.15)] hover:-translate-x-0.5 active:scale-90"
+                                >
+                                    <ArrowLeft size={16} className="transition-transform duration-300 group-hover/back:-translate-x-0.5" />
+                                </button>
                                 <div>
                                     <span className="light-muted-chip inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[9px] font-mono font-semibold uppercase tracking-[0.22em]">
                                         <LayoutGrid size={10} />
