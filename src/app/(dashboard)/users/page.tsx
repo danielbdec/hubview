@@ -163,7 +163,7 @@ export default function UsersPage() {
                 <button
                     onClick={() => setActiveTab('active')}
                     className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full border px-4 py-3 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 sm:flex-none sm:px-5 ${activeTab === 'active'
-                            ? 'bg-[linear-gradient(135deg,rgba(236,253,245,0.96),rgba(255,255,255,0.94))] text-emerald-500 border-emerald-200 shadow-[0_12px_24px_rgba(15,23,42,0.08)]'
+                            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-bold shadow-[0_12px_24px_rgba(0,0,0,0.15)]'
                             : 'text-[var(--muted-foreground)] border-transparent hover:text-[var(--foreground)] hover:border-[var(--card-border)]'
                         }`}
                 >
@@ -179,7 +179,7 @@ export default function UsersPage() {
                 <button
                     onClick={() => setActiveTab('inactive')}
                     className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full border px-4 py-3 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 sm:flex-none sm:px-5 ${activeTab === 'inactive'
-                            ? 'bg-[linear-gradient(135deg,rgba(255,241,242,0.95),rgba(255,255,255,0.94))] text-rose-500 border-rose-200 shadow-[0_12px_24px_rgba(15,23,42,0.08)]'
+                            ? 'border-rose-500/30 bg-rose-500/10 text-rose-400 font-bold shadow-[0_12px_24px_rgba(0,0,0,0.15)]'
                             : 'text-[var(--muted-foreground)] border-transparent hover:text-[var(--foreground)] hover:border-[var(--card-border)]'
                         }`}
                 >

@@ -319,8 +319,8 @@ export const KanbanColumn = memo(function KanbanColumn({
                 tasks.length === 0 && "flex items-center justify-center border-2 border-dashed border-[var(--card-border)]/50 rounded-sm m-2 bg-[var(--card-hover)]/30"
             )}>
                 {tasks.length === 0 && (
-                    <div className="text-center p-4 opacity-50 select-none pointer-events-none">
-                        <p className="text-[10px] font-mono uppercase text-[var(--muted-foreground)]">Sem Tarefas</p>
+                    <div className="text-center p-4 opacity-70 select-none pointer-events-none">
+                        <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--foreground)]/50">Sem Tarefas</p>
                     </div>
                 )}
                 <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>

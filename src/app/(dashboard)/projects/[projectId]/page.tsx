@@ -470,7 +470,7 @@ export default function KanbanBoardPage() {
                                     <div className="mt-1.5 flex items-end justify-between gap-2">
                                         <strong className="text-[1.4rem] font-black tracking-[-0.08em] text-white">{completedTasks}</strong>
                                         <span className="light-dark-chip px-2 py-1 text-[9px] font-mono font-semibold uppercase tracking-[0.16em]">
-                                            {completedColumns} done
+                                            {completedColumns} {completedColumns === 1 ? 'painel' : 'painéis'}
                                         </span>
                                     </div>
                                 </div>
@@ -506,7 +506,7 @@ export default function KanbanBoardPage() {
                                     allowClear
                                     placeholder="Prioridade"
                                     maxTagCount="responsive"
-                                    className="min-w-[132px] [&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-[var(--input-bg)] [&_.ant-select-selector]:!border-[var(--input-border)] [&_.ant-select-selector]:!min-h-[32px] font-mono text-xs shadow-none hover:[&_.ant-select-selector]:!border-[var(--primary)] sm:min-w-[140px]"
+                                    className="min-w-[132px] [&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-[var(--input-bg)] [&_.ant-select-selector]:!border-[var(--input-border)] [&_.ant-select-selector]:!min-h-[32px] [&_.ant-select-selection-placeholder]:!text-[var(--foreground)]/40 font-mono text-xs shadow-none hover:[&_.ant-select-selector]:!border-[var(--primary)] sm:min-w-[140px]"
                                     value={filters.priority}
                                     onChange={v => setFilters(f => ({ ...f, priority: v }))}
                                     options={[
@@ -522,7 +522,7 @@ export default function KanbanBoardPage() {
                                     allowClear
                                     placeholder="Responsável"
                                     maxTagCount="responsive"
-                                    className="min-w-[146px] [&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-[var(--input-bg)] [&_.ant-select-selector]:!border-[var(--input-border)] [&_.ant-select-selector]:!min-h-[32px] font-mono text-xs shadow-none hover:[&_.ant-select-selector]:!border-[var(--primary)] sm:min-w-[160px]"
+                                    className="min-w-[146px] [&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-[var(--input-bg)] [&_.ant-select-selector]:!border-[var(--input-border)] [&_.ant-select-selector]:!min-h-[32px] [&_.ant-select-selection-placeholder]:!text-[var(--foreground)]/40 font-mono text-xs shadow-none hover:[&_.ant-select-selector]:!border-[var(--primary)] sm:min-w-[160px]"
                                     value={filters.assignees}
                                     onChange={v => setFilters(f => ({ ...f, assignees: v }))}
                                     options={uniqueAssignees.map(a => ({ label: a, value: a }))}
@@ -534,7 +534,7 @@ export default function KanbanBoardPage() {
                                     allowClear
                                     placeholder="Tags"
                                     maxTagCount="responsive"
-                                    className="min-w-[146px] [&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-[var(--input-bg)] [&_.ant-select-selector]:!border-[var(--input-border)] [&_.ant-select-selector]:!min-h-[32px] font-mono text-xs shadow-none hover:[&_.ant-select-selector]:!border-[var(--primary)] sm:min-w-[160px]"
+                                    className="min-w-[146px] [&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-[var(--input-bg)] [&_.ant-select-selector]:!border-[var(--input-border)] [&_.ant-select-selector]:!min-h-[32px] [&_.ant-select-selection-placeholder]:!text-[var(--foreground)]/40 font-mono text-xs shadow-none hover:[&_.ant-select-selector]:!border-[var(--primary)] sm:min-w-[160px]"
                                     value={filters.tags}
                                     onChange={v => setFilters(f => ({ ...f, tags: v }))}
                                     options={uniqueTags.map(t => ({ label: t.name, value: t.name }))}

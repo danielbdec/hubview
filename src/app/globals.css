@@ -379,6 +379,22 @@ body {
 }
 
 /* ══════════════════════════════════════════════
+   Dark Theme – Form Placeholder Contrast
+   ══════════════════════════════════════════════ */
+
+[data-theme='dark'] .ant-select-selection-placeholder {
+  color: rgba(255, 255, 255, 0.35) !important;
+}
+
+[data-theme='dark'] .ant-input::placeholder {
+  color: rgba(255, 255, 255, 0.35) !important;
+}
+
+[data-theme='dark'] .ant-select-arrow {
+  color: rgba(255, 255, 255, 0.35) !important;
+}
+
+/* ══════════════════════════════════════════════
    Light Theme – Button Hover Animations
    ══════════════════════════════════════════════ */
 
