@@ -257,7 +257,7 @@ export default function ProjectsPage() {
                     className={`
                         relative flex-1 justify-center rounded-full border px-4 py-3 text-xs font-mono uppercase tracking-widest transition-all duration-200 sm:flex-none sm:px-5
                         ${activeTab === 'active'
-                            ? 'border-lime-200 bg-[linear-gradient(135deg,rgba(246,253,232,0.96),rgba(255,255,255,0.94))] text-[var(--primary)] font-bold shadow-[0_12px_24px_rgba(15,23,42,0.08)]'
+                            ? 'border-[var(--primary)]/30 bg-[var(--primary)]/10 text-[var(--primary)] font-bold shadow-[0_12px_24px_rgba(0,0,0,0.15)]'
                             : 'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
                         }
                     `}
@@ -282,7 +282,7 @@ export default function ProjectsPage() {
                     className={`
                         relative flex-1 justify-center rounded-full border px-4 py-3 text-xs font-mono uppercase tracking-widest transition-all duration-200 sm:flex-none sm:px-5
                         ${activeTab === 'inactive'
-                            ? 'border-rose-200 bg-[linear-gradient(135deg,rgba(255,241,242,0.95),rgba(255,255,255,0.94))] text-rose-400 font-bold shadow-[0_12px_24px_rgba(15,23,42,0.08)]'
+                            ? 'border-rose-500/30 bg-rose-500/10 text-rose-400 font-bold shadow-[0_12px_24px_rgba(0,0,0,0.15)]'
                             : 'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
                         }
                     `}
