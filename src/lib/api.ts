@@ -11,6 +11,15 @@ const DEFAULT_HEADERS = {
 
 async function handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
+        // Handle 401 - redirect to login instead of crashing the app
+        if (response.status === 401) {
+            if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+                console.warn('Sessão expirada, redirecionando ao login...');
+                window.location.href = '/login';
+            }
+            throw new ApiError(401, 'Sessão expirada');
+        }
+
         let errorMessage = 'An error occurred';
         let errorData;
         try {

@@ -5,7 +5,7 @@ export async function POST(request: Request) {
         const body = await request.json();
         const sanitized = sanitizeStrings(body);
 
-        const validationError = validateRequired(sanitized, ['projectId', 'columnId', 'content']);
+        const validationError = validateRequired(sanitized, ['columnId', 'content']);
         if (validationError) return validationError;
 
         return await forwardToN8N('hubview-tasks-create', sanitized);

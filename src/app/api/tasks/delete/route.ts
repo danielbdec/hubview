@@ -4,7 +4,7 @@ export async function POST(request: Request) {
     try {
         const body = await request.json();
 
-        const validationError = validateRequired(body, ['taskId']);
+        const validationError = validateRequired(body, ['id']);
         if (validationError) return validationError;
 
         return await forwardToN8N('hubview-tasks-delete', body);
