@@ -4,6 +4,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { ThemeProvider } from '@/components/ui/ThemeProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { FloatingParticles } from '@/components/auth/LoginEffects';
 
 export default function DashboardLayout({
     children,
@@ -27,6 +28,11 @@ export default function DashboardLayout({
 
                     {/* Tech Grid Background (Faint) */}
                     <div className="absolute inset-0 bg-tech-grid opacity-[0.05] pointer-events-none z-0" />
+
+                    {/* Floating HUD Particles */}
+                    <div className="absolute inset-0 z-0 opacity-[0.85] pointer-events-none">
+                        <FloatingParticles />
+                    </div>
 
                     <Header />
 

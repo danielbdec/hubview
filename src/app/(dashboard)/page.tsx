@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/Button';
 import { useProjectStore } from '@/store/kanbanStore';
 import { useTheme } from '@/components/ui/ThemeProvider';
 import { useHydrated } from '@/hooks/useHydrated';
+import { DecodingText } from '@/components/auth/LoginEffects';
 import Link from 'next/link';
 import Image from 'next/image';
 import { clsx, type ClassValue } from 'clsx';
@@ -212,9 +213,9 @@ export default function DashboardPage() {
 
       {/* Welcome Section */}
       <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        initial={{ opacity: 0, y: -10, filter: 'blur(8px)' }}
+        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className={cn(
           'relative flex flex-col gap-5 overflow-hidden lg:flex-row lg:items-center lg:justify-between',
           isLight
@@ -274,7 +275,7 @@ export default function DashboardPage() {
             >
               {getGreeting()},{' '}
               <span className="text-[var(--primary)]">
-                {user?.name?.split(' ')[0] || 'Operador'}
+                <DecodingText text={user?.name?.split(' ')[0] || 'Operador'} />
               </span>
             </motion.h1>
             <motion.p
@@ -359,9 +360,9 @@ export default function DashboardPage() {
         {metrics.map((metric, i) => (
           <motion.div
             key={metric.label}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 + i * 0.08 }}
+            initial={{ opacity: 0, y: 20, filter: 'blur(10px)', scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)', scale: 1 }}
+            transition={{ duration: 0.7, delay: 0.1 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
           >
             <Card
               variant="default"
@@ -423,9 +424,9 @@ export default function DashboardPage() {
         {/* Recent Projects Panel */}
         <motion.div
           className="lg:col-span-2"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45 }}
+          initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }}
+          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          transition={{ duration: 0.8, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
         >
           <Card
             variant={isLight ? 'glass' : 'outline'}
@@ -444,7 +445,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold uppercase text-[var(--foreground)] tracking-wider font-mono">
-                    Projetos Recentes
+                    <DecodingText text="Projetos Recentes" />
                   </h3>
                   {isLight && (
                     <p className="mt-1 text-xs text-slate-500">Priorize entradas mais movimentadas e acompanhe o avanço por projeto.</p>
@@ -503,9 +504,9 @@ export default function DashboardPage() {
                   return (
                     <motion.div
                       key={project.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.5 + i * 0.05 }}
+                      initial={{ opacity: 0, x: -10, filter: 'blur(5px)' }}
+                      animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                      transition={{ duration: 0.6, delay: 0.5 + i * 0.05, ease: [0.16, 1, 0.3, 1] }}
                     >
                       <Link href={`/projects/${project.id}`}>
                         <div className={cn(
@@ -569,9 +570,9 @@ export default function DashboardPage() {
 
         {/* Side Panel: Quick Stats */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
+          initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }}
+          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="space-y-4"
         >
           {/* Completion Rate Card */}
@@ -588,7 +589,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-sm font-bold uppercase text-[var(--foreground)] tracking-wider font-mono">
-                  Taxa de Conclusão
+                  <DecodingText text="Taxa de Conclusão" />
                 </h3>
                 {isLight && (
                   <p className="mt-1 text-xs text-slate-500">O quanto do pipeline ativo já virou entrega.</p>
@@ -668,7 +669,7 @@ export default function DashboardPage() {
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-bold uppercase text-[var(--foreground)] tracking-wider font-mono">
-                  Ações Rápidas
+                  <DecodingText text="Ações Rápidas" />
                 </h3>
                 {isLight && (
                   <p className="mt-1 text-xs text-slate-500">Atalhos para os fluxos mais usados do dia.</p>
@@ -716,7 +717,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-tech-green shadow-[0_0_6px_rgba(169,239,47,0.6)] animate-pulse" />
               <span className="text-[9px] font-mono text-[var(--muted-foreground)] uppercase tracking-wider">
-                STATUS: <span className="text-tech-green font-bold">OPERACIONAL</span>
+                <DecodingText text="STATUS:" /> <span className="text-tech-green font-bold"><DecodingText text="OPERACIONAL" /></span>
               </span>
             </div>
           </div>

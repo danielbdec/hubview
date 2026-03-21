@@ -3,12 +3,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Spinner } from '@/components/ui/Spinner';
+import { useTheme } from '@/components/ui/ThemeProvider';
 
 /**
  * Enhanced Floating Particles with Z-depth simulation
  */
 export function FloatingParticles() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const { theme } = useTheme();
+    const isLight = theme === 'light';
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -68,11 +71,11 @@ export function FloatingParticles() {
 
                 const perspective = 1000 / (1000 - p.z * 200); // Simple perspective projection
                 const size = p.size * perspective;
-                const opacity = p.opacity * (1 / p.z); // Fade distant particles
+                const opacity = p.opacity * (1 / p.z) * (isLight ? 1.5 : 1); // Boost opacity in light mode
 
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
-                ctx.fillStyle = `hsla(${p.hue}, 80%, 55%, ${opacity})`;
+                ctx.fillStyle = `hsla(${p.hue}, 80%, ${isLight ? 35 : 55}%, ${opacity})`;
                 ctx.fill();
 
                 // Connect nearby particles (within similar depth plane)
@@ -88,7 +91,7 @@ export function FloatingParticles() {
                         ctx.beginPath();
                         ctx.moveTo(p.x, p.y);
                         ctx.lineTo(p2.x, p2.y);
-                        ctx.strokeStyle = `hsla(140, 70%, 50%, ${0.05 * (1 - dist / 100)})`;
+                        ctx.strokeStyle = `hsla(140, ${isLight ? 90 : 70}%, ${isLight ? 35 : 50}%, ${(isLight ? 0.15 : 0.05) * (1 - dist / 100)})`;
                         ctx.lineWidth = 0.5 * perspective;
                         ctx.stroke();
                     }
@@ -103,7 +106,7 @@ export function FloatingParticles() {
             cancelAnimationFrame(animationId);
             window.removeEventListener('resize', resize);
         };
-    }, []);
+    }, [isLight]);
 
     return (
         <canvas

@@ -318,64 +318,84 @@ body {
 }
 
 /* ══════════════════════════════════════════════
-   Dark Theme – Button Hover Animations
+   Dark Theme – Cinematic Button Hover (Liquid Fluorite Brutalism)
    ══════════════════════════════════════════════ */
 
 [data-theme='dark'] .hubview-button {
   transition:
-    transform 0.24s ease,
-    box-shadow 0.24s ease,
-    border-color 0.24s ease,
-    background-color 0.24s ease,
-    color 0.24s ease;
+    transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    box-shadow 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    border-color 0.4s ease,
+    background 0.4s ease,
+    text-shadow 0.4s ease;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 [data-theme='dark'] .hubview-button:hover:not(:disabled) {
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.01);
 }
 
 [data-theme='dark'] .hubview-button:active:not(:disabled) {
-  transform: translateY(0) scale(0.98);
+  transform: translateY(1px) scale(0.98);
+  transition-duration: 0.1s;
 }
 
 [data-theme='dark'] .hubview-button--primary {
-  box-shadow: 0 4px 16px rgba(169, 239, 47, 0.12);
+  background: radial-gradient(circle at 50% 120%, rgba(132, 204, 22, 0.15), transparent 60%),
+              linear-gradient(180deg, rgba(20, 24, 20, 0.8), rgba(8, 12, 8, 0.95));
+  border: 1px solid rgba(132, 204, 22, 0.3);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1), inset 0 0 8px rgba(132, 204, 22, 0.05), 0 4px 12px rgba(0, 0, 0, 0.5);
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(132, 204, 22, 0.2);
+  backdrop-filter: blur(12px);
 }
 
 [data-theme='dark'] .hubview-button--primary:hover:not(:disabled) {
-  box-shadow: 0 8px 32px rgba(169, 239, 47, 0.28), 0 0 12px rgba(169, 239, 47, 0.15);
-  filter: brightness(1.1);
+  background: radial-gradient(circle at 50% 100%, rgba(169, 239, 47, 0.3), transparent 60%),
+              linear-gradient(180deg, rgba(24, 30, 24, 0.8), rgba(10, 15, 10, 0.95));
+  border-color: rgba(169, 239, 47, 0.9);
+  box-shadow: 0 20px 50px -10px rgba(132, 204, 22, 0.5), 
+              0 0 24px rgba(132, 204, 22, 0.3), 
+              inset 0 0 20px rgba(132, 204, 22, 0.3), 
+              inset 0 1px 1px rgba(255, 255, 255, 0.5);
+  text-shadow: 0 0 12px rgba(169, 239, 47, 0.8);
 }
 
 [data-theme='dark'] .hubview-button__shine {
-  opacity: 0.2;
-  transform: translateX(-240%) skewX(-20deg);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-  transition: transform 0.72s ease, opacity 0.3s ease;
+  opacity: 0;
+  transform: translateX(-150%) skewX(-30deg);
+  background: linear-gradient(90deg, transparent, rgba(169, 239, 47, 0.6), transparent);
+  transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.3s ease;
+  mix-blend-mode: color-dodge;
+  z-index: 10;
+  width: 50%;
 }
 
 [data-theme='dark'] .hubview-button:hover:not(:disabled) .hubview-button__shine {
-  opacity: 0.5;
-  transform: translateX(420%) skewX(-20deg);
+  opacity: 1;
+  transform: translateX(350%) skewX(-30deg);
 }
 
 [data-theme='dark'] .hubview-button__scanline {
   background: repeating-linear-gradient(
     0deg,
     transparent,
-    transparent 2px,
-    rgba(169, 239, 47, 0.06) 2px,
-    rgba(169, 239, 47, 0.06) 4px
+    transparent 1px,
+    rgba(169, 239, 47, 0.15) 1px,
+    rgba(169, 239, 47, 0.15) 2px
   );
-  transition: opacity 0.28s ease;
+  opacity: 0.1;
+  transition: opacity 0.5s ease;
 }
 
 [data-theme='dark'] .hubview-button:hover:not(:disabled) .hubview-button__scanline {
-  opacity: 0.8;
+  opacity: 0.6;
 }
 
 [data-theme='dark'] .hubview-button__fill {
-  background: linear-gradient(135deg, rgba(169, 239, 47, 0.9), rgba(132, 204, 22, 0.95));
+  background: transparent;
+  display: none;
 }
 
 /* ══════════════════════════════════════════════
@@ -395,92 +415,104 @@ body {
 }
 
 /* ══════════════════════════════════════════════
-   Light Theme – Button Hover Animations
+   Light Theme – Cinematic Button Hover (Crystal Fluorite Brutalism)
    ══════════════════════════════════════════════ */
 
 [data-theme='light'] .hubview-button {
   border-radius: 999px;
-  border-color: rgba(148, 163, 184, 0.18);
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.72);
   transition:
-    transform 0.24s ease,
-    box-shadow 0.24s ease,
-    border-color 0.24s ease,
-    background-color 0.24s ease,
-    color 0.24s ease;
+    transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    box-shadow 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    border-color 0.4s ease,
+    background 0.4s ease,
+    color 0.4s ease;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 [data-theme='light'] .hubview-button:hover:not(:disabled) {
-  transform: translateY(-1.5px);
-  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.74);
+  transform: translateY(-2px) scale(1.01);
 }
 
 [data-theme='light'] .hubview-button:active:not(:disabled) {
-  transform: translateY(0) scale(0.98);
+  transform: translateY(1px) scale(0.98);
+  transition-duration: 0.1s;
 }
 
 [data-theme='light'] .hubview-button--primary {
-  border-color: rgba(132, 204, 22, 0.34);
-  background: linear-gradient(135deg, #bef264 0%, #a3e635 48%, #84cc16 100%);
-  box-shadow: 0 16px 34px rgba(132, 204, 22, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.48);
+  border-color: rgba(132, 204, 22, 0.4);
+  background: linear-gradient(135deg, rgba(230, 245, 215, 0.9), rgba(245, 252, 235, 0.95));
+  box-shadow: 0 12px 28px rgba(132, 204, 22, 0.15), inset 0 1px 2px rgba(255, 255, 255, 1), inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  color: #4d7c0f;
+  backdrop-filter: blur(8px);
 }
 
 [data-theme='light'] .hubview-button--primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #d9f99d 0%, #bef264 46%, #84cc16 100%);
-  box-shadow: 0 20px 42px rgba(132, 204, 22, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.56);
+  background: linear-gradient(135deg, rgba(217, 249, 157, 0.95), rgba(190, 242, 100, 0.9));
+  box-shadow: 0 20px 45px -10px rgba(132, 204, 22, 0.45), 
+              0 0 20px rgba(132, 204, 22, 0.25), 
+              inset 0 1px 2px rgba(255, 255, 255, 1),
+              inset 0 0 12px rgba(255, 255, 255, 0.8);
+  border-color: rgba(132, 204, 22, 0.8);
+  color: #3f6212;
 }
 
 [data-theme='light'] .hubview-button--secondary {
-  border-color: rgba(132, 204, 22, 0.28);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(239, 247, 241, 0.86));
+  border-color: rgba(132, 204, 22, 0.35);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.85), rgba(239, 247, 241, 0.9));
   color: #4d7c0f;
 }
 
 [data-theme='light'] .hubview-button--ghost {
-  border-color: rgba(148, 163, 184, 0.14);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.54), rgba(241, 247, 243, 0.64));
+  border-color: rgba(148, 163, 184, 0.18);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(241, 247, 243, 0.7));
 }
 
 [data-theme='light'] .hubview-button--status {
-  border-color: rgba(132, 204, 22, 0.22);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.58), rgba(241, 247, 243, 0.68));
+  border-color: rgba(132, 204, 22, 0.25);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.65), rgba(241, 247, 243, 0.75));
 }
 
 [data-theme='light'] .hubview-button--danger {
-  border-color: rgba(248, 113, 113, 0.24);
-  background: linear-gradient(135deg, rgba(255, 241, 242, 0.88), rgba(255, 255, 255, 0.82));
-  box-shadow: 0 14px 30px rgba(244, 63, 94, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  border-color: rgba(248, 113, 113, 0.3);
+  background: linear-gradient(135deg, rgba(255, 241, 242, 0.9), rgba(255, 255, 255, 0.85));
+  box-shadow: 0 12px 26px rgba(244, 63, 94, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.8);
 }
 
 [data-theme='light'] .hubview-button__shine {
-  opacity: 0.44;
-  transform: translateX(-240%) skewX(-20deg);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
-  transition: transform 0.72s ease, opacity 0.3s ease;
+  opacity: 0;
+  transform: translateX(-150%) skewX(-30deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), transparent);
+  transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.3s ease;
+  mix-blend-mode: overlay;
+  z-index: 10;
+  width: 50%;
 }
 
 [data-theme='light'] .hubview-button:hover:not(:disabled) .hubview-button__shine {
-  opacity: 0.74;
-  transform: translateX(420%) skewX(-20deg);
+  opacity: 1;
+  transform: translateX(350%) skewX(-30deg);
 }
 
 [data-theme='light'] .hubview-button__scanline {
   background: repeating-linear-gradient(
     0deg,
     transparent,
-    transparent 2px,
-    rgba(8, 17, 0, 0.05) 2px,
-    rgba(8, 17, 0, 0.05) 4px
+    transparent 1px,
+    rgba(132, 204, 22, 0.08) 1px,
+    rgba(132, 204, 22, 0.08) 2px
   );
-  transition: opacity 0.28s ease;
+  opacity: 0.1;
+  transition: opacity 0.4s ease;
 }
 
 [data-theme='light'] .hubview-button:hover:not(:disabled) .hubview-button__scanline {
-  opacity: 0.72;
+  opacity: 0.6;
 }
 
 [data-theme='light'] .hubview-button__fill {
-  background: linear-gradient(135deg, #d9f99d 0%, #bef264 58%, #84cc16 100%);
+  background: transparent;
+  display: none;
 }
 
 [data-theme='light'] .hubview-button__corner {
