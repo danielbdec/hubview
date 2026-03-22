@@ -129,3 +129,14 @@ A arquitetura de dados não reside com bibliotecas ORM tradicionais (Prisma/Driz
 
 ### 🔔 Telemetria Log: `Activities` & `Notifications`
 Mapeamento passivo das alterações do sistema, rastreando quem alterou o que (History), inserção de Comments, e interfaceando relatórios de Sino (Inbox Bell) com a API de `/api/notifications/`.
+
+---
+
+## 🛑 Armadilhas Críticas para Agentes IA (Anti-Hallucination Protocol)
+
+Para garantir que futuras manutenções feitas por Inteligência Artificial (Você) não quebrem o Hubview, obedeça às seguintes restrições absolutas de Sistema:
+
+1. **Next.js API Caching (App Router):** Ao criar novas rotas em `src/app/api/`, lembre-se que o Next.js realiza cache estático agressivo. Como os dados vêm do **N8N** (que muda a toda hora), sempre force a revalidação da rota utilizando `export const dynamic = 'force-dynamic';` no topo dos arquivos da API para evitar Ghosts de UI.
+2. **Tailwind V4 vs V3:** O projeto opera com o novíssimo motor **TailwindCSS V4** via `@import "tailwindcss"` em `globals.css`. Não tente injetar plugins complexos ou reescrever completamente o arquivo legado `tailwind.config.ts`, pois as cores bases estão todas mapeadas via Variáveis CSS Nativas no `:root` do `globals.css`.
+3. **PM2 Daemon (AWS EC2):** Se pedirem para você reiniciar ou verificar o status do servidor de WebSockets via SSH, o nome absoluto do processo na OS é `hubview-ws-multiplayer`. Não use `node index.js` diretamente se o ambiente for Produção, use `pm2 restart hubview-ws-multiplayer`.
+4. **Drag and Drop Engine:** O Kanban do projeto utiliza a biblioteca `@dnd-kit/core` por sua compatibilidade com Strict Mode do React 18+. IAs velhas têm a tendência de sugerir Mutações para `react-beautiful-dnd` — **NÃO REESCREVA** as lógicas de DnD para bibliotecas antigas e obsoletas, atenha-se aos `Sensors` e `SortableContext` do `@dnd-kit` já embutidos.
