@@ -328,6 +328,8 @@ export const KanbanColumn = memo(function KanbanColumn({
                         <KanbanCard
                             key={task.id}
                             task={task}
+                            columnId={column.id}
+                            isDoneColumn={column.isDone}
                             onDelete={(taskId) => setTaskToDelete(taskId)}
                             onEdit={onEditTask}
                         />

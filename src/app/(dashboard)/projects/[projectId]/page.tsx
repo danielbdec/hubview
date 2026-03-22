@@ -150,7 +150,7 @@ export default function KanbanBoardPage() {
         column.isDone ? sum + (column.tasks?.length || 0) : sum
     ), 0);
     const overdueTasks = columns.reduce((sum, column) => (
-        sum + (column.tasks?.filter(t => getSlaStatus(t.endDate) === 'overdue').length || 0)
+        sum + (column.isDone ? 0 : (column.tasks?.filter(t => getSlaStatus(t.endDate) === 'overdue').length || 0))
     ), 0);
 
     const [activeColumn, setActiveColumn] = useState<Column | null>(null);
@@ -204,7 +204,7 @@ export default function KanbanBoardPage() {
                 const matchPriority = filters.priority.length === 0 || filters.priority.includes(task.priority);
                 const matchAssignee = filters.assignees.length === 0 || (task.assignee && filters.assignees.includes(task.assignee));
                 const matchTags = filters.tags.length === 0 || (task.tags && task.tags.some(tag => filters.tags.includes(tag.name)));
-                const matchOverdue = !filters.onlyOverdue || getSlaStatus(task.endDate) === 'overdue';
+                const matchOverdue = !filters.onlyOverdue || (!col.isDone && getSlaStatus(task.endDate) === 'overdue');
 
                 return matchSearch && matchPriority && matchAssignee && matchTags && matchOverdue;
             })

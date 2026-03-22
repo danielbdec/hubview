@@ -17,6 +17,8 @@ function cn(...inputs: ClassValue[]) {
 interface KanbanCardProps {
     task: Task;
     isOverlay?: boolean;
+    columnId?: string;
+    isDoneColumn?: boolean;
     onEdit?: (task: Task) => void;
     onDelete?: (taskId: string) => void;
 }
@@ -54,7 +56,7 @@ function formatTaskDate(date?: string) {
     return new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 }
 
-export function KanbanCard({ task, isOverlay, onEdit, onDelete }: KanbanCardProps) {
+export function KanbanCard({ task, isOverlay, columnId, isDoneColumn, onEdit, onDelete }: KanbanCardProps) {
     const { theme: themeMode } = useTheme();
     const {
         setNodeRef,
@@ -107,7 +109,7 @@ export function KanbanCard({ task, isOverlay, onEdit, onDelete }: KanbanCardProp
         ? task.assignee.split(' ')[0]
         : null;
 
-    const slaStatus = getSlaStatus(task.endDate);
+    const slaStatus = isDoneColumn ? null : getSlaStatus(task.endDate);
 
     return (
         <div
