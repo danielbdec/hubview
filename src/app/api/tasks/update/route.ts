@@ -8,7 +8,7 @@ export async function POST(request: Request) {
         const validationError = validateRequired(sanitized, ['id']);
         if (validationError) return validationError;
 
-        return await forwardToN8N('hubview-tasks-update', sanitized);
+        return await forwardToN8N('hubview-tasks-update', sanitized, request);
     } catch (error) {
         console.error('Erro ao atualizar tarefa:', error);
         const { NextResponse } = await import('next/server');

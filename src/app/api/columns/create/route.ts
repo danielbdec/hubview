@@ -8,7 +8,7 @@ export async function POST(request: Request) {
         const validationError = validateRequired(sanitized, ['projectId', 'title']);
         if (validationError) return validationError;
 
-        return await forwardToN8N('hubview-columns-create', sanitized);
+        return await forwardToN8N('hubview-columns-create', sanitized, request);
     } catch (error) {
         console.error('Erro ao criar coluna:', error);
         const { NextResponse } = await import('next/server');

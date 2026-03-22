@@ -18,7 +18,7 @@ export async function POST(request: Request) {
             );
         }
 
-        return await forwardToN8N('hubview-project-members-add', sanitized);
+        return await forwardToN8N('hubview-project-members-add', sanitized, request);
     } catch (error) {
         console.error('Erro ao adicionar membro:', error);
         const { NextResponse } = await import('next/server');

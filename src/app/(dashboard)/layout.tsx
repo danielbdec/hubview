@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { BottomNav } from "@/components/layout/BottomNav";
@@ -10,6 +10,7 @@ import { FloatingParticles } from '@/components/auth/LoginEffects';
 import { useMobile } from '@/hooks/useMobile';
 import { usePathname } from 'next/navigation';
 import { GlobalNotifications } from '@/components/GlobalNotifications';
+import { useProjectStore } from '@/store/kanbanStore';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -23,6 +24,10 @@ export default function DashboardLayout({
     const pathname = usePathname();
     const segments = pathname.split('/').filter(Boolean);
     const isProjectPage = segments.length === 2 && segments[0] === 'projects' && UUID_REGEX.test(segments[1]);
+
+    useEffect(() => {
+        useProjectStore.getState().initializeUser();
+    }, []);
 
     return (
         <ThemeProvider defaultTheme="dark">

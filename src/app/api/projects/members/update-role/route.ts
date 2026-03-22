@@ -18,7 +18,7 @@ export async function POST(request: Request) {
             );
         }
 
-        return await forwardToN8N('hubview-project-members-update-role', sanitized);
+        return await forwardToN8N('hubview-project-members-update-role', sanitized, request);
     } catch (error) {
         console.error('Erro ao atualizar role:', error);
         const { NextResponse } = await import('next/server');

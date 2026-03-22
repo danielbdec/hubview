@@ -10,7 +10,8 @@ export async function POST(request: Request) {
 
     try {
         const body = await request.json();
-        const { userId } = body;
+        let userId: any = request.headers.get('x-user-id') || body.userId;
+        if (typeof userId === 'string' && !isNaN(Number(userId))) userId = Number(userId);
 
         if (!userId) {
             return NextResponse.json({ error: 'userId obrigatório' }, { status: 400 });

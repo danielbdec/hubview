@@ -8,7 +8,7 @@ export async function POST(request: Request) {
         const validationError = validateRequired(sanitized, ['title']);
         if (validationError) return validationError;
 
-        return await forwardToN8N('hubview-projeto-inclui', sanitized);
+        return await forwardToN8N('hubview-projeto-inclui', sanitized, request);
     } catch (error) {
         console.error('Erro ao criar projeto:', error);
         const { NextResponse } = await import('next/server');

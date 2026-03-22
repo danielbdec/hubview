@@ -58,8 +58,11 @@ export async function POST(request: Request) {
             user: userData,
         });
 
+        const { signJWT } = await import('@/lib/jwt');
+        const token = await signJWT(user.id);
+
         // Set HttpOnly secure cookie with user session data
-        res.cookies.set('hubview_auth', user.id, {
+        res.cookies.set('hubview_auth', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',

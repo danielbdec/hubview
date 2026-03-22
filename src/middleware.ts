@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server';
 // Routes that don't require authentication
 const PUBLIC_ROUTES = ['/login', '/api/auth/login', '/api/auth/logout'];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     // Allow static assets
@@ -23,7 +23,13 @@ export function middleware(request: NextRequest) {
     // Check for HttpOnly auth cookie
     const authCookie = request.cookies.get('hubview_auth');
 
-    if (!authCookie?.value) {
+    let verifiedUserId: string | null = null;
+    if (authCookie?.value) {
+        const { verifyJWT } = await import('@/lib/jwt');
+        verifiedUserId = await verifyJWT(authCookie.value);
+    }
+
+    if (!verifiedUserId) {
         // API routes: return 401
         if (pathname.startsWith('/api/')) {
             return NextResponse.json(
@@ -40,7 +46,7 @@ export function middleware(request: NextRequest) {
     // Inject userId into request headers for API routes
     if (pathname.startsWith('/api/')) {
         const requestHeaders = new Headers(request.headers);
-        requestHeaders.set('x-user-id', authCookie.value);
+        requestHeaders.set('x-user-id', verifiedUserId as string);
         return NextResponse.next({
             request: { headers: requestHeaders },
         });

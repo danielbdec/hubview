@@ -40,7 +40,8 @@ export function sanitizeStrings<T extends Record<string, unknown>>(body: T): T {
 export async function forwardToN8N(
     endpoint: string,
     body: Record<string, unknown>,
-    method: 'POST' | 'GET' = 'POST'
+    req?: Request,
+    method: 'POST' | 'GET' | 'PUT' | 'PATCH' = 'POST'
 ): Promise<NextResponse> {
     try {
         const url = `${N8N_BASE}/${endpoint}`;
@@ -53,7 +54,14 @@ export async function forwardToN8N(
             },
         };
 
-        if (method === 'POST') {
+        if (req) {
+            const secureUserId = req.headers.get('x-user-id');
+            if (secureUserId) {
+                body.userId = isNaN(Number(secureUserId)) ? secureUserId : Number(secureUserId);
+            }
+        }
+
+        if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
             fetchOptions.body = JSON.stringify(body);
         }
 

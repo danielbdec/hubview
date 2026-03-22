@@ -11,25 +11,32 @@ export async function POST(request: Request) {
     try {
         const body = await request.json();
         const { notificationId } = body;
+        
+        // Integrar identidade segura validada no middleware
+        let userId: any = request.headers.get('x-user-id') || body.userId;
+        if (typeof userId === 'string' && !isNaN(Number(userId))) userId = Number(userId);
 
         if (!notificationId) {
             return NextResponse.json({ error: 'notificationId obrigatório' }, { status: 400 });
         }
 
-        const response = await fetch(`${N8N_BASE}/hubview-notifications-read`, {
+        const response = await fetch(`${N8N_BASE}/hubview-notifications-read-v2`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
             },
-            body: JSON.stringify({ notificationId }),
+            body: JSON.stringify({ notificationId, userId }),
         });
 
         if (!response.ok) {
             throw new Error(`n8n retornou status: ${response.status}`);
         }
 
-        const data = await response.json();
+        const text = await response.text();
+        let data = {};
+        try { if (text) data = JSON.parse(text); } catch (e) {}
+        
         return NextResponse.json({ success: true, ...data });
     } catch (error) {
         console.error('Erro ao marcar notificação como lida:', error);

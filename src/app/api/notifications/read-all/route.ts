@@ -10,7 +10,8 @@ export async function POST(request: Request) {
 
     try {
         const body = await request.json();
-        const { userId } = body;
+        let userId: any = request.headers.get('x-user-id') || body.userId;
+        if (typeof userId === 'string' && !isNaN(Number(userId))) userId = Number(userId);
 
         if (!userId) {
             return NextResponse.json({ error: 'userId obrigatório' }, { status: 400 });
@@ -29,7 +30,10 @@ export async function POST(request: Request) {
             throw new Error(`n8n retornou status: ${response.status}`);
         }
 
-        const data = await response.json();
+        const text = await response.text();
+        let data = {};
+        try { if (text) data = JSON.parse(text); } catch (e) {}
+        
         return NextResponse.json({ success: true, ...data });
     } catch (error) {
         console.error('Erro ao marcar todas notificações como lidas:', error);

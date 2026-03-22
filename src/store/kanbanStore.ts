@@ -371,25 +371,33 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     },
 
     markNotificationAsRead: async (id: string) => {
+        // Atualização Otimista
+        set((state) => {
+            const updated = state.notifications.filter(n => n.id !== id);
+            return { notifications: updated, unreadNotificationsCount: updated.length };
+        });
+
         try {
             await api.post('/api/notifications/read', { notificationId: id });
-            set((state) => {
-                const updated = state.notifications.filter(n => n.id !== id);
-                return { notifications: updated, unreadNotificationsCount: updated.length };
-            });
         } catch (error) {
             console.error('Failed to mark read', error);
+            // Reverte em caso de falha silenciosa buscando o real
+            get().fetchNotifications();
         }
     },
 
     markAllNotificationsAsRead: async () => {
         const { currentUser } = get();
         if (!currentUser?.id) return;
+        
+        // Atualização Otimista
+        set({ notifications: [], unreadNotificationsCount: 0 });
+        
         try {
             await api.post('/api/notifications/read-all', { userId: currentUser.id });
-            set({ notifications: [], unreadNotificationsCount: 0 });
         } catch (error) {
             console.error('Failed to mark all as read', error);
+            get().fetchNotifications();
         }
     },
 

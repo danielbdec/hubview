@@ -7,7 +7,7 @@ export async function POST(request: Request) {
         const validationError = validateRequired(body, ['id']);
         if (validationError) return validationError;
 
-        return await forwardToN8N('hubview-tasks-delete', body);
+        return await forwardToN8N('hubview-tasks-delete', body, request);
     } catch (error) {
         console.error('Erro ao excluir tarefa:', error);
         const { NextResponse } = await import('next/server');
