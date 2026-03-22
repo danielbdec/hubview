@@ -30,6 +30,9 @@ import { useHydrated } from '@/hooks/useHydrated';
 import ProjectListView from './ProjectListView';
 import ProjectCalendarView from './ProjectCalendarView';
 import TimelineView from '@/components/board/TimelineView';
+import { useSocketStore } from '@/store/socketStore';
+import { LiveCursors } from '@/components/board/LiveCursors';
+import { PresenceAvatars } from '@/components/board/PresenceAvatars';
 
 type EditingTask = Task & {
     _columnId?: string;
@@ -58,6 +61,8 @@ export default function KanbanBoardPage() {
         activeView
     } = useProjectStore();
 
+    const { connect: connectSocket, disconnect: disconnectSocket, sendCursorMove } = useSocketStore();
+
     const hasFetchedRef = useRef(false);
     const dragSourceColumnIdRef = useRef<string | null>(null);
     const celebrationBurstRef = useRef(0);
@@ -78,6 +83,36 @@ export default function KanbanBoardPage() {
     }, [fetchBoardData, fetchProjects, projectId, projects.length, setActiveProject]);
 
     const activeProject = projects.find(p => p.id === projectId);
+
+    // Socket Connection
+    useEffect(() => {
+        if (!projectId || !activeProject) return;
+        
+        // Simulating a random user payload for the collaborative session
+        const randomNames = ["Daniel B.", "Anna T.", "João Silva", "Lucas K.", "Marta V."];
+        const randomName = randomNames[Math.floor(Math.random() * randomNames.length)];
+        const sessionUserId = `user_${Math.floor(Math.random() * 99999)}`;
+        
+        connectSocket(projectId, { 
+            id: sessionUserId, 
+            name: randomName
+        });
+
+        return () => {
+            disconnectSocket();
+        };
+    }, [projectId, activeProject?.id]);
+
+    // Throttle cursor updates (every 50ms = 20fps for performance)
+    const cursorTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const handlePointerMove = (e: React.PointerEvent) => {
+        if (!cursorTimerRef.current) {
+            cursorTimerRef.current = setTimeout(() => {
+                sendCursorMove({ x: e.clientX, y: e.clientY });
+                cursorTimerRef.current = null;
+            }, 50);
+        }
+    };
 
     // Redirect if invalid
     useEffect(() => {
@@ -395,7 +430,12 @@ export default function KanbanBoardPage() {
             onDragEnd={handleDragEnd}
             onDragCancel={handleDragCancel}
         >
-            <div className="page-light-atmosphere flex h-full max-w-full flex-col overflow-hidden px-3 pb-3 pt-2 sm:px-4 lg:px-6">
+            <div 
+                className="page-light-atmosphere flex h-full max-w-full flex-col overflow-hidden px-3 pb-3 pt-2 sm:px-4 lg:px-6"
+                onPointerMove={handlePointerMove}
+            >
+                <LiveCursors />
+                
                 {/* Header & Control Bar Area */}
                 <ConfigProvider
                     theme={{
@@ -453,6 +493,7 @@ export default function KanbanBoardPage() {
                                         STATUS_FLUXO: <span className="text-yellow-500 font-bold">ATIVO</span> | <span className="opacity-50 tracking-widest">ID: {activeProject.id.slice(0, 8)}</span>
                                     </p>
                                 </div>
+                                <PresenceAvatars />
                             </div>
 
                             <div className="grid w-full shrink-0 grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
