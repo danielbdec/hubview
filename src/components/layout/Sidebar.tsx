@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
@@ -10,8 +10,8 @@ import {
     KanbanSquare,
     Settings,
     Users,
-    Menu,
-    ChevronLeft,
+    Pin,
+    PinOff,
     LogOut
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
@@ -29,9 +29,27 @@ const menuItems = [
 ];
 
 export function Sidebar() {
-    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
+    const [isPinned, setIsPinned] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
+    
     const pathname = usePathname();
     const router = useRouter();
+
+    // Hydration check and load preferences
+    useEffect(() => {
+        setIsMounted(true);
+        const savedPin = localStorage.getItem('hubview_sidebar_pinned');
+        if (savedPin === 'true') {
+            setIsPinned(true);
+        }
+    }, []);
+
+    const togglePin = () => {
+        const newPinnedState = !isPinned;
+        setIsPinned(newPinnedState);
+        localStorage.setItem('hubview_sidebar_pinned', String(newPinnedState));
+    };
 
     const handleLogout = async () => {
         // Clear server-side HttpOnly cookies via API
@@ -41,48 +59,70 @@ export function Sidebar() {
         router.push('/login');
     };
 
+    const isExpanded = isPinned || isHovered;
+
+    if (!isMounted) {
+        // Render a basic 80px sidebar during SSR to prevent layout shift before hydration
+        return <aside className="h-screen w-[80px] bg-[var(--sidebar)] border-r border-[var(--sidebar-border)] z-50 flex-shrink-0" />;
+    }
+
     return (
         <motion.aside
-            initial={{ width: 240 }}
-            animate={{ width: isCollapsed ? 80 : 240 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="relative h-screen bg-[var(--sidebar)] border-r border-[var(--sidebar-border)] flex flex-col z-50 text-[var(--foreground)]"
+            initial={false}
+            animate={{ width: isExpanded ? 240 : 80 }}
+            transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            className="relative h-screen bg-[var(--sidebar)] border-r border-[var(--sidebar-border)] flex flex-col z-50 text-[var(--foreground)] flex-shrink-0"
         >
             {/* Brand Header */}
-            <div className="h-16 flex items-center justify-between px-6 border-b border-[var(--sidebar-border)]">
+            <div className="h-16 flex items-center justify-between px-6 border-b border-[var(--sidebar-border)] overflow-hidden">
                 <AnimatePresence mode="wait">
-                    {!isCollapsed ? (
+                    {isExpanded ? (
                         <motion.div
+                            key="expanded-logo"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="flex items-center gap-2.5"
+                            transition={{ duration: 0.2 }}
+                            className="flex items-center gap-2.5 min-w-0"
                         >
                             <Image src="/logo-uninova.png" alt="HubView" width={24} height={24} className="shrink-0" />
-                            <span className="font-sans font-black tracking-tighter uppercase text-[var(--foreground)]">HubView</span>
+                            <span className="font-sans font-black tracking-tighter uppercase text-[var(--foreground)] truncate">HubView</span>
                         </motion.div>
                     ) : (
                         <motion.div
+                            key="collapsed-logo"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="flex items-center justify-center"
+                            transition={{ duration: 0.2 }}
+                            className="flex items-center justify-center w-full"
                         >
-                            <Image src="/logo-uninova.png" alt="HubView" width={22} height={22} />
+                            <Image src="/logo-uninova.png" alt="HubView" width={22} height={22} className="shrink-0" />
                         </motion.div>
                     )}
                 </AnimatePresence>
 
-                <button
-                    onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="p-1 hover:bg-[var(--card-hover)] rounded-none text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
-                >
-                    {isCollapsed ? <Menu size={20} /> : <ChevronLeft size={20} />}
-                </button>
+                {/* Pin Toggle Button (Only visible when expanded or specifically requested) */}
+                <AnimatePresence>
+                    {isExpanded && (
+                        <motion.button
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            onClick={togglePin}
+                            title={isPinned ? "Desafixar Sidebar" : "Fixar Sidebar"}
+                            className="p-1.5 ml-2 hover:bg-[var(--card-hover)] rounded-md text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors flex-shrink-0"
+                        >
+                            {isPinned ? <PinOff size={16} /> : <Pin size={16} />}
+                        </motion.button>
+                    )}
+                </AnimatePresence>
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 py-6 space-y-1 px-3">
+            <nav className="flex-1 py-6 space-y-1 px-3 overflow-hidden">
                 {menuItems.map((item) => {
                     const isActive = item.href === '/'
                         ? pathname === '/'
@@ -91,8 +131,10 @@ export function Sidebar() {
                         <Link
                             key={item.href}
                             href={item.href}
+                            title={!isExpanded ? item.label : undefined}
                             className={cn(
-                                'group flex items-center gap-3 px-3 py-3 rounded-none transition-all duration-200 relative overflow-hidden',
+                                'group flex items-center gap-3 py-3 rounded-none transition-all duration-200 relative overflow-hidden',
+                                isExpanded ? 'px-3' : 'px-0 justify-center',
                                 isActive
                                     ? 'text-[var(--sidebar-menu-active)] bg-[var(--card-hover)]'
                                     : 'text-[var(--sidebar-menu-inactive)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)]'
@@ -108,11 +150,11 @@ export function Sidebar() {
 
                             <item.icon
                                 size={20}
-                                className={cn('transition-colors', isActive && 'text-[var(--primary)]')}
+                                className={cn('transition-colors shrink-0', isActive && 'text-[var(--primary)]')}
                             />
 
                             <AnimatePresence>
-                                {!isCollapsed && (
+                                {isExpanded && (
                                     <motion.span
                                         initial={{ opacity: 0, x: -10 }}
                                         animate={{ opacity: 1, x: 0 }}
@@ -132,23 +174,24 @@ export function Sidebar() {
             </nav>
 
             {/* Footer */}
-            <div className="p-3 border-t border-[var(--sidebar-border)] space-y-2">
+            <div className="p-3 border-t border-[var(--sidebar-border)] space-y-2 overflow-hidden">
                 {/* Logout Button */}
                 <button
                     onClick={handleLogout}
+                    title={!isExpanded ? "Sair" : undefined}
                     className={cn(
-                        'w-full group flex items-center gap-3 px-3 py-2.5 rounded-none transition-all duration-200 text-[var(--muted-foreground)] hover:text-red-400 hover:bg-red-500/5',
-                        isCollapsed && 'justify-center'
+                        'w-full group flex items-center gap-3 py-2.5 rounded-none transition-all duration-200 text-[var(--muted-foreground)] hover:text-red-400 hover:bg-red-500/5',
+                        isExpanded ? 'px-3' : 'px-0 justify-center'
                     )}
                 >
-                    <LogOut size={18} />
+                    <LogOut size={18} className="shrink-0" />
                     <AnimatePresence>
-                        {!isCollapsed && (
+                        {isExpanded && (
                             <motion.span
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -10 }}
-                                className="font-sans text-xs font-bold tracking-tighter uppercase"
+                                className="font-sans text-xs font-bold tracking-tighter uppercase whitespace-nowrap"
                             >
                                 SAIR
                             </motion.span>
@@ -157,9 +200,20 @@ export function Sidebar() {
                 </button>
 
                 {/* System Status */}
-                <div className={cn("text-[10px] text-[var(--muted-foreground)] font-sans font-semibold tracking-tighter uppercase flex items-center gap-2", isCollapsed && "justify-center")}>
-                    <div className="w-2 h-2 rounded-full bg-[var(--primary)] animate-pulse" />
-                    {!isCollapsed && <span>SISTEMA ONLINE</span>}
+                <div className={cn("text-[10px] text-[var(--muted-foreground)] font-sans font-semibold tracking-tighter uppercase flex items-center gap-2", !isExpanded && "justify-center")}>
+                    <div className="w-2 h-2 rounded-full bg-[var(--primary)] animate-pulse shrink-0" />
+                    <AnimatePresence>
+                        {isExpanded && (
+                            <motion.span
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="whitespace-nowrap"
+                            >
+                                SISTEMA ONLINE
+                            </motion.span>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
         </motion.aside>
