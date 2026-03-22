@@ -11,6 +11,7 @@ import { useProjectStore } from '@/store/kanbanStore';
 import { Segmented, ConfigProvider, theme as antdTheme } from 'antd';
 import { KanbanIcon, ListIcon, CalendarIcon, GanttChart } from 'lucide-react';
 import { NotificationDropdown } from './NotificationDropdown';
+import { CommandPalette } from './CommandPalette';
 
 const breadnameMap: Record<string, string> = {
     'projects': 'PROJETOS',
@@ -103,6 +104,8 @@ export function Header() {
                         </ConfigProvider>
                     </div>
                 )}
+
+                <CommandPalette />
 
                 <div className="flex items-center gap-2 border-l border-[var(--header-border)] pl-4">
                     <ThemeToggle />
