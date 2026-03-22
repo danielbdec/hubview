@@ -456,7 +456,7 @@ export default function KanbanBoardPage() {
             onDragCancel={handleDragCancel}
         >
             <div 
-                className="page-light-atmosphere flex min-h-full md:h-full max-w-full flex-col overflow-y-auto md:overflow-hidden px-3 pb-24 md:pb-3 pt-2 sm:px-4 lg:px-6"
+                className="page-light-atmosphere flex min-h-full md:h-full max-w-full flex-col overflow-y-auto md:overflow-hidden px-3 pb-3 pt-2 sm:px-4 lg:px-6"
                 onPointerMove={handlePointerMove}
             >
                 <LiveCursors />
