@@ -29,6 +29,7 @@ import { useTheme } from '@/components/ui/ThemeProvider';
 import { useHydrated } from '@/hooks/useHydrated';
 import ProjectListView from './ProjectListView';
 import ProjectCalendarView from './ProjectCalendarView';
+import TimelineView from '@/components/board/TimelineView';
 
 type EditingTask = Task & {
     _columnId?: string;
@@ -401,9 +402,9 @@ export default function KanbanBoardPage() {
                         algorithm: themeMode === 'light' ? antdTheme.defaultAlgorithm : antdTheme.darkAlgorithm,
                         token: {
                             colorBgContainer: 'transparent',
-                            colorBorder: 'var(--input-border)',
+                            colorBorder: 'rgba(255,255,255,0.15)', // Trazendo um pouco de contraste para a borda
                             colorText: 'var(--foreground)',
-                            colorTextPlaceholder: 'var(--muted-foreground)',
+                            colorTextPlaceholder: 'var(--foreground)', // Alterado para brilhar mais emvez de muted
                             borderRadius: 0,
                             fontFamily: 'var(--font-sans)',
                             colorPrimary: 'var(--primary)',
@@ -456,19 +457,19 @@ export default function KanbanBoardPage() {
 
                             <div className="grid w-full shrink-0 grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
                                 <div className="light-page-kpi min-w-0 px-3 py-2 sm:min-w-[104px]">
-                                    <span className="text-[9px] font-mono uppercase tracking-[0.22em] text-slate-500">Painéis</span>
+                                    <span className="text-[9px] font-mono uppercase tracking-[0.22em] text-cyan-500 font-bold">Painéis</span>
                                     <div className="mt-1.5 flex items-end justify-between gap-2">
-                                        <strong className="text-[1.4rem] font-black tracking-[-0.08em] text-slate-950">{columns.length}</strong>
+                                        <strong className="text-[1.4rem] font-black tracking-[-0.08em] text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]">{columns.length}</strong>
                                         <span className="rounded-full bg-lime-100 px-2 py-1 text-[9px] font-mono font-semibold uppercase tracking-[0.16em] text-lime-700">
                                             estrutura
                                         </span>
                                     </div>
                                 </div>
 
-                                <div className="light-page-kpi light-page-kpi--contrast min-w-0 px-3 py-2 sm:min-w-[122px]">
-                                    <span className="text-[9px] font-mono uppercase tracking-[0.22em] text-slate-400">Conclusão</span>
+                                <div className="light-page-kpi light-page-kpi--contrast min-w-0 px-3 py-2 sm:min-w-[122px] border border-emerald-500/20 bg-emerald-950/10">
+                                    <span className="text-[9px] font-mono uppercase tracking-[0.22em] text-emerald-500 font-bold">Conclusão</span>
                                     <div className="mt-1.5 flex items-end justify-between gap-2">
-                                        <strong className="text-[1.4rem] font-black tracking-[-0.08em] text-white">{completedTasks}</strong>
+                                        <strong className="text-[1.4rem] font-black tracking-[-0.08em] text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]">{completedTasks}</strong>
                                         <span className="light-dark-chip px-2 py-1 text-[9px] font-mono font-semibold uppercase tracking-[0.16em]">
                                             {completedColumns} {completedColumns === 1 ? 'painel' : 'painéis'}
                                         </span>
@@ -477,8 +478,8 @@ export default function KanbanBoardPage() {
 
                                 <div className="col-span-full flex w-full items-center gap-2 sm:w-auto sm:self-end">
                                     <div className="light-page-kpi flex-1 px-3 py-2 sm:flex-none">
-                                        <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-slate-500">Tarefas</span>
-                                        <strong className="mt-1 block text-[1.15rem] font-black tracking-[-0.06em] text-slate-950">{totalTasks}</strong>
+                                        <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-purple-500 font-bold">Tarefas</span>
+                                        <strong className="mt-1 block text-[1.15rem] font-black tracking-[-0.06em] text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.4)]">{totalTasks}</strong>
                                     </div>
                                     <Button variant="ghost" size="sm" onClick={handleRefresh} title="Atualizar Board" className="light-page-kpi h-[34px] rounded-full border border-transparent px-3 text-[var(--muted-foreground)] hover:border-[var(--card-border)] hover:bg-[var(--card-hover)] hover:text-[var(--foreground)]">
                                         <RefreshCw size={15} className={isLoadingBoard ? 'animate-spin text-[var(--primary)]' : ''} />
@@ -495,8 +496,8 @@ export default function KanbanBoardPage() {
                             <div className="scrollbar-none flex flex-1 items-center gap-3 overflow-x-auto py-0.5">
                                 <Input
                                     placeholder="Buscar tarefas..."
-                                    prefix={<Search size={14} className="text-[var(--muted-foreground)]" />}
-                                    className="h-8 w-[min(16rem,70vw)] rounded-none border-[var(--input-border)] bg-[var(--input-bg)] text-sm text-[var(--foreground)] hover:border-[var(--primary)] focus:border-[var(--primary)] sm:w-64"
+                                    prefix={<Search size={14} className="text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]" />}
+                                    className="h-8 w-[min(16rem,70vw)] rounded-none border-cyan-900/40 bg-[var(--input-bg)] text-sm text-[var(--foreground)] hover:border-cyan-500 focus:border-cyan-500 font-bold sm:w-64"
                                     value={filters.search}
                                     onChange={e => setFilters(f => ({ ...f, search: e.target.value }))}
                                 />
@@ -506,7 +507,7 @@ export default function KanbanBoardPage() {
                                     allowClear
                                     placeholder="Prioridade"
                                     maxTagCount="responsive"
-                                    className="min-w-[132px] [&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-[var(--input-bg)] [&_.ant-select-selector]:!border-[var(--input-border)] [&_.ant-select-selector]:!min-h-[32px] [&_.ant-select-selection-placeholder]:!text-[var(--foreground)]/40 font-mono text-xs shadow-none hover:[&_.ant-select-selector]:!border-[var(--primary)] sm:min-w-[140px]"
+                                    className="min-w-[132px] [&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-[var(--input-bg)] [&_.ant-select-selector]:!border-pink-900/40 [&_.ant-select-selector]:!min-h-[32px] [&_.ant-select-selection-placeholder]:!text-pink-400 [&_.ant-select-selection-placeholder]:!font-bold font-mono text-xs shadow-none hover:[&_.ant-select-selector]:!border-pink-500 sm:min-w-[140px]"
                                     value={filters.priority}
                                     onChange={v => setFilters(f => ({ ...f, priority: v }))}
                                     options={[
@@ -522,7 +523,7 @@ export default function KanbanBoardPage() {
                                     allowClear
                                     placeholder="Responsável"
                                     maxTagCount="responsive"
-                                    className="min-w-[146px] [&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-[var(--input-bg)] [&_.ant-select-selector]:!border-[var(--input-border)] [&_.ant-select-selector]:!min-h-[32px] [&_.ant-select-selection-placeholder]:!text-[var(--foreground)]/40 font-mono text-xs shadow-none hover:[&_.ant-select-selector]:!border-[var(--primary)] sm:min-w-[160px]"
+                                    className="min-w-[146px] [&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-[var(--input-bg)] [&_.ant-select-selector]:!border-emerald-900/40 [&_.ant-select-selector]:!min-h-[32px] [&_.ant-select-selection-placeholder]:!text-emerald-400 [&_.ant-select-selection-placeholder]:!font-bold font-mono text-xs shadow-none hover:[&_.ant-select-selector]:!border-emerald-500 sm:min-w-[160px]"
                                     value={filters.assignees}
                                     onChange={v => setFilters(f => ({ ...f, assignees: v }))}
                                     options={uniqueAssignees.map(a => ({ label: a, value: a }))}
@@ -534,7 +535,7 @@ export default function KanbanBoardPage() {
                                     allowClear
                                     placeholder="Tags"
                                     maxTagCount="responsive"
-                                    className="min-w-[146px] [&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-[var(--input-bg)] [&_.ant-select-selector]:!border-[var(--input-border)] [&_.ant-select-selector]:!min-h-[32px] [&_.ant-select-selection-placeholder]:!text-[var(--foreground)]/40 font-mono text-xs shadow-none hover:[&_.ant-select-selector]:!border-[var(--primary)] sm:min-w-[160px]"
+                                    className="min-w-[146px] [&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-[var(--input-bg)] [&_.ant-select-selector]:!border-purple-900/40 [&_.ant-select-selector]:!min-h-[32px] [&_.ant-select-selection-placeholder]:!text-purple-400 [&_.ant-select-selection-placeholder]:!font-bold font-mono text-xs shadow-none hover:[&_.ant-select-selector]:!border-purple-500 sm:min-w-[160px]"
                                     value={filters.tags}
                                     onChange={v => setFilters(f => ({ ...f, tags: v }))}
                                     options={uniqueTags.map(t => ({ label: t.name, value: t.name }))}
@@ -585,6 +586,8 @@ export default function KanbanBoardPage() {
                     <ProjectListView columns={filteredColumns} onEditTask={openEditModal} />
                 ) : activeView === 'calendar' ? (
                     <ProjectCalendarView columns={filteredColumns} onEditTask={openEditModal} />
+                ) : activeView === 'timeline' ? (
+                    <TimelineView columns={filteredColumns} onEditTask={openEditModal} />
                 ) : (
                     <div className="flex-1 overflow-x-auto pb-4">
                         <div className="flex gap-6 h-full items-stretch min-w-[1220px]">

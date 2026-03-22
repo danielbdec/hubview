@@ -142,8 +142,8 @@ interface ProjectState {
     markAllNotificationsAsRead: () => Promise<void>;
 
     // View State
-    activeView: 'kanban' | 'list' | 'calendar';
-    setActiveView: (view: 'kanban' | 'list' | 'calendar') => void;
+    activeView: 'kanban' | 'list' | 'calendar' | 'timeline';
+    setActiveView: (view: 'kanban' | 'list' | 'calendar' | 'timeline') => void;
 }
 
 export const useProjectStore = create<ProjectState>((set, get) => ({
