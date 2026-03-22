@@ -88,15 +88,27 @@ export default function KanbanBoardPage() {
     useEffect(() => {
         if (!projectId || !activeProject) return;
         
-        // Simulating a random user payload for the collaborative session
-        const randomNames = ["Daniel B.", "Anna T.", "João Silva", "Lucas K.", "Marta V."];
-        const randomName = randomNames[Math.floor(Math.random() * randomNames.length)];
-        const sessionUserId = `user_${Math.floor(Math.random() * 99999)}`;
-        
-        connectSocket(projectId, { 
-            id: sessionUserId, 
-            name: randomName
-        });
+        let currentUser = {
+            id: `user_${Math.floor(Math.random() * 99999)}`,
+            name: 'Usuário',
+            color: '#'+Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')
+        };
+
+        try {
+            const stored = localStorage.getItem('hubview_user');
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                currentUser = {
+                    id: parsed.id || currentUser.id,
+                    name: parsed.name || parsed.email?.split('@')[0] || 'Usuário',
+                    color: parsed.color || currentUser.color
+                };
+            }
+        } catch (e) {
+            console.error('Failed to parse user from localStorage', e);
+        }
+
+        connectSocket(projectId, currentUser);
 
         return () => {
             disconnectSocket();

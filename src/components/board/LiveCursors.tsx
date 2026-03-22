@@ -5,10 +5,13 @@ import { motion } from 'framer-motion';
 
 export function LiveCursors() {
     const onlineUsers = useSocketStore(state => state.onlineUsers);
+    const socket = useSocketStore(state => state.socket);
+
+    const otherUsers = onlineUsers.filter(user => user.id !== socket?.id);
 
     return (
         <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden">
-            {onlineUsers.map((user) => {
+            {otherUsers.map((user) => {
                 if (!user.cursor) return null;
 
                 return (
