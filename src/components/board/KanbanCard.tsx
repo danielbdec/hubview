@@ -8,6 +8,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Task } from '@/store/kanbanStore';
 import { useTheme } from '@/components/ui/ThemeProvider';
+import { getSlaStatus } from '@/lib/sla';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -106,6 +107,8 @@ export function KanbanCard({ task, isOverlay, onEdit, onDelete }: KanbanCardProp
         ? task.assignee.split(' ')[0]
         : null;
 
+    const slaStatus = getSlaStatus(task.endDate);
+
     return (
         <div
             ref={setNodeRef}
@@ -121,7 +124,8 @@ export function KanbanCard({ task, isOverlay, onEdit, onDelete }: KanbanCardProp
                     // Sharp geometry & active physical tension shadow
                     !isOverlay && "hover:-translate-y-1 hover:translate-x-[-2px] hover:shadow-[4px_4px_0_0_var(--primary)] cursor-grab active:cursor-grabbing hover:border-[var(--primary)]/50",
                     isOverlay && "border border-[var(--primary)] shadow-[8px_8px_0_0_var(--primary)] scale-105 z-50 cursor-grabbing bg-[var(--background)]",
-                    task.syncStatus === 'syncing' && "after:absolute after:top-0 after:right-0 after:w-1.5 after:h-1.5 after:bg-amber-400 after:animate-pulse"
+                    task.syncStatus === 'syncing' && "after:absolute after:top-0 after:right-0 after:w-1.5 after:h-1.5 after:bg-amber-400 after:animate-pulse",
+                    slaStatus === 'overdue' && "ring-1 ring-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5 border-red-500/30"
                 )}
                 style={{ borderRadius: '0px' }}
                 onDoubleClick={(e) => {
@@ -225,13 +229,20 @@ export function KanbanCard({ task, isOverlay, onEdit, onDelete }: KanbanCardProp
                     )}
 
                     <div className="mt-auto flex flex-wrap items-end justify-between gap-2 border-t border-[var(--card-border)]/60 pt-3 text-[10px] text-[var(--muted-foreground)]">
+//
                         <div className="flex flex-wrap items-center gap-2">
                             {hasTimeline && (
                                 <div
-                                    className="inline-flex items-center gap-1.5 border border-[var(--card-border)] bg-[var(--input-bg)] px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.18em]"
+                                    className={cn(
+                                        "inline-flex items-center gap-1.5 border px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.18em]",
+                                        slaStatus === 'overdue' ? "border-red-500/50 bg-red-500/20 text-red-400 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.3)]" :
+                                        slaStatus === 'warning' ? "border-amber-500/40 bg-amber-500/10 text-amber-500" :
+                                        slaStatus === 'on-track' ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500" :
+                                        "border-[var(--card-border)] bg-[var(--input-bg)] text-[var(--muted-foreground)]"
+                                    )}
                                     title="Data Prevista"
                                 >
-                                    <Clock size={11} className="text-[var(--primary)]" />
+                                    <Clock size={11} className="currentColor" />
                                     <span>
                                         {startDateLabel || '..'} - {endDateLabel || '..'}
                                     </span>

@@ -15,7 +15,7 @@ import {
     DragEndEvent,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates, SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
-import { Plus, RefreshCw, ArrowLeft, LayoutGrid, Search, Filter } from 'lucide-react';
+import { Plus, RefreshCw, ArrowLeft, LayoutGrid, Search, Filter, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { KanbanColumn } from '@/components/board/KanbanColumn';
@@ -26,6 +26,11 @@ import { createPortal } from 'react-dom';
 import { useProjectStore, Task, Column } from '@/store/kanbanStore';
 import { Input, Select, ConfigProvider, theme as antdTheme } from 'antd';
 import { useTheme } from '@/components/ui/ThemeProvider';
+
+function cn(...classes: (string | undefined | null | false)[]) {
+    return classes.filter(Boolean).join(' ');
+}
+
 import { useHydrated } from '@/hooks/useHydrated';
 import ProjectListView from './ProjectListView';
 import ProjectCalendarView from './ProjectCalendarView';
@@ -33,6 +38,7 @@ import TimelineView from '@/components/board/TimelineView';
 import { useSocketStore } from '@/store/socketStore';
 import { LiveCursors } from '@/components/board/LiveCursors';
 import { PresenceAvatars } from '@/components/board/PresenceAvatars';
+import { getSlaStatus } from '@/lib/sla';
 
 type EditingTask = Task & {
     _columnId?: string;
@@ -143,6 +149,9 @@ export default function KanbanBoardPage() {
     const completedTasks = columns.reduce((sum, column) => (
         column.isDone ? sum + (column.tasks?.length || 0) : sum
     ), 0);
+    const overdueTasks = columns.reduce((sum, column) => (
+        sum + (column.tasks?.filter(t => getSlaStatus(t.endDate) === 'overdue').length || 0)
+    ), 0);
 
     const [activeColumn, setActiveColumn] = useState<Column | null>(null);
     const [activeTask, setActiveTask] = useState<Task | null>(null);
@@ -154,7 +163,8 @@ export default function KanbanBoardPage() {
         search: '',
         priority: [] as string[],
         assignees: [] as string[],
-        tags: [] as string[]
+        tags: [] as string[],
+        onlyOverdue: false
     });
 
     // Extract unique assignees and tags
@@ -179,7 +189,7 @@ export default function KanbanBoardPage() {
 
     // Filter logic
     const filteredColumns = (() => {
-        const hasFilters = filters.search || filters.priority.length > 0 || filters.assignees.length > 0 || filters.tags.length > 0;
+        const hasFilters = filters.search || filters.priority.length > 0 || filters.assignees.length > 0 || filters.tags.length > 0 || filters.onlyOverdue;
         if (!hasFilters) return columns;
 
         const searchLower = (filters.search || '').toLowerCase();
@@ -194,14 +204,15 @@ export default function KanbanBoardPage() {
                 const matchPriority = filters.priority.length === 0 || filters.priority.includes(task.priority);
                 const matchAssignee = filters.assignees.length === 0 || (task.assignee && filters.assignees.includes(task.assignee));
                 const matchTags = filters.tags.length === 0 || (task.tags && task.tags.some(tag => filters.tags.includes(tag.name)));
+                const matchOverdue = !filters.onlyOverdue || getSlaStatus(task.endDate) === 'overdue';
 
-                return matchSearch && matchPriority && matchAssignee && matchTags;
+                return matchSearch && matchPriority && matchAssignee && matchTags && matchOverdue;
             })
         }));
     })();
 
-    const hasActiveFilters = !!(filters.search || filters.priority.length || filters.assignees.length || filters.tags.length);
-    const clearFilters = () => setFilters({ search: '', priority: [], assignees: [], tags: [] });
+    const hasActiveFilters = !!(filters.search || filters.priority.length || filters.assignees.length || filters.tags.length || filters.onlyOverdue);
+    const clearFilters = () => setFilters({ search: '', priority: [], assignees: [], tags: [], onlyOverdue: false });
 
     const columnIds = filteredColumns.map((col) => col.id);
 
@@ -533,6 +544,19 @@ export default function KanbanBoardPage() {
                                     </div>
                                 </div>
 
+                                <div className="light-page-kpi min-w-0 px-3 py-2 sm:min-w-[122px] border-l-[3px] border-l-red-500 bg-red-500/5">
+                                    <span className="text-[9px] font-mono uppercase tracking-[0.22em] text-red-500 font-bold">Vencidas</span>
+                                    <div className="mt-1.5 flex items-end justify-between gap-2">
+                                        <strong className={cn(
+                                            "text-[1.4rem] font-black tracking-[-0.08em]",
+                                            overdueTasks > 0 ? "text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)] animate-pulse" : "text-red-400/50"
+                                        )}>{overdueTasks}</strong>
+                                        <span className="rounded-full bg-red-100 px-2 py-1 text-[9px] font-mono font-semibold uppercase tracking-[0.16em] text-red-700">
+                                            atraso
+                                        </span>
+                                    </div>
+                                </div>
+
                                 <div className="col-span-full flex w-full items-center gap-2 sm:w-auto sm:self-end">
                                     <div className="light-page-kpi flex-1 px-3 py-2 sm:flex-none">
                                         <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-purple-500 font-bold">Tarefas</span>
@@ -598,6 +622,22 @@ export default function KanbanBoardPage() {
                                     options={uniqueTags.map(t => ({ label: t.name, value: t.name }))}
                                     classNames={{ popup: { root: '!rounded-none border border-[var(--input-border)] !bg-[var(--sidebar)] [&_.ant-select-item]:!rounded-none [&_.ant-select-item-option-selected]:!font-bold [&_.ant-select-item]:!font-mono [&_.ant-select-item]:!text-[var(--foreground)] [&_.ant-select-item]:!text-xs' } }}
                                 />
+
+                                <div className="flex shrink-0 items-center gap-1.5 ml-2">
+                                    <button
+                                        onClick={() => setFilters(f => ({ ...f, onlyOverdue: !f.onlyOverdue }))}
+                                        className={cn(
+                                            "flex h-8 items-center gap-1.5 border px-3 text-[10px] font-mono font-bold uppercase tracking-wider transition-all",
+                                            filters.onlyOverdue 
+                                                ? "border-red-500 bg-red-500/10 text-red-500 shadow-[0_0_12px_rgba(239,68,68,0.2)]" 
+                                                : "border-[var(--input-border)] bg-[var(--input-bg)] text-[var(--muted-foreground)] hover:border-red-500/40 hover:text-red-400"
+                                        )}
+                                        title="Filtrar penas tarefas atrasadas"
+                                    >
+                                        <AlertCircle size={12} className={filters.onlyOverdue ? "animate-pulse" : ""} />
+                                        Vencidas
+                                    </button>
+                                </div>
 
                                 {hasActiveFilters && (
                                     <button
