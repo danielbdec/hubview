@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import {
   TrendingUp,
@@ -27,6 +28,23 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+
+const TaskDistributionChart = dynamic(
+  () => import('@/components/dashboard/TaskDistributionChart').then((m) => m.TaskDistributionChart),
+  { ssr: false, loading: () => <div className="h-[260px] animate-pulse bg-[var(--card-hover)]" /> }
+);
+const PriorityBreakdownChart = dynamic(
+  () => import('@/components/dashboard/PriorityBreakdownChart').then((m) => m.PriorityBreakdownChart),
+  { ssr: false, loading: () => <div className="h-[260px] animate-pulse bg-[var(--card-hover)]" /> }
+);
+const ProjectProgressChart = dynamic(
+  () => import('@/components/dashboard/ProjectProgressChart').then((m) => m.ProjectProgressChart),
+  { ssr: false, loading: () => <div className="h-[260px] animate-pulse bg-[var(--card-hover)]" /> }
+);
+const CompletionRateChart = dynamic(
+  () => import('@/components/dashboard/CompletionRateChart').then((m) => m.CompletionRateChart),
+  { ssr: false, loading: () => <div className="h-[260px] animate-pulse bg-[var(--card-hover)]" /> }
+);
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -442,6 +460,61 @@ export default function DashboardPage() {
           </motion.div>
         ))}
       </div>
+
+      {/* Analytics Charts */}
+      <motion.div
+        initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }}
+        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+        transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <div className="mb-4 flex items-center gap-3">
+          <div className={cn(
+            'p-2 bg-[var(--column-bg)] text-[var(--primary)]',
+            isLight && 'rounded-2xl border border-white/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]'
+          )}>
+            <BarChart3 size={18} />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold uppercase text-[var(--foreground)] tracking-wider font-mono">
+              <DecodingText text="Analytics" />
+            </h3>
+            {isLight && (
+              <p className="mt-0.5 text-xs text-slate-500">Distribuição de tarefas, prioridades e progresso dos projetos.</p>
+            )}
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[
+            { title: 'Distribuição por Projeto', chart: <TaskDistributionChart projects={projects} taskCounts={taskCounts} /> },
+            { title: 'Prioridades', chart: <PriorityBreakdownChart taskCounts={taskCounts} /> },
+            { title: 'Progresso dos Projetos', chart: <ProjectProgressChart projects={projects} taskCounts={taskCounts} /> },
+            { title: 'Taxa de Conclusão', chart: <CompletionRateChart projects={projects} taskCounts={taskCounts} /> },
+          ].map((item, i) => (
+            <motion.div
+              key={item.title}
+              initial={{ opacity: 0, y: 15, filter: 'blur(8px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              transition={{ duration: 0.6, delay: 0.45 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <Card
+                variant={isLight ? 'glass' : 'outline'}
+                className={cn(
+                  'overflow-hidden',
+                  isLight && 'rounded-[24px] border-slate-200/80 bg-[linear-gradient(155deg,rgba(255,255,255,0.98),rgba(246,248,252,0.94))] shadow-[0_20px_48px_rgba(15,23,42,0.08)]'
+                )}
+              >
+                <h4 className={cn(
+                  'mb-3 text-[10px] font-mono font-bold uppercase tracking-[0.2em]',
+                  isLight ? 'text-slate-500' : 'text-[var(--muted-foreground)]'
+                )}>
+                  {item.title}
+                </h4>
+                {item.chart}
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      </motion.div>
 
       {/* Main Content Split */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
