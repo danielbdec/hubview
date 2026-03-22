@@ -71,3 +71,50 @@ Se edições estruturais demandarem um banco de dados temporal de cursores, _rec
 1. Ao criar componentes novos, mantenha o escopo Client Component `('use client')` **apenas nas folhas** (foliage). Prefira Servidor nas interfaces de top-level, embora as Views centrais do Dasboard necessitem do DOM para exibir os gráficos.
 2. O Design deverá ser guiado por `tailwindcss v4`. Jamais instancie classes de layout rígidas ou hexadecimais nativos (e.g. `bg-[#222]`), obedeça as variáveis relativas `var(--primary)`, `var(--card)` injetadas no CSS Global para suporte Automático Light/Dark Theme.
 3. Não presuma autorização direta ao Banco de Dados (Postgres ou SQL Server) a partir das Apis no arquivo `/app/api/`. Utilize sempre do ecossistema Orquestrado por **n8n.uninova.ai** via requisições formadas por Tokens Bearer padronizados.
+
+---
+
+## 🗄️ Estrutura Físico-Lógica do Banco de Dados (MSSQL)
+
+A arquitetura de dados não reside com bibliotecas ORM tradicionais (Prisma/Drizzle) no repositório Front-End, sendo o n8n o *Source of Truth* e a ponte direta para o **Microsoft SQL Server**. Os campos a seguir mapeiam os requisitos estritos (Tabelas/Views) transacionados em JSON pelos Webhooks:
+
+### 📄 Entidade `Projects` (Quadros Kanban)
+- `id` (string/UUID): Chave primária.
+- `title` (string): Nome da operação ou Hub.
+- `description` (string, opcional): Resumo de objetivos.
+- `status` (string, opcional): Enumeração para controle ativo/inativo.
+- `createdAt` / `updatedAt` (number): Timestamps numéricos de ciclo de vida.
+
+### 🗂️ Entidade `Columns` (Estágios do Pipeline)
+- `id` (string/UUID): Chave primária.
+- `projectId` (string): Chave Estrangeira (FK).
+- `title` (string): Estágio de operação (ex: Backlog, Em Andamento).
+- `color` (string, opcional): Hexadecimal semântico de UI.
+- `isDone` (boolean, opcional): Flag mandatória para arquivamento e cálculo métrico de Taxa de Conclusão no Dashboard.
+- `position` (number): Índice nativo de ordenação horizontal.
+
+### 📝 Entidade `Tasks` (Cartões Operacionais)
+- `id` (string/UUID): Chave primária.
+- `columnId` (string): Chave Estrangeira (FK).
+- `projectId` (string): Chave Estrangeira (FK) redundante para Queries planas no n8n.
+- `content` (string): Título resumido.
+- `description` (string, opcional): Descritivo profundo da operação.
+- `priority` (enum: 'low' | 'medium' | 'high'): Tag de peso operacional.
+- `assignee` (string, opcional): Operador responsável atrelado.
+- `startDate` / `endDate` (string, opcional): Range de prazos (SLA).
+- `position` (number): Índice vertical do Cartão na coluna parent.
+
+### 🏷️ Arrays Complementares (Comum via JSONB no SQLite/MSSQL)
+- `Tags`: Associativas `{ id, name, color }` gravadas no Node correspondente da Task.
+- `Checklist`: Arrays gravados hierarquicamente na Task contendo sub-etapas `{ id, text, completed }`.
+
+### 👥 Entidade `Users` (Operadores Hubview)
+- `id` (string/UUID): Chave de Sessão.
+- `name` (string): Utilizado para rendering UI e Avatares Glassmorphism Cursors do Multiplayer.
+- `email` (string): Credencial root de Token.
+- `role` (string, opcional): Escopo de autoridade no sistema.
+- `avatar` (string/URL, opcional): Blob visual.
+- `isActive` (boolean): Flag de exclusão lógica.
+
+### 🔔 Telemetria Log: `Activities` & `Notifications`
+Mapeamento passivo das alterações do sistema, rastreando quem alterou o que (History), inserção de Comments, e interfaceando relatórios de Sino (Inbox Bell) com a API de `/api/notifications/`.
