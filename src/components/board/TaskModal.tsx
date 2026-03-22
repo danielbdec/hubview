@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useTheme } from '@/components/ui/ThemeProvider';
 import { createPortal } from 'react-dom';
-import { v4 as uuidv4 } from 'uuid';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -43,7 +42,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
     const [isLoadingUsers, setIsLoadingUsers] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-    const { taskActivities, isLoadingActivities, fetchTaskActivities, addTaskActivity } = useProjectStore();
+    const { taskActivities, isLoadingActivities, fetchTaskActivities, addTaskActivity, activeProjectId, projectTags, addProjectTag } = useProjectStore();
     const activities = task ? (taskActivities[task.id] || []) : [];
     const [isGeneratingAi, setIsGeneratingAi] = useState(false);
 
@@ -306,11 +305,43 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                     </div>
                 )}
 
+                {/* Dicionário de Tags do Projeto */}
+                {activeProjectId && projectTags[activeProjectId] && projectTags[activeProjectId].length > 0 && (
+                    <div className="flex flex-col gap-2 mb-3">
+                        <label className="text-[10px] text-[var(--muted-foreground)] uppercase tracking-wider">Tags do Projeto</label>
+                        <div className="flex flex-wrap gap-2">
+                            {projectTags[activeProjectId].map(tag => {
+                                const isSelected = formData.tags?.some(t => t.id === tag.id || t.name === tag.name);
+                                return (
+                                    <button
+                                        key={tag.id}
+                                        type="button"
+                                        onClick={() => {
+                                            if (isSelected) {
+                                                setFormData({ ...formData, tags: formData.tags?.filter(t => t.id !== tag.id && t.name !== tag.name) });
+                                            } else {
+                                                setFormData({ ...formData, tags: [...(formData.tags || []), tag] });
+                                            }
+                                        }}
+                                        className={cn(
+                                            "flex items-center gap-1 border border-black/10 px-2 py-1 text-[10px] font-mono font-bold uppercase tracking-widest transition-all",
+                                            isSelected ? "ring-2 ring-offset-1 ring-[var(--foreground)]" : "opacity-60 hover:opacity-100 grayscale hover:grayscale-0"
+                                        )}
+                                        style={{ backgroundColor: tag.color, color: getReadableTextColor(tag.color) }}
+                                    >
+                                        {tag.name}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
                 <div className="flex flex-col gap-2">
-                    <label className="text-[10px] text-[var(--muted-foreground)] uppercase tracking-wider">Adicionar Nova Tag</label>
+                    <label className="text-[10px] text-[var(--muted-foreground)] uppercase tracking-wider">Criar Nova Tag</label>
                     <div className="flex gap-2 items-center p-2 border border-[var(--input-border)] bg-[var(--input-bg)] rounded-none">
                         <Input
-                            placeholder="Nome da tag..."
+                            placeholder="Nome da tag inédita..."
                             className="border-none bg-[var(--input-bg)] h-8 focus:ring-0 px-0 text-sm w-full text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] rounded-none"
                             id="new-tag-input"
                         />
@@ -318,21 +349,29 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                             {['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#a855f7', '#ec4899', '#64748b'].map(color => (
                                 <button
                                     key={color}
+                                    type="button"
                                     className="w-5 h-5 rounded-full hover:scale-110 transition-transform ring-2 ring-offset-1 ring-transparent hover:ring-[var(--foreground)]/20 focus:outline-none focus:ring-[var(--primary)]"
                                     style={{ backgroundColor: color }}
-                                    title="Adicionar com esta cor"
-                                    onClick={() => {
+                                    title="Criar com esta cor"
+                                    onClick={async () => {
                                         const input = document.getElementById('new-tag-input') as HTMLInputElement;
-                                        if (input.value.trim()) {
-                                            const newTag = {
-                                                id: uuidv4(),
-                                                name: input.value.trim(),
-                                                color: color
-                                            };
-                                            setFormData({
-                                                ...formData,
-                                                tags: [...(formData.tags || []), newTag]
-                                            });
+                                        const name = input.value.trim();
+                                        if (name && activeProjectId) {
+                                            // 1. Tenta achar se ela já existe
+                                            const existing = projectTags[activeProjectId]?.find(t => t.name.toLowerCase() === name.toLowerCase());
+                                            if (existing) {
+                                                if (!formData.tags?.some(t => t.id === existing.id || t.name === existing.name)) {
+                                                    setFormData({ ...formData, tags: [...(formData.tags || []), existing] });
+                                                }
+                                                input.value = '';
+                                                return;
+                                            }
+
+                                            // 2. Cria no backend e adiciona à tarefa
+                                            const createdTag = await addProjectTag(activeProjectId, name, color);
+                                            if (createdTag) {
+                                                setFormData({ ...formData, tags: [...(formData.tags || []), createdTag] });
+                                            }
                                             input.value = '';
                                             input.focus();
                                         }

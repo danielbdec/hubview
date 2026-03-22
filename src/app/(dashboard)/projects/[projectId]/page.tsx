@@ -26,6 +26,7 @@ import { createPortal } from 'react-dom';
 import { useProjectStore, Task, Column } from '@/store/kanbanStore';
 import { Input, Select, ConfigProvider, theme as antdTheme } from 'antd';
 import { useTheme } from '@/components/ui/ThemeProvider';
+import { getReadableTextColor } from '@/lib/color';
 
 function cn(...classes: (string | undefined | null | false)[]) {
     return classes.filter(Boolean).join(' ');
@@ -40,6 +41,8 @@ import { LiveCursors } from '@/components/board/LiveCursors';
 import { PresenceAvatars } from '@/components/board/PresenceAvatars';
 import { getSlaStatus } from '@/lib/sla';
 import { ProjectMembersModal } from '@/components/board/ProjectMembersModal';
+import { ProjectTagsModal } from '@/components/board/ProjectTagsModal';
+import { Tags } from 'lucide-react';
 
 type EditingTask = Task & {
     _columnId?: string;
@@ -67,6 +70,7 @@ export default function KanbanBoardPage() {
         isLoadingBoard,
         activeView,
         canEditProject,
+        projectTags,
     } = useProjectStore();
 
     const canEdit = canEditProject(projectId);
@@ -162,6 +166,7 @@ export default function KanbanBoardPage() {
     const [editingTask, setEditingTask] = useState<EditingTask | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
+    const [isTagsModalOpen, setIsTagsModalOpen] = useState(false);
     const [celebrationBurst, setCelebrationBurst] = useState<CompletionBurst | null>(null);
 
     const [filters, setFilters] = useState({
@@ -589,6 +594,19 @@ export default function KanbanBoardPage() {
                                         <Users size={14} />
                                         <span className="hidden sm:inline">Acessos</span>
                                     </Button>
+                                    
+                                    {/* Tags Manager Button */}
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setIsTagsModalOpen(true)}
+                                        title="Gerenciar Dicionário de Tags"
+                                        className="h-[34px] rounded-full border border-purple-500/40 bg-purple-500/10 px-3.5 gap-1.5 text-purple-400 font-mono text-[9px] uppercase tracking-widest hover:border-purple-400/60 hover:bg-purple-500/20 hover:text-purple-300 hover:shadow-[0_0_12px_rgba(168,85,247,0.25)] transition-all"
+                                    >
+                                        <Tags size={14} />
+                                        <span className="hidden sm:inline">Tags</span>
+                                    </Button>
+
                                     <Button variant="ghost" size="sm" onClick={handleRefresh} title="Atualizar Board" className="light-page-kpi h-[34px] rounded-full border border-transparent px-3 text-[var(--muted-foreground)] hover:border-[var(--card-border)] hover:bg-[var(--card-hover)] hover:text-[var(--foreground)]">
                                         <RefreshCw size={15} className={isLoadingBoard ? 'animate-spin text-[var(--primary)]' : ''} />
                                     </Button>
@@ -679,6 +697,35 @@ export default function KanbanBoardPage() {
                     </div>
                 </ConfigProvider>
 
+                {/* Tags Quick Filters */}
+                {projectTags[projectId] && projectTags[projectId].length > 0 && (
+                    <div className="flex flex-wrap items-center gap-2 px-3 mb-4">
+                        <span className="text-[10px] text-[var(--muted-foreground)] uppercase tracking-wider font-mono mr-1">Filtro Rápido:</span>
+                        {projectTags[projectId].map(tag => {
+                            const isSelected = filters.tags.includes(tag.name);
+                            return (
+                                <button
+                                    key={tag.id}
+                                    onClick={() => {
+                                        setFilters(f => ({
+                                            ...f,
+                                            tags: isSelected 
+                                                ? f.tags.filter(t => t !== tag.name)
+                                                : [...f.tags, tag.name]
+                                        }))
+                                    }}
+                                    className={cn(
+                                        "flex items-center gap-1 border border-black/10 px-2.5 py-1 z-10 text-[10px] font-mono font-bold uppercase tracking-widest transition-all",
+                                        isSelected ? "ring-2 ring-offset-1 ring-[var(--foreground)] grayscale-0 opacity-100 scale-105" : "opacity-60 hover:opacity-100 grayscale hover:grayscale-0 hover:scale-105"
+                                    )}
+                                    style={{ backgroundColor: tag.color, color: getReadableTextColor(tag.color) }}
+                                >
+                                    {tag.name}
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
 
                 {isLoadingBoard ? (
                     <LoadingState
@@ -745,6 +792,12 @@ export default function KanbanBoardPage() {
                 projectId={projectId}
                 isOpen={isMembersModalOpen}
                 onClose={() => setIsMembersModalOpen(false)}
+            />
+
+            <ProjectTagsModal
+                projectId={projectId}
+                isOpen={isTagsModalOpen}
+                onClose={() => setIsTagsModalOpen(false)}
             />
 
             {

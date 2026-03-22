@@ -231,7 +231,6 @@ export function KanbanCard({ task, isOverlay, columnId, isDoneColumn, onEdit, on
                     )}
 
                     <div className="mt-auto flex flex-wrap items-end justify-between gap-2 border-t border-[var(--card-border)]/60 pt-3 text-[10px] text-[var(--muted-foreground)]">
-//
                         <div className="flex flex-wrap items-center gap-2">
                             {hasTimeline && (
                                 <div

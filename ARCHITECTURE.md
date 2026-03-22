@@ -149,8 +149,16 @@ A arquitetura de dados não reside com bibliotecas ORM tradicionais (Prisma/Driz
 - `startDate` / `endDate` (string, opcional): Range de prazos (SLA).
 - `position` (number): Índice vertical do Cartão na coluna parent.
 
-### 🏷️ Arrays Complementares (Comum via JSONB no SQLite/MSSQL)
-- `Tags`: Associativas `{ id, name, color }` gravadas no Node correspondente da Task.
+### 🏷️ Entidade `Project_Tags` (Dicionário Global de Tags)
+Essa entidade centraliza as etiquetas do projeto para evitar duplicação ou inconsistência visual.
+- `id` (string/UUID): Chave primária.
+- `projectId` (string): Chave Estrangeira (FK).
+- `name` (string): Nome da etiqueta (ex: "Urgente", "Bug").
+- `color` (string): Hexadecimal da cor.
+- **Workflow n8n**: Quatro rotas exclusivas cuidam do CRUD (`hubview-project-tags-list`, `create`, `update`, `delete`), repassando para o Next.js via `/api/tags/*`. Mutações locais acionam UI Otimista pelo `kanbanStore.ts`.
+- **Note**: Nas Tasks, as tags ainda são embrulhadas como Objetos Completos (`{ id, name, color }`) em Arrays JSON localmente (desnormalizadas para velocidade de Query UI), mas a Fonte da Verdade na Criação/Modificação do Dicionário reside na tabela `hubview_project_tags`.
+
+### 📋 Arrays Complementares (JSONB)
 - `Checklist`: Arrays gravados hierarquicamente na Task contendo sub-etapas `{ id, text, completed }`.
 
 ### 👥 Entidade `Users` (Operadores Hubview)

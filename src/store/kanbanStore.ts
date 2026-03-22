@@ -172,12 +172,20 @@ interface ProjectState {
     getProjectRole: (projectId: string) => ProjectRole | null;
     canEditProject: (projectId: string) => boolean;
     canManageMembers: (projectId: string) => boolean;
+
+    // Tags
+    projectTags: Record<string, Tag[]>;
+    fetchProjectTags: (projectId: string) => Promise<void>;
+    addProjectTag: (projectId: string, name: string, color: string) => Promise<Tag | null>;
+    updateProjectTag: (projectId: string, tagId: string, name: string, color: string) => Promise<void>;
+    deleteProjectTag: (projectId: string, tagId: string) => Promise<void>;
 }
 
 export const useProjectStore = create<ProjectState>((set, get) => ({
     projects: [],
     activeProjectId: null,
     taskCounts: {},
+    projectTags: {},
     isLoadingProjects: false,
     isLoadingBoard: false,
     currentUser: null,
@@ -204,6 +212,106 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             }
         } catch (error) {
             console.error('Failed to parse user from localStorage', error);
+        }
+    },
+
+    fetchProjectTags: async (projectId: string) => {
+        try {
+            const data = await api.get<Tag[]>(`/api/tags/list?projectId=${projectId}`);
+            set((state) => ({
+                projectTags: {
+                    ...state.projectTags,
+                    [projectId]: Array.isArray(data) ? data : []
+                }
+            }));
+        } catch (error) {
+            console.error('Error fetching project tags:', error);
+        }
+    },
+
+    addProjectTag: async (projectId: string, name: string, color: string) => {
+        // Optimistic update
+        const tempId = 'temp-' + Date.now();
+        const optimisticTag: Tag = { id: tempId, name, color };
+        
+        set((state) => ({
+            projectTags: {
+                ...state.projectTags,
+                [projectId]: [...(state.projectTags[projectId] || []), optimisticTag]
+            }
+        }));
+
+        try {
+            const data = await api.post<Tag>('/api/tags/create', { projectId, name, color });
+            
+            // Replace temp tag with real tag returned from DB
+            set((state) => ({
+                projectTags: {
+                    ...state.projectTags,
+                    [projectId]: (state.projectTags[projectId] || []).map(t => 
+                        t.id === tempId ? { ...t, id: data.id } : t
+                    )
+                }
+            }));
+            return data;
+        } catch (error) {
+            console.error('Error creating project tag:', error);
+            // Revert optimistic update on failure
+            set((state) => ({
+                projectTags: {
+                    ...state.projectTags,
+                    [projectId]: (state.projectTags[projectId] || []).filter(t => t.id !== tempId)
+                }
+            }));
+            return null;
+        }
+    },
+
+    updateProjectTag: async (projectId: string, tagId: string, name: string, color: string) => {
+        const previousTags = get().projectTags[projectId] || [];
+        // Optimistic update
+        set((state) => ({
+            projectTags: {
+                ...state.projectTags,
+                [projectId]: previousTags.map(t => t.id === tagId ? { ...t, name, color } : t)
+            }
+        }));
+
+        try {
+            await api.put(`/api/tags/update`, { id: tagId, projectId, name, color });
+        } catch (error) {
+            console.error('Error updating project tag:', error);
+            // Revert
+            set((state) => ({
+                projectTags: {
+                    ...state.projectTags,
+                    [projectId]: previousTags
+                }
+            }));
+        }
+    },
+
+    deleteProjectTag: async (projectId: string, tagId: string) => {
+        const previousTags = get().projectTags[projectId] || [];
+        // Optimistic update
+        set((state) => ({
+            projectTags: {
+                ...state.projectTags,
+                [projectId]: previousTags.filter(t => t.id !== tagId)
+            }
+        }));
+
+        try {
+            await api.delete(`/api/tags/delete`, { id: tagId, projectId });
+        } catch (error) {
+            console.error('Error deleting project tag:', error);
+            // Revert
+            set((state) => ({
+                projectTags: {
+                    ...state.projectTags,
+                    [projectId]: previousTags
+                }
+            }));
         }
     },
 
@@ -474,6 +582,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     fetchBoardData: async (projectId) => {
         if (!projectId) return;
         set({ isLoadingBoard: true });
+
+        // Parallel hook to populate the project tags dictionary
+        get().fetchProjectTags(projectId);
 
         try {
             // Parallel fetch for columns and rules
