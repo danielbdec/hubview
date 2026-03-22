@@ -179,7 +179,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
     };
 
     const detalhesView = (
-        <div className="space-y-6 pt-2 flex-1 overflow-y-auto px-4 sm:px-6 pb-6 custom-scrollbar">
+        <div className="space-y-6 pt-2 px-4 sm:px-6 pb-6">
             {/* Título */}
             <div className="space-y-2">
                 <label className="text-xs font-mono text-[var(--primary)] uppercase tracking-wider">Título</label>
@@ -362,15 +362,15 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
     );
 
     return createPortal(
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[color:var(--overlay-bg)] p-0 sm:p-4 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[color:var(--overlay-bg)] p-0 sm:p-4 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
             <div className={cn(
-                "relative flex max-h-[90vh] overflow-hidden rounded-none border border-[var(--card-border)] bg-[var(--sidebar)] shadow-[var(--surface-shadow)] animate-in zoom-in-95 duration-200 transition-all duration-300 ease-out",
-                "w-full h-full sm:w-auto sm:h-auto sm:max-h-[90vh] sm:rounded-none",
-                isSidebarOpen ? "sm:w-[1048px] sm:max-w-[95vw]" : "sm:w-[648px] sm:max-w-full"
+                "relative flex overflow-hidden border border-[var(--card-border)] bg-[var(--sidebar)] shadow-[var(--surface-shadow)] animate-in slide-in-from-bottom-3 sm:zoom-in-95 duration-200 transition-all ease-out",
+                "w-full h-[95dvh] sm:h-auto sm:max-h-[88vh] rounded-t-xl sm:rounded-xl",
+                isSidebarOpen ? "sm:w-[90vw] md:w-[80vw] lg:w-[65vw] xl:w-[55vw]" : "sm:w-[88vw] md:w-[65vw] lg:w-[48vw] xl:w-[40vw]"
             )} onClick={(e) => e.stopPropagation()}>
 
                 {/* Main Content Area */}
-                <div className="flex flex-col w-full sm:w-[600px] shrink-0">
+                <div className="flex flex-col w-full shrink-0">
                     {/* Header */}
                     <div className="flex items-start justify-between p-6 border-b border-[var(--sidebar-border)] bg-[var(--sidebar)] shrink-0">
                         <div className="flex flex-col min-w-0 flex-1 mr-4">
@@ -387,7 +387,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                     </div>
 
                     {/* Body */}
-                    <div className="flex-1 bg-[var(--background)]">
+                    <div className="flex-1 overflow-y-auto min-h-0 bg-[var(--background)] custom-scrollbar">
                         {detalhesView}
                     </div>
 

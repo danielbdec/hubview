@@ -99,15 +99,12 @@ O HubView já é uma plataforma robusta de gestão de projetos com:
 
 ## 🟡 Funcionalidades Propostas (Prioridade Média)
 
-### 6. 🔐 Permissões por Projeto (RBAC Granular)
+### ✅ 6. 🔐 Permissões por Projeto (RBAC Granular)
 
-**O que falta:** Roles são globais. Um "Visualizador" não pode ser "Operador" em um projeto específico.
-
-**Proposta:**
-- **Membros por Projeto** com roles específicas
-- **Visibilidade de Projeto** (público para todos vs privado para membros)
-- Apenas membros do projeto veem suas tasks e recebem notificações
-
+**Status:** Concluído! 🎉
+- **Membros por Projeto** com roles específicas implementado via MSSQL e webhooks n8n (Uninova).
+- **Visibilidade de Projeto** (Público vs Privado) funcionando com regra de bypass global para usuários Admin.
+- APIs do backend Next.js protegidas e integradas ao Kanban local de forma otimista.
 ---
 
 ### 7. 📋 Templates de Projeto / Colunas

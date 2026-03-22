@@ -34,6 +34,18 @@ export type Column = {
     position?: number; // Para ordenação
 };
 
+export type ProjectRole = 'owner' | 'editor' | 'viewer';
+
+export type ProjectMember = {
+    id: string;
+    userId: string;
+    name: string;
+    email: string;
+    avatar?: string | null;
+    role: ProjectRole;
+    addedAt: string;
+};
+
 export type Project = {
     id: string;
     title: string;
@@ -43,6 +55,8 @@ export type Project = {
     createdAt: number;
     updatedAt: number;
     syncStatus?: 'syncing' | 'synced' | 'error';
+    visibility?: 'public' | 'private';
+    members?: ProjectMember[];
 };
 
 export type Activity = {
@@ -148,6 +162,16 @@ interface ProjectState {
     // View State
     activeView: 'kanban' | 'list' | 'calendar' | 'timeline';
     setActiveView: (view: 'kanban' | 'list' | 'calendar' | 'timeline') => void;
+
+    // RBAC — Project Members
+    fetchProjectMembers: (projectId: string) => Promise<void>;
+    addProjectMember: (projectId: string, userId: string, role: ProjectRole) => Promise<void>;
+    removeProjectMember: (projectId: string, userId: string) => Promise<void>;
+    updateMemberRole: (projectId: string, userId: string, role: ProjectRole) => Promise<void>;
+    updateProjectVisibility: (projectId: string, visibility: 'public' | 'private') => Promise<void>;
+    getProjectRole: (projectId: string) => ProjectRole | null;
+    canEditProject: (projectId: string) => boolean;
+    canManageMembers: (projectId: string) => boolean;
 }
 
 export const useProjectStore = create<ProjectState>((set, get) => ({
@@ -286,16 +310,30 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
             const loadedProjects: Project[] = data.map((p: any) => ({
                 id: p.id,
-                title: p.title,
-                description: p.description,
-                status: p.status || 'active',
+                title: (p.title && p.title !== 'undefined') ? p.title : (p.nome || p.titulo || 'Projeto sem nome'),
+                description: (p.description && p.description !== 'undefined') ? p.description : (p.descricao || ''),
+                status: (p.status && p.status !== 'undefined') ? p.status : 'active',
                 createdAt: new Date(p.createdAt).getTime(),
                 updatedAt: new Date(p.updatedAt).getTime(),
                 columns: parseColumns(p.columns),
-                syncStatus: 'synced'
+                syncStatus: 'synced',
+                visibility: (p.visibility as 'public' | 'private') || 'public',
+                members: Array.isArray(p.members) ? p.members : undefined,
             }));
 
-            set({ projects: loadedProjects });
+            // RBAC: filter out private projects the current user is not a member of
+            const { currentUser } = get();
+            const visibleProjects = loadedProjects.filter(p => {
+                if (p.visibility !== 'private') return true; // public = visible to all
+                if (!currentUser) return false;
+                // Check global admin override
+                if (currentUser.role?.toLowerCase().includes('admin')) return true;
+                // Check membership
+                if (!p.members || p.members.length === 0) return true; // no members list yet = show
+                return p.members.some(m => m.userId === currentUser.id);
+            });
+
+            set({ projects: visibleProjects });
 
             // Set active project if none selected and projects exist
             if (!get().activeProjectId && loadedProjects.length > 0) {
@@ -344,7 +382,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             const result = await api.post<any>('/api/projects/create', {
                 title,
                 description,
-                createdBy: currentUser?.name || 'Unknown User'
+                createdBy: currentUser?.name || 'Unknown User',
+                createdById: currentUser?.id,
+                visibility: 'public'
             });
 
             const realId = result.id || result[0]?.id; // Adjust based on n8n response
@@ -1269,5 +1309,135 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         } catch (error) {
             console.error('Failed to save activity:', error);
         }
-    }
+    },
+
+    // ── RBAC: Project Members ─────────────────────────────────────────────────
+
+    fetchProjectMembers: async (projectId: string) => {
+        try {
+            const data = await api.post<any>('/api/projects/members/list', { projectId });
+            const members: ProjectMember[] = Array.isArray(data) ? data : (data?.members || []);
+
+            set((state) => ({
+                projects: state.projects.map(p =>
+                    p.id === projectId ? { ...p, members } : p
+                )
+            }));
+        } catch (error) {
+            console.error('Error fetching project members:', error);
+        }
+    },
+
+    addProjectMember: async (projectId: string, userId: string, role: ProjectRole) => {
+        try {
+            await api.post('/api/projects/members/add', { projectId, userId, role });
+            // Refresh members
+            await get().fetchProjectMembers(projectId);
+        } catch (error) {
+            console.error('Error adding project member:', error);
+            throw error;
+        }
+    },
+
+    removeProjectMember: async (projectId: string, userId: string) => {
+        try {
+            await api.post('/api/projects/members/remove', { projectId, userId });
+            // Optimistic: remove member from local state
+            set((state) => ({
+                projects: state.projects.map(p =>
+                    p.id === projectId
+                        ? { ...p, members: (p.members || []).filter(m => m.userId !== userId) }
+                        : p
+                )
+            }));
+        } catch (error) {
+            console.error('Error removing project member:', error);
+            throw error;
+        }
+    },
+
+    updateMemberRole: async (projectId: string, userId: string, role: ProjectRole) => {
+        try {
+            await api.post('/api/projects/members/update-role', { projectId, userId, role });
+            // Optimistic: update member role locally
+            set((state) => ({
+                projects: state.projects.map(p =>
+                    p.id === projectId
+                        ? {
+                            ...p,
+                            members: (p.members || []).map(m =>
+                                m.userId === userId ? { ...m, role } : m
+                            )
+                        }
+                        : p
+                )
+            }));
+        } catch (error) {
+            console.error('Error updating member role:', error);
+            throw error;
+        }
+    },
+
+    updateProjectVisibility: async (projectId: string, visibility: 'public' | 'private') => {
+        // Optimistic update
+        set((state) => ({
+            projects: state.projects.map(p =>
+                p.id === projectId ? { ...p, visibility, syncStatus: 'syncing' } : p
+            )
+        }));
+
+        try {
+            await api.post('/api/projects/update', { id: projectId, visibility });
+            set((state) => ({
+                projects: state.projects.map(p =>
+                    p.id === projectId ? { ...p, syncStatus: 'synced' } : p
+                )
+            }));
+        } catch (error) {
+            console.error('Error updating project visibility:', error);
+            // Revert
+            set((state) => ({
+                projects: state.projects.map(p =>
+                    p.id === projectId
+                        ? { ...p, visibility: visibility === 'public' ? 'private' : 'public', syncStatus: 'error' }
+                        : p
+                )
+            }));
+            throw error;
+        }
+    },
+
+    getProjectRole: (projectId: string): ProjectRole | null => {
+        const { projects, currentUser } = get();
+        if (!currentUser) return null;
+
+        // Global admin = owner everywhere
+        if (currentUser.role?.toLowerCase().includes('admin')) return 'owner';
+
+        const project = projects.find(p => p.id === projectId);
+        if (!project) return null;
+
+        // Public project with no members = editor for all
+        if (project.visibility !== 'private' && (!project.members || project.members.length === 0)) {
+            return 'editor';
+        }
+
+        const membership = project.members?.find(m => m.userId === currentUser.id);
+        if (membership) return membership.role;
+
+        // Public project, not a member — can still view/edit
+        if (project.visibility !== 'private') return 'editor';
+
+        return null;
+    },
+
+    canEditProject: (projectId: string): boolean => {
+        const role = get().getProjectRole(projectId);
+        return role === 'owner' || role === 'editor';
+    },
+
+    canManageMembers: (projectId: string): boolean => {
+        const role = get().getProjectRole(projectId);
+        return role === 'owner';
+    },
 }));

@@ -25,7 +25,8 @@ export async function POST() {
             throw new Error(`n8n retornou status: ${response.status}`);
         }
 
-        const data = await response.json();
+        const text = await response.text();
+        const data = text ? JSON.parse(text) : [];
         return NextResponse.json(data);
     } catch (error) {
         console.error('Erro ao buscar projetos:', error);

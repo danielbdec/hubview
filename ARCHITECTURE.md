@@ -52,8 +52,9 @@ Uma das maiores forças do Hubview é a **ausência de Loadings** interativos e 
 
 A camada `src/app/api/...` age como um Bff de roteamento seguro para não expor credenciais (n8n Webhook Keys) e bancos ao browser.
 1. `GET /api/projects`: Carrega repositórios macro de quadros, validando com a autenticação local.
-2. `GET /api/tasks/[projectId]`: Puxa todas as tarefas aninhadas em hierarquia do projeto.
-3. `POST /api/auth/login`: Entrega as credenciais primárias do usuário, gera o token JWT localmente, engaveta o raw data e injeta um Cookie `hubview_user` nativo.
+2. `POST /api/projects/members/*`: Microsserviços de RBAC (Role-Based Access Control) que roteiam requisições de listar (`/list`), adicionar (`/add`), remover (`/remove`) e alterar cargos (`/update-role`) para os recintos do banco MSSQL via n8n.
+3. `GET /api/tasks/[projectId]`: Puxa todas as tarefas aninhadas em hierarquia do projeto.
+4. `POST /api/auth/login`: Entrega as credenciais primárias do usuário, gera o token JWT localmente, engaveta o raw data e injeta um Cookie `hubview_user` nativo.
 
 ---
 
@@ -119,7 +120,15 @@ A arquitetura de dados não reside com bibliotecas ORM tradicionais (Prisma/Driz
 - `title` (string): Nome da operação ou Hub.
 - `description` (string, opcional): Resumo de objetivos.
 - `status` (string, opcional): Enumeração para controle ativo/inativo.
+- `visibility` (string, opcional): Controle de acesso público (`public`) ou privado (`private`) gerido pelo RBAC.
 - `createdAt` / `updatedAt` (number): Timestamps numéricos de ciclo de vida.
+
+### 🔐 Entidade `Project_Members` (RBAC)
+- `id` (string/UUID): Chave primária de acesso.
+- `projectId` (string): Chave Estrangeira (FK).
+- `userId` (string): Chave Estrangeira que correlaciona à entidade `Users`.
+- `role` (enum: 'owner' | 'editor' | 'viewer'): Escopo de autoridade isolado dentro de um projeto fechado.
+- `addedAt` (string/DATETIME): Timestamp de integração.
 
 ### 🗂️ Entidade `Columns` (Estágios do Pipeline)
 - `id` (string/UUID): Chave primária.

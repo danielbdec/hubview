@@ -15,7 +15,7 @@ import {
     DragEndEvent,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates, SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
-import { Plus, RefreshCw, ArrowLeft, LayoutGrid, Search, Filter, AlertCircle } from 'lucide-react';
+import { Plus, RefreshCw, ArrowLeft, LayoutGrid, Search, Filter, AlertCircle, Users, Lock, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { KanbanColumn } from '@/components/board/KanbanColumn';
@@ -39,6 +39,7 @@ import { useSocketStore } from '@/store/socketStore';
 import { LiveCursors } from '@/components/board/LiveCursors';
 import { PresenceAvatars } from '@/components/board/PresenceAvatars';
 import { getSlaStatus } from '@/lib/sla';
+import { ProjectMembersModal } from '@/components/board/ProjectMembersModal';
 
 type EditingTask = Task & {
     _columnId?: string;
@@ -64,8 +65,11 @@ export default function KanbanBoardPage() {
         fetchBoardData,
         isLoadingProjects,
         isLoadingBoard,
-        activeView
+        activeView,
+        canEditProject,
     } = useProjectStore();
+
+    const canEdit = canEditProject(projectId);
 
     const { connect: connectSocket, disconnect: disconnectSocket, sendCursorMove } = useSocketStore();
 
@@ -157,6 +161,7 @@ export default function KanbanBoardPage() {
     const [activeTask, setActiveTask] = useState<Task | null>(null);
     const [editingTask, setEditingTask] = useState<EditingTask | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
     const [celebrationBurst, setCelebrationBurst] = useState<CompletionBurst | null>(null);
 
     const [filters, setFilters] = useState({
@@ -508,9 +513,20 @@ export default function KanbanBoardPage() {
                                         <LayoutGrid size={10} />
                                         Flow Control
                                     </span>
-                                    <h1 className="mt-1.5 max-w-[520px] truncate text-[1.05rem] font-black uppercase leading-none tracking-tight text-[var(--primary)] sm:text-[1.15rem]" style={{ textShadow: '0 0 18px rgba(169,239,47,0.35)' }}>
-                                        {activeProject.title}
-                                    </h1>
+                                    <div className="mt-1.5 flex items-center gap-2">
+                                        <h1 className="max-w-[520px] truncate text-[1.05rem] font-black uppercase leading-none tracking-tight text-[var(--primary)] sm:text-[1.15rem]" style={{ textShadow: '0 0 18px rgba(169,239,47,0.35)' }}>
+                                            {activeProject.title}
+                                        </h1>
+                                        {/* Visibility Badge */}
+                                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-[8px] font-mono font-bold uppercase tracking-wider border ${
+                                            activeProject.visibility === 'private'
+                                                ? 'border-amber-500/30 bg-amber-500/10 text-amber-400'
+                                                : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                                        }`}>
+                                            {activeProject.visibility === 'private' ? <Lock size={8} /> : <Globe size={8} />}
+                                            {activeProject.visibility === 'private' ? 'Privado' : 'Público'}
+                                        </span>
+                                    </div>
                                     <p className="mt-1 hidden max-w-xl text-[11px] leading-4 text-[var(--muted-foreground)] lg:block">
                                         Visualize paineis, acompanhe gargalos e opere o board com filtros rápidos.
                                     </p>
@@ -535,7 +551,7 @@ export default function KanbanBoardPage() {
                                 </div>
 
                                 <div className="light-page-kpi light-page-kpi--contrast min-w-0 px-3 py-2 sm:min-w-[122px]">
-                                    <span className="text-[9px] font-mono uppercase tracking-[0.22em] text-emerald-500 font-bold">Conclusão</span>
+                                    <span className="text-[9px] font-mono uppercase tracking-[0.22em] text-emerald-500 font-bold">Concluídas</span>
                                     <div className="mt-1.5 flex items-end justify-between gap-2">
                                         <strong className="text-[1.4rem] font-black tracking-[-0.08em] text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]">{completedTasks}</strong>
                                         <span className="light-dark-chip px-2 py-1 text-[9px] font-mono font-semibold uppercase tracking-[0.16em]">
@@ -562,10 +578,21 @@ export default function KanbanBoardPage() {
                                         <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-purple-500 font-bold">Tarefas</span>
                                         <strong className="mt-1 block text-[1.15rem] font-black tracking-[-0.06em] text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.4)]">{totalTasks}</strong>
                                     </div>
+                                    {/* Members Button */}
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setIsMembersModalOpen(true)}
+                                        title="Gerenciar Membros"
+                                        className="h-[34px] rounded-full border border-cyan-500/40 bg-cyan-500/10 px-3.5 gap-1.5 text-cyan-400 font-mono text-[9px] uppercase tracking-widest hover:border-cyan-400/60 hover:bg-cyan-500/20 hover:text-cyan-300 hover:shadow-[0_0_12px_rgba(6,182,212,0.25)] transition-all"
+                                    >
+                                        <Users size={14} />
+                                        <span className="hidden sm:inline">Acessos</span>
+                                    </Button>
                                     <Button variant="ghost" size="sm" onClick={handleRefresh} title="Atualizar Board" className="light-page-kpi h-[34px] rounded-full border border-transparent px-3 text-[var(--muted-foreground)] hover:border-[var(--card-border)] hover:bg-[var(--card-hover)] hover:text-[var(--foreground)]">
                                         <RefreshCw size={15} className={isLoadingBoard ? 'animate-spin text-[var(--primary)]' : ''} />
                                     </Button>
-                                    <Button variant="primary" size="sm" onClick={addColumn} disabled={isLoadingBoard || activeView !== 'kanban'} className="h-[34px] min-w-[122px] flex-1 rounded-full font-mono text-[9px] uppercase tracking-[0.22em] sm:flex-none">
+                                    <Button variant="primary" size="sm" onClick={addColumn} disabled={isLoadingBoard || activeView !== 'kanban' || !canEdit} className="h-[34px] min-w-[122px] flex-1 rounded-full font-mono text-[9px] uppercase tracking-[0.22em] sm:flex-none">
                                         <Plus size={15} className="mr-1.5" /> Novo Painel
                                     </Button>
                                 </div>
@@ -713,6 +740,12 @@ export default function KanbanBoardPage() {
             />
 
             <CompletionConfetti burst={celebrationBurst} />
+
+            <ProjectMembersModal
+                projectId={projectId}
+                isOpen={isMembersModalOpen}
+                onClose={() => setIsMembersModalOpen(false)}
+            />
 
             {
                 createPortal(
