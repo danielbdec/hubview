@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     LayoutDashboard,
     KanbanSquare,
+    ListChecks,
     Settings,
     Users,
     Pin,
@@ -24,6 +25,7 @@ function cn(...inputs: ClassValue[]) {
 
 const menuItems = [
     { icon: LayoutDashboard, label: 'DASHBOARD', href: '/' },
+    { icon: ListChecks, label: 'MINHAS TAREFAS', href: '/my-tasks' },
     { icon: KanbanSquare, label: 'PROJETOS', href: '/projects' },
     { icon: Users, label: 'USUÁRIOS', href: '/users' },
     { icon: Settings, label: 'CONFIGURAÇÕES', href: '/settings' },
