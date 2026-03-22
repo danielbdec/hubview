@@ -96,7 +96,8 @@ export default function DashboardPage() {
     connectSocket('dashboard', {
         id: user.id || `user_${Math.floor(Math.random() * 99999)}`,
         name: user.name || user.email?.split('@')[0] || 'Operador',
-        color: '#'+Math.floor(Math.random()*16777215).toString(16).padStart(6, '0') // No color in user yet so randomize
+        color: '#'+Math.floor(Math.random()*16777215).toString(16).padStart(6, '0'),
+        avatar: user.avatar || null
     });
 
     return () => {

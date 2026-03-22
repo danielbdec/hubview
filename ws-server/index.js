@@ -38,7 +38,7 @@ io.on('connection', (socket) => {
         });
 
         socket.join(roomId);
-        console.log(`[Room ${roomId}] User joined: ${user.name}`);
+        console.log(`[Room ${roomId}] User joined: ${user.name} | avatar: ${user.avatar ? 'YES (' + user.avatar.length + ' chars)' : 'NONE'}`);
 
         if (!rooms[roomId]) {
             rooms[roomId] = {};
@@ -49,6 +49,7 @@ io.on('connection', (socket) => {
             userId: user.id || socket.id,
             name: user.name || 'Anonymous',
             color: user.color || '#'+Math.floor(Math.random()*16777215).toString(16).padStart(6, '0'),
+            avatar: user.avatar || null,
             cursor: null,
             currentRoom: roomId
         };

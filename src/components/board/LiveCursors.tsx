@@ -5,13 +5,18 @@ import { motion } from 'framer-motion';
 
 export function LiveCursors() {
     const onlineUsers = useSocketStore(state => state.onlineUsers);
-    const socket = useSocketStore(state => state.socket);
+    const currentUser = useSocketStore(state => state.currentUser);
 
-    const otherUsers = onlineUsers.filter(user => user.id !== socket?.id);
+    // 1. Filter out all sockets that belong to the current user (e.g. from their other tabs)
+    const trulyOtherUsers = onlineUsers.filter(user => user.name !== currentUser?.name);
+
+    // 2. Deduplicate other users so each person only has 1 cursor, even if they have multiple tabs open
+    //    Since cursor updates are pushed via React state, taking the last/first in the Map works fine.
+    const uniqueOtherUsers = Array.from(new Map(trulyOtherUsers.map(u => [u.name, u])).values());
 
     return (
         <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden">
-            {otherUsers.map((user) => {
+            {uniqueOtherUsers.map((user) => {
                 if (!user.cursor) return null;
 
                 return (

@@ -91,7 +91,8 @@ export default function KanbanBoardPage() {
         let currentUser = {
             id: `user_${Math.floor(Math.random() * 99999)}`,
             name: 'Usuário',
-            color: '#'+Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')
+            color: '#'+Math.floor(Math.random()*16777215).toString(16).padStart(6, '0'),
+            avatar: null as string | null
         };
 
         try {
@@ -101,7 +102,8 @@ export default function KanbanBoardPage() {
                 currentUser = {
                     id: parsed.id || currentUser.id,
                     name: parsed.name || parsed.email?.split('@')[0] || 'Usuário',
-                    color: parsed.color || currentUser.color
+                    color: parsed.color || currentUser.color,
+                    avatar: parsed.avatar || null
                 };
             }
         } catch (e) {
@@ -482,30 +484,32 @@ export default function KanbanBoardPage() {
                 >
                     <div className="mb-5 flex flex-col gap-3">
                         {/* Top Header */}
-                        <div className="light-page-hero flex flex-col gap-2.5 px-3 py-3 sm:px-3.5 xl:flex-row xl:items-center xl:justify-between">
-                            <div className="flex min-w-0 items-start gap-3">
+                        <div className="light-page-hero flex flex-col gap-2.5 px-3 py-3 sm:px-3.5 xl:flex-row xl:items-center xl:justify-between border-b border-[var(--primary)]/15">
+                            <div className="flex min-w-0 items-start gap-4">
                                 <button
                                     onClick={() => router.push('/projects')}
-                                    className="group/back mt-0.5 flex h-8 w-8 items-center justify-center rounded-full border border-[var(--card-border)] bg-[var(--card)] text-[var(--muted-foreground)] transition-all duration-300 hover:border-[var(--primary)]/50 hover:bg-[var(--primary)]/10 hover:text-[var(--primary)] hover:shadow-[0_0_16px_rgba(169,239,47,0.15)] hover:-translate-x-0.5 active:scale-90"
+                                    className="group/back mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--card-border)] bg-[var(--card)] text-[var(--muted-foreground)] transition-all duration-300 hover:border-[var(--primary)]/50 hover:bg-[var(--primary)]/10 hover:text-[var(--primary)] hover:shadow-[0_0_16px_rgba(169,239,47,0.15)] hover:-translate-x-0.5 active:scale-90"
                                 >
                                     <ArrowLeft size={16} className="transition-transform duration-300 group-hover/back:-translate-x-0.5" />
                                 </button>
-                                <div>
-                                    <span className="light-muted-chip inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[9px] font-mono font-semibold uppercase tracking-[0.22em]">
+                                <div className="flex flex-col min-w-0 border-l-2 border-[var(--primary)] pl-3">
+                                    <span className="light-muted-chip inline-flex self-start items-center gap-1.5 px-2.5 py-0.5 text-[9px] font-mono font-semibold uppercase tracking-[0.22em]">
                                         <LayoutGrid size={10} />
                                         Flow Control
                                     </span>
-                                    <h1 className="mt-1.5 max-w-[460px] truncate text-[0.98rem] font-black uppercase leading-none tracking-tight text-[var(--foreground)] shadow-none sm:text-[1.05rem]">
+                                    <h1 className="mt-1.5 max-w-[520px] truncate text-[1.05rem] font-black uppercase leading-none tracking-tight text-[var(--primary)] sm:text-[1.15rem]" style={{ textShadow: '0 0 18px rgba(169,239,47,0.35)' }}>
                                         {activeProject.title}
                                     </h1>
                                     <p className="mt-1 hidden max-w-xl text-[11px] leading-4 text-[var(--muted-foreground)] lg:block">
-                                        Visualize paineis, acompanhe gargalos e opere o board com filtros rápidos no tema claro.
+                                        Visualize paineis, acompanhe gargalos e opere o board com filtros rápidos.
                                     </p>
-                                    <p className="mt-1 text-[9px] font-mono text-[var(--muted-foreground)] sm:text-[10px]">
-                                        STATUS_FLUXO: <span className="text-yellow-500 font-bold">ATIVO</span> | <span className="opacity-50 tracking-widest">ID: {activeProject.id.slice(0, 8)}</span>
-                                    </p>
+                                    <div className="mt-2.5 flex flex-wrap items-center gap-0">
+                                        <p className="text-[9px] font-mono text-[var(--muted-foreground)] sm:text-[10px] m-0">
+                                            STATUS_FLUXO: <span className="text-yellow-500 font-bold">ATIVO</span> | <span className="opacity-50 tracking-widest">ID: {activeProject.id.slice(0, 8)}</span>
+                                        </p>
+                                        <PresenceAvatars />
+                                    </div>
                                 </div>
-                                <PresenceAvatars />
                             </div>
 
                             <div className="grid w-full shrink-0 grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
@@ -519,7 +523,7 @@ export default function KanbanBoardPage() {
                                     </div>
                                 </div>
 
-                                <div className="light-page-kpi light-page-kpi--contrast min-w-0 px-3 py-2 sm:min-w-[122px] border border-emerald-500/20 bg-emerald-950/10">
+                                <div className="light-page-kpi light-page-kpi--contrast min-w-0 px-3 py-2 sm:min-w-[122px]">
                                     <span className="text-[9px] font-mono uppercase tracking-[0.22em] text-emerald-500 font-bold">Conclusão</span>
                                     <div className="mt-1.5 flex items-end justify-between gap-2">
                                         <strong className="text-[1.4rem] font-black tracking-[-0.08em] text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]">{completedTasks}</strong>

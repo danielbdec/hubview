@@ -8,6 +8,7 @@ export interface RemoteUser {
     userId: string; // unique database or session id
     name: string;
     color: string;
+    avatar?: string | null;
     cursor: CursorPosition;
 }
 
@@ -17,9 +18,10 @@ interface SocketState {
     roomId: string | null;
     onlineUsers: RemoteUser[];
     globalUsers: RemoteUser[]; // Platform-wide users
+    currentUser: { id: string; name: string; color?: string; avatar?: string | null } | null;
     
     // Actions
-    connect: (projectId: string, user: { id: string; name: string; color?: string }) => void;
+    connect: (projectId: string, user: { id: string; name: string; color?: string; avatar?: string | null }) => void;
     disconnect: () => void;
     sendCursorMove: (cursor: CursorPosition) => void;
     broadcastBoardUpdate: (type: string, payload: any) => void;
@@ -34,12 +36,15 @@ export const useSocketStore = create<SocketState>((set, get) => ({
     roomId: null,
     onlineUsers: [],
     globalUsers: [],
+    currentUser: null,
 
     connect: (projectId, user) => {
         const existingSocket = get().socket;
         if (existingSocket) {
             existingSocket.disconnect();
         }
+
+        set({ currentUser: user });
 
         const socket = io(SOCKET_URL, {
             reconnectionAttempts: 5,

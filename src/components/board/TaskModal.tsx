@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Save, Trash2, User, ChevronDown } from 'lucide-react';
+import { X, Save, Trash2, User, ChevronDown, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useTheme } from '@/components/ui/ThemeProvider';
@@ -11,6 +11,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getReadableTextColor } from '@/lib/color';
+import { message } from 'antd';
 import { TaskChecklist, type ChecklistItem } from './TaskChecklist';
 import { TaskActivitySidebar } from './TaskActivitySidebar';
 
@@ -44,6 +45,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
 
     const { taskActivities, isLoadingActivities, fetchTaskActivities, addTaskActivity } = useProjectStore();
     const activities = task ? (taskActivities[task.id] || []) : [];
+    const [isGeneratingAi, setIsGeneratingAi] = useState(false);
 
     useEffect(() => {
         setMounted(true);
@@ -129,6 +131,53 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
         setFormData({ ...formData, checklist });
     };
 
+    const handleGenerateAi = async () => {
+        if (!task || !formData.content) return;
+        setIsGeneratingAi(true);
+        try {
+            const { api } = await import('@/lib/api');
+            const response = await api.post<any>('/api/tasks/ai-breakdown', { 
+                taskId: task.id, 
+                context: `Título: ${formData.content}\nDescrição: ${formData.description || ''}` 
+            });
+            
+            let aiChecklist = Array.isArray(response) ? response : (response?.checklist || []);
+
+            // Fallback robusto para quando o n8n devolve a string crua do OpenAI Wrapper
+            if (aiChecklist.length === 1 && aiChecklist[0]?.message?.content) {
+                try {
+                    const parsedContent = JSON.parse(aiChecklist[0].message.content);
+                    if (parsedContent.checklist && Array.isArray(parsedContent.checklist)) {
+                        aiChecklist = parsedContent.checklist;
+                    }
+                } catch (e) {
+                    console.warn('[Modal] N8N Raw OpenAI fallback failed:', e);
+                }
+            }
+            
+            if (aiChecklist.length > 0) {
+                const formattedAiChecklist = aiChecklist.map((item: any) => ({
+                    id: crypto.randomUUID(),
+                    text: item.text || item.content || item.title || 'Nova Tarefa',
+                    completed: false
+                }));
+                // Adiciona localmente para aprovação do usuário antes de salvar
+                setFormData(prev => ({
+                    ...prev,
+                    checklist: [...(prev.checklist || []), ...formattedAiChecklist]
+                }));
+                message.success(`${formattedAiChecklist.length} sub-tarefas geradas com IA!`);
+            } else {
+                message.warning("A IA não retornou nenhuma sub-tarefa. Tente detalhar mais a descrição.");
+            }
+        } catch (error) {
+            console.error('Falha na requisição de IA:', error);
+            message.error("Ocorreu um erro de conexão com a IA.");
+        } finally {
+            setIsGeneratingAi(false);
+        }
+    };
+
     const detalhesView = (
         <div className="space-y-6 pt-2 h-[60vh] overflow-y-auto px-6 pb-6 custom-scrollbar">
             {/* Título */}
@@ -175,6 +224,28 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                     className="w-full h-32 bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--foreground)] p-3 text-sm focus:outline-none focus:border-[var(--primary)] transition-colors resize-none font-mono rounded-none"
                     placeholder="Adicione detalhes sobre esta tarefa..."
                 />
+            </div>
+
+            {/* Botão Mágico IA */}
+            <div className="flex items-center justify-between mb-2 mt-4">
+                <Button
+                    variant="primary"
+                    onClick={handleGenerateAi}
+                    disabled={isGeneratingAi || !formData.content}
+                    className="w-full"
+                >
+                    {isGeneratingAi ? (
+                        <>
+                            <Loader2 size={16} className="animate-spin mr-2" />
+                            Processando Inteligência...
+                        </>
+                    ) : (
+                        <>
+                            <Sparkles size={16} className="fill-current animate-pulse mr-2" />
+                            Detalhar Sub-tarefas com IA
+                        </>
+                    )}
+                </Button>
             </div>
 
             {/* Checklist (componente extraído) */}
@@ -300,12 +371,12 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                 {/* Main Content Area */}
                 <div className="flex flex-col w-[600px] shrink-0">
                     {/* Header */}
-                    <div className="flex items-center justify-between p-6 border-b border-[var(--sidebar-border)] bg-[var(--sidebar)] shrink-0 h-[81px]">
-                        <div className="flex flex-col">
-                            <h2 className="text-lg font-bold font-mono tracking-wider text-[var(--foreground)] uppercase shadow-none tracking-widest truncate max-w-sm" title={task.content}>
+                    <div className="flex items-start justify-between p-6 border-b border-[var(--sidebar-border)] bg-[var(--sidebar)] shrink-0">
+                        <div className="flex flex-col min-w-0 flex-1 mr-4">
+                            <h2 className="text-lg font-bold font-mono tracking-wider text-[var(--primary)] uppercase leading-snug" style={{ textShadow: '0 0 14px rgba(169,239,47,0.3)' }}>
                                 {task.content || 'Editar Tarefa'}
                             </h2>
-                            <span className="text-[10px] text-[var(--muted-foreground)] font-mono uppercase">ID: {task.id.slice(0, 8)}</span>
+                            <span className="text-[10px] text-[var(--muted-foreground)] font-mono uppercase mt-1">ID: {task.id.slice(0, 8)}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <button onClick={onClose} className="p-2 text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]">
@@ -323,14 +394,14 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                     <div className="flex items-center justify-between p-6 border-t border-[var(--sidebar-border)] bg-[var(--sidebar)] shrink-0 h-[89px]">
                         <Button
                             variant="ghost"
-                            className="text-[var(--muted-foreground)] hover:text-red-500 hover:bg-red-500/10 px-0 rounded-none font-mono"
+                            className="theme-shine-rose text-[var(--muted-foreground)] hover:text-red-500 hover:bg-red-500/10 px-0 rounded-none font-mono"
                             onClick={handleDelete}
                         >
                             <Trash2 size={16} className="mr-2" /> EXCLUIR
                         </Button>
 
                         <div className="flex gap-3">
-                            <Button variant="ghost" className="rounded-none font-mono tracking-widest text-[10px]" onClick={onClose}>CANCELAR</Button>
+                            <Button variant="ghost" className="theme-shine-amber rounded-none font-mono tracking-widest text-[10px] hover:text-yellow-400 hover:bg-yellow-400/10 focus:ring-yellow-400" onClick={onClose}>CANCELAR</Button>
                             <Button variant="primary" className="rounded-none font-mono tracking-widest text-[10px]" onClick={handleSave}>
                                 <Save size={16} className="mr-2" /> SALVAR ALTERAÇÕES
                             </Button>

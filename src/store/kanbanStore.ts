@@ -128,6 +128,10 @@ interface ProjectState {
     // Import/Export (scoped to active project)
     setColumns: (columns: Column[]) => void;
 
+    // AI Integration
+    generateAiSubtasks: (taskId: string, context: string) => Promise<void>;
+    isGeneratingAi: Record<string, boolean>;
+
     // Activities
     taskActivities: Record<string, Activity[]>;
     isLoadingActivities: boolean;
@@ -156,6 +160,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     activeView: 'kanban',
     taskActivities: {},
     isLoadingActivities: false,
+    isGeneratingAi: {},
     notifications: [],
     unreadNotificationsCount: 0,
     users: [],
@@ -985,6 +990,55 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
                     })
                 };
             });
+        }
+    },
+
+    generateAiSubtasks: async (taskId, context) => {
+        set((state) => ({
+            isGeneratingAi: { ...state.isGeneratingAi, [taskId]: true }
+        }));
+
+        const state = get();
+        const activeProject = state.projects.find(p => p.id === state.activeProjectId);
+        if (!activeProject) {
+            set((state) => ({ isGeneratingAi: { ...state.isGeneratingAi, [taskId]: false } }));
+            return;
+        }
+
+        try {
+            const response = await api.post<any>('/api/tasks/ai-breakdown', { taskId, context });
+            
+            // Aceitando arrays puros ou objetos { checklist: [] }
+            const aiChecklist = Array.isArray(response) ? response : (response?.checklist || []);
+
+            if (aiChecklist.length > 0) {
+                let currentChecklist: any[] = [];
+                for (const col of activeProject.columns) {
+                    const task = col.tasks.find(t => t.id === taskId);
+                    if (task) {
+                        currentChecklist = task.checklist || [];
+                        break;
+                    }
+                }
+
+                // Append new checklist items with unique ids if missing
+                const formattedAiChecklist = aiChecklist.map((item: any) => ({
+                    id: item.id || crypto.randomUUID(),
+                    text: item.text || item.content || item.title || 'Nova Tarefa IA',
+                    completed: false
+                }));
+
+                const mergedChecklist = [...currentChecklist, ...formattedAiChecklist];
+                
+                await get().updateTask(taskId, { checklist: mergedChecklist });
+                get().addTaskActivity(taskId, 'history', `Gerou ${formattedAiChecklist.length} sub-tarefas usando Inteligência Artificial 🪄`);
+            }
+        } catch (error) {
+            console.error('Falha ao gerar sub-tarefas via IA:', error);
+        } finally {
+            set((state) => ({
+                isGeneratingAi: { ...state.isGeneratingAi, [taskId]: false }
+            }));
         }
     },
 

@@ -140,3 +140,16 @@ Para garantir que futuras manutenções feitas por Inteligência Artificial (Voc
 2. **Tailwind V4 vs V3:** O projeto opera com o novíssimo motor **TailwindCSS V4** via `@import "tailwindcss"` em `globals.css`. Não tente injetar plugins complexos ou reescrever completamente o arquivo legado `tailwind.config.ts`, pois as cores bases estão todas mapeadas via Variáveis CSS Nativas no `:root` do `globals.css`.
 3. **PM2 Daemon (AWS EC2):** Se pedirem para você reiniciar ou verificar o status do servidor de WebSockets via SSH, o nome absoluto do processo na OS é `hubview-ws-multiplayer`. Não use `node index.js` diretamente se o ambiente for Produção, use `pm2 restart hubview-ws-multiplayer`.
 4. **Drag and Drop Engine:** O Kanban do projeto utiliza a biblioteca `@dnd-kit/core` por sua compatibilidade com Strict Mode do React 18+. IAs velhas têm a tendência de sugerir Mutações para `react-beautiful-dnd` — **NÃO REESCREVA** as lógicas de DnD para bibliotecas antigas e obsoletas, atenha-se aos `Sensors` e `SortableContext` do `@dnd-kit` já embutidos.
+
+---
+
+## 🤖 Integrações de Inteligência Artificial e Agentes (AI Features)
+
+O Hubview suporta rotinas delegadas a IAs externas via BFF (rotas `/api/tasks/ai-breakdown`). O fluxo padrão destas features é:
+
+1. **Gatilho (Front-End):** Um botão UI (ex: `TaskModal.tsx`) entra em modo `isGeneratingAi` exibindo _Spinners_.
+2. **Proxy BFF (`route.ts`):** O Next atua como ponte segura mascarando as chaves rumo ao `n8n.uninova.ai`.
+3. **N8N Workflow:** O orquestrador usa Lógica em Grafos (OpenAI Node) para extração de respostas em JSON estruturado.
+4. **Tratamento Resiliente na View:** Como o nó de saída do OpenAI pode variar a topologia de Array Base (ex: devolver uma Raw OpenAI string Wrapper com `{ message: content }` em vez da chave `checklist`), a _View Component_ detém um script de **Fallback Parser** que destrincha a string do array de mensagens caso o nó do N8N tenha falhado em descompactar a API.
+5. **Estado Local Pré-Save:** A I.A injeta sub-tarefas **apenas no formData do Modal em tela** (via `setFormData`). Não dispara o banco de dados direto, para que o usuário possa aprovar (ou excluir) antes de apertar "Salvar Alterações".
+6. **Notificação de Sistema:** Utiliza-se `message.success` ou `message.warning` nativo do `antd` para prover feedbacks sem quebrar a estética fluida.

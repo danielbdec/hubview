@@ -377,6 +377,14 @@ body {
   transform: translateX(350%) skewX(-30deg);
 }
 
+[data-theme='dark'] .theme-shine-amber .hubview-button__shine {
+  background: linear-gradient(90deg, transparent, rgba(250, 204, 21, 0.6), transparent);
+}
+
+[data-theme='dark'] .theme-shine-rose .hubview-button__shine {
+  background: linear-gradient(90deg, transparent, rgba(244, 63, 94, 0.6), transparent);
+}
+
 [data-theme='dark'] .hubview-button__scanline {
   background: repeating-linear-gradient(
     0deg,
