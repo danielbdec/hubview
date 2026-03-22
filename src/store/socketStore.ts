@@ -16,6 +16,7 @@ interface SocketState {
     isConnected: boolean;
     roomId: string | null;
     onlineUsers: RemoteUser[];
+    globalUsers: RemoteUser[]; // Platform-wide users
     
     // Actions
     connect: (projectId: string, user: { id: string; name: string; color?: string }) => void;
@@ -32,6 +33,7 @@ export const useSocketStore = create<SocketState>((set, get) => ({
     isConnected: false,
     roomId: null,
     onlineUsers: [],
+    globalUsers: [],
 
     connect: (projectId, user) => {
         const existingSocket = get().socket;
@@ -50,7 +52,11 @@ export const useSocketStore = create<SocketState>((set, get) => ({
         });
 
         socket.on('disconnect', () => {
-            set({ isConnected: false, onlineUsers: [] });
+            set({ isConnected: false, onlineUsers: [], globalUsers: [] });
+        });
+
+        socket.on('global-presence', (users: RemoteUser[]) => {
+            set({ globalUsers: users });
         });
 
         socket.on('presence-update', (users: RemoteUser[]) => {

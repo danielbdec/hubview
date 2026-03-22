@@ -5,13 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Users } from 'lucide-react';
 
 export function PresenceAvatars() {
-    const onlineUsers = useSocketStore(state => state.onlineUsers);
+    const globalUsers = useSocketStore(state => state.globalUsers);
 
-    if (onlineUsers.length === 0) return null;
+    if (globalUsers.length === 0) return null;
 
     // Show up to 4 users, group the rest
-    const visibleUsers = onlineUsers.slice(0, 4);
-    const hiddenCount = onlineUsers.length - visibleUsers.length;
+    const visibleUsers = globalUsers.slice(0, 4);
+    const hiddenCount = globalUsers.length - visibleUsers.length;
 
     return (
         <div className="flex items-center ml-4 border-l border-[var(--border)] pl-4 h-8 shrink-0">
@@ -34,7 +34,7 @@ export function PresenceAvatars() {
                                 transition={{ duration: 0.2, delay: idx * 0.05 }}
                                 className="relative flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full border-2 border-[var(--card)] font-mono text-[9px] sm:text-[10px] font-bold text-white shadow-sm ring-2 ring-transparent transition-transform hover:z-10 hover:scale-110"
                                 style={{ backgroundColor: user.color }}
-                                title={`${user.name} online na sala`}
+                                title={`${user.name} online na plataforma`}
                             >
                                 {initials}
                                 {/* Pulse light */}
@@ -55,7 +55,7 @@ export function PresenceAvatars() {
             </div>
             <div className="ml-2 hidden lg:flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-widest text-[var(--muted-foreground)]">
                 <Users size={12} className="text-emerald-400" />
-                <span className="text-emerald-500 font-bold">{onlineUsers.length} ONLINE</span>
+                <span className="text-emerald-500 font-bold">{globalUsers.length} ONLINE NA PLATAFORMA</span>
             </div>
         </div>
     );

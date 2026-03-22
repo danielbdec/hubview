@@ -17,14 +17,26 @@ const io = new Server(server, {
 });
 
 // Memory store for active users per room (projectId)
-// Structure: { [roomId]: { [socketId]: { id, name, cursor: { x, y } } } }
 const rooms = {};
+// Global presence map
+const globalUsers = {}; 
 
 io.on('connection', (socket) => {
     console.log(`[+] User connected: ${socket.id}`);
 
-    // User joins a project board
+    // User joins a project board or global view
     socket.on('join-room', ({ roomId, user }) => {
+        // Leave previous rooms (except their own socket.id room)
+        Array.from(socket.rooms).forEach(room => {
+            if (room !== socket.id) {
+                socket.leave(room);
+                if (rooms[room]) {
+                    delete rooms[room][socket.id];
+                    socket.to(room).emit('presence-update', Object.values(rooms[room]));
+                }
+            }
+        });
+
         socket.join(roomId);
         console.log(`[Room ${roomId}] User joined: ${user.name}`);
 
@@ -32,17 +44,23 @@ io.on('connection', (socket) => {
             rooms[roomId] = {};
         }
 
-        // Store user presence
-        rooms[roomId][socket.id] = {
+        const userData = {
             id: socket.id,
             userId: user.id || socket.id,
             name: user.name || 'Anonymous',
             color: user.color || '#'+Math.floor(Math.random()*16777215).toString(16).padStart(6, '0'),
-            cursor: null
+            cursor: null,
+            currentRoom: roomId
         };
 
-        // Broadcast current users in room to everyone in the room
+        // Store user presence in current isolated room
+        rooms[roomId][socket.id] = userData;
+        // Broadcast current users in room
         io.to(roomId).emit('presence-update', Object.values(rooms[roomId]));
+
+        // Store and broadcast global platform-wide presence
+        globalUsers[socket.id] = userData;
+        io.emit('global-presence', Object.values(globalUsers));
     });
 
     // Handle cursor movement
@@ -59,12 +77,16 @@ io.on('connection', (socket) => {
 
     // Handle task sync (drag/drop, edit)
     socket.on('board-update', ({ roomId, type, payload }) => {
-        // Broadcasts the payload so other clients can update their Zustand stores immediately
         socket.to(roomId).emit('board-sync', { type, payload });
     });
 
     // Handle disconnection
     socket.on('disconnecting', () => {
+        if (globalUsers[socket.id]) {
+            delete globalUsers[socket.id];
+            io.emit('global-presence', Object.values(globalUsers));
+        }
+
         socket.rooms.forEach(roomId => {
             if (rooms[roomId] && rooms[roomId][socket.id]) {
                 const userName = rooms[roomId][socket.id].name;

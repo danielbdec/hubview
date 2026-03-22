@@ -56,7 +56,7 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 
 const app = express();
-app.use(cors()); // Allow all for prototype
+app.use(cors());
 
 const server = http.createServer(app);
 
@@ -68,11 +68,22 @@ const io = new Server(server, {
 });
 
 const rooms = {};
+const globalUsers = {}; 
 
 io.on('connection', (socket) => {
     console.log(`[+] User connected: ${socket.id}`);
 
     socket.on('join-room', ({ roomId, user }) => {
+        Array.from(socket.rooms).forEach(room => {
+            if (room !== socket.id) {
+                socket.leave(room);
+                if (rooms[room]) {
+                    delete rooms[room][socket.id];
+                    socket.to(room).emit('presence-update', Object.values(rooms[room]));
+                }
+            }
+        });
+
         socket.join(roomId);
         console.log(`[Room ${roomId}] User joined: ${user.name}`);
 
@@ -80,15 +91,20 @@ io.on('connection', (socket) => {
             rooms[roomId] = {};
         }
 
-        rooms[roomId][socket.id] = {
+        const userData = {
             id: socket.id,
             userId: user.id || socket.id,
             name: user.name || 'Anonymous',
             color: user.color || '#'+Math.floor(Math.random()*16777215).toString(16).padStart(6, '0'),
-            cursor: null
+            cursor: null,
+            currentRoom: roomId
         };
 
+        rooms[roomId][socket.id] = userData;
         io.to(roomId).emit('presence-update', Object.values(rooms[roomId]));
+
+        globalUsers[socket.id] = userData;
+        io.emit('global-presence', Object.values(globalUsers));
     });
 
     socket.on('cursor-move', ({ roomId, cursor }) => {
@@ -106,6 +122,11 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnecting', () => {
+        if (globalUsers[socket.id]) {
+            delete globalUsers[socket.id];
+            io.emit('global-presence', Object.values(globalUsers));
+        }
+
         socket.rooms.forEach(roomId => {
             if (rooms[roomId] && rooms[roomId][socket.id]) {
                 const userName = rooms[roomId][socket.id].name;

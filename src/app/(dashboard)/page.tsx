@@ -21,6 +21,8 @@ import { useProjectStore } from '@/store/kanbanStore';
 import { useTheme } from '@/components/ui/ThemeProvider';
 import { useHydrated } from '@/hooks/useHydrated';
 import { DecodingText } from '@/components/auth/LoginEffects';
+import { useSocketStore } from '@/store/socketStore';
+import { PresenceAvatars } from '@/components/board/PresenceAvatars';
 import Link from 'next/link';
 import Image from 'next/image';
 import { clsx, type ClassValue } from 'clsx';
@@ -83,6 +85,24 @@ export default function DashboardPage() {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
+
+  const connectSocket = useSocketStore(state => state.connect);
+  const disconnectSocket = useSocketStore(state => state.disconnect);
+
+  // Global WebSocket presence connection for Dashboard
+  useEffect(() => {
+    if (!user) return;
+    
+    connectSocket('dashboard', {
+        id: user.id || `user_${Math.floor(Math.random() * 99999)}`,
+        name: user.name || user.email?.split('@')[0] || 'Operador',
+        color: '#'+Math.floor(Math.random()*16777215).toString(16).padStart(6, '0') // No color in user yet so randomize
+    });
+
+    return () => {
+        disconnectSocket();
+    };
+  }, [user, connectSocket, disconnectSocket]);
 
   // Compute aggregate stats from taskCounts
   const stats = useMemo(() => {
@@ -300,9 +320,12 @@ export default function DashboardPage() {
               <span className="text-[var(--muted-foreground)] font-mono text-xs uppercase tracking-wider">
                 {formattedDate}
               </span>
-              <span className="text-[var(--primary)] font-mono text-xs font-bold">
+              <span className="text-[var(--primary)] font-mono text-xs font-bold mr-4">
                 {formattedTime}
               </span>
+              <div className="hidden sm:block">
+                  <PresenceAvatars />
+              </div>
               {isLight && (
                 <span className="inline-flex items-center gap-1 rounded-full border border-lime-200 bg-lime-50 px-2.5 py-1 text-[10px] font-mono font-semibold uppercase tracking-[0.18em] text-lime-700">
                   <Sparkles size={10} />
