@@ -9,8 +9,8 @@ Your strict objective is to autonomously **CREATE the source code files**, robus
 **DO NOT** ask for manual execution of code. Use your `write_to_file` and `run_command` tools to autonomously execute the following strict protocols in sequence:
 
 ### PHASE 1: Scaffolding the Source Code
-1. Use `run_command` to create a directory: `mkdir C:\hubview-ws` (or in whoever directory the user prefers, confirm with `pwd`).
-2. Navigate into it. Use `write_to_file` to recreate the following 3 exact files:
+1. Use `run_command` to ensure the directory `C:\hubview-ws` exists. If it already exists, simply navigate into it (`cd C:\hubview-ws`). Ignore `mkdir` errors if it exists.
+2. Inside that directory, use `write_to_file` with `Overwrite: true` to create/update the following 3 exact files:
 
 **File 1: `package.json`**
 ```json
@@ -161,9 +161,11 @@ server.listen(PORT, () => {
 3. Execute `pm2-service-install -n PM2` (you may need to pipe `echo y | pm2-service-install -n PM2` or use silent flags if prompted). This binds PM2 directly to the OS Boot Registry.
 
 ### PHASE 4: Ignition & Process Preservation
-1. From inside the folder, use `run_command` to execute: `pm2 start ecosystem.config.js`
-2. Immediately capture the state to the daemon by running: `pm2 save`
-3. Validate the process status with `pm2 status` and share the output with the User. Ensure `hubview-ws-multiplayer` shows a green `online` status.
+1. From inside the folder, use `run_command` to check if the app is already running (`pm2 status`).
+2. If it is NOT running natively, execute: `pm2 start ecosystem.config.js`
+3. If it IS already running (because this is an update), execute: `pm2 restart hubview-ws-multiplayer`
+4. Immediately capture the state to the daemon by running: `pm2 save`
+5. Validate the process status with `pm2 status` and share the output with the User. Ensure `hubview-ws-multiplayer` shows a green `online` status.
 
 ### PHASE 5: Cryptographic & Network Securitization
 The Node service is listening locally on port 3002. Since this EC2 acts as a WebSocket relay for Vercel, the port must be publicly accessible.
