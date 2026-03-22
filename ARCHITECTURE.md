@@ -16,6 +16,17 @@ O aplicativo constitui-se como um Workflow Dashboard sofisticado.
 
 ---
 
+## ⚡ Motor de Atualizações Otimistas (Optimistic UI & Storage)
+
+Uma das maiores forças do Hubview é a **ausência de Loadings** interativos e Spinner-blocks na experiência de Kanban. Toda a operação massiva do usuário (Arrastar, Editar, Deletar Cartões/Colunas) que é regida pelo arquivo `src/store/kanbanStore.ts` obedece à engenharia **Optimistic UI Update**:
+1. **Mutação Síncrona (Agressiva):** A estrutura local do Zustand (Storage) é alterada instantaneamente antes de haver comunicação de rede. A UI renderiza em 60fps.
+2. **Background Sync:** Um gatilho assíncrono (geralmente com `debounce`) aciona silenciosamente as rotas no background repassando as edições estruturais pro servidor `n8n`.
+3. **Ghost Loading / Rollback:** Cartões ou quadros utilizam a flag `syncStatus: 'syncing'` se precisarem sinalizar spinners minúsculos localizados no card, e não trancam a interface inteira. Em caso de *HTTP-Fail*, realiza-se um Rollback reescrevendo o Estado antigo da máquina perfeitamente.
+
+> **CRÍTICO PARA AGENTES IA E MANUTENÇÕES**: **Jamais instancie bloqueadores UI (Await Fetch)** aguardando N8N antes de promover a edição visual no DOM do usuário ou altere essa lógica do Store, pois criará engasgos no sistema visual. Primeiro manipule as Collections no Zustand, aponte sucesso, e só depois envie pela Web. O EC2 de Sockets acompanha esse movimento disparando reflexos de Estado para os outros colaboradores da sala de forma paralela ao fluxo de Backend.
+
+---
+
 ## 🗂️ Estrutura Físico-Lógica
 
 ```plaintext
