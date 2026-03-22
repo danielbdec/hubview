@@ -456,7 +456,7 @@ export default function KanbanBoardPage() {
             onDragCancel={handleDragCancel}
         >
             <div 
-                className="page-light-atmosphere flex h-full max-w-full flex-col overflow-hidden px-3 pb-3 pt-2 sm:px-4 lg:px-6"
+                className="page-light-atmosphere flex min-h-full md:h-full max-w-full flex-col overflow-y-auto md:overflow-hidden px-3 pb-3 pt-2 sm:px-4 lg:px-6"
                 onPointerMove={handlePointerMove}
             >
                 <LiveCursors />
@@ -686,8 +686,8 @@ export default function KanbanBoardPage() {
                 ) : activeView === 'timeline' ? (
                     <TimelineView columns={filteredColumns} onEditTask={openEditModal} />
                 ) : (
-                    <div className="flex-1 overflow-x-auto pb-4 board-scroll-snap">
-                        <div className="flex gap-3 sm:gap-6 h-full items-stretch px-1 sm:px-0">
+                    <div className="flex-1 overflow-x-auto pb-4 board-scroll-snap md:h-full">
+                        <div className="flex gap-3 sm:gap-6 items-start md:items-stretch md:h-full px-1 sm:px-0">
                             <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
                                 {filteredColumns.map((col) => (
                                     <KanbanColumn

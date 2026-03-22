@@ -144,7 +144,7 @@ export const KanbanColumn = memo(function KanbanColumn({
             style={style}
             data-kanban-column-id={!isOverlay ? column.id : undefined}
             className={cn(
-                "w-[85vw] sm:w-[24rem] flex-shrink-0 flex flex-col rounded-md border transition-all relative h-full max-h-full shadow-sm snap-start",
+                "w-[85vw] sm:w-[24rem] flex-shrink-0 flex flex-col rounded-md border transition-all relative md:h-full md:max-h-full shadow-sm snap-start",
                 "bg-[var(--column-bg)] border-[var(--card-border)]",
                 column.isDone === true && "bg-emerald-500/5 border-emerald-500/20",
                 isDragging && "opacity-50 border-[var(--col-color)] border-dashed ring-2 ring-[var(--col-color)] ring-opacity-50",
