@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { User } from 'lucide-react';
+import { User, Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 
@@ -22,7 +22,11 @@ const breadnameMap: Record<string, string> = {
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export function Header() {
+interface HeaderProps {
+    onMobileMenuToggle?: () => void;
+}
+
+export function Header({ onMobileMenuToggle }: HeaderProps) {
     const pathname = usePathname();
     const { theme: themeMode } = useTheme();
     const { projects, activeView, setActiveView } = useProjectStore();
@@ -44,10 +48,19 @@ export function Header() {
     const isProjectPage = segments.length === 2 && segments[0] === 'projects' && UUID_REGEX.test(segments[1]);
 
     return (
-        <header className="h-16 flex items-center px-6 gap-6 border-b border-[var(--header-border)] bg-[var(--header)] backdrop-blur-md sticky top-0 z-40">
+        <header className="h-14 md:h-16 flex items-center px-3 md:px-6 gap-3 md:gap-6 border-b border-[var(--header-border)] bg-[var(--header)] backdrop-blur-md sticky top-0 z-40">
+            {/* Mobile Hamburger */}
+            <button
+                onClick={onMobileMenuToggle}
+                className="md:hidden p-2 -ml-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+                aria-label="Menu"
+            >
+                <Menu size={22} />
+            </button>
+
             {/* Left: Breadcrumbs / Page Title */}
             <div className="flex items-center gap-2 overflow-hidden flex-shrink min-w-0">
-                <span className="text-[var(--muted-foreground)] font-sans text-xs uppercase tracking-tight">/</span>
+                <span className="text-[var(--muted-foreground)] font-sans text-xs uppercase tracking-tight hidden md:inline">/</span>
                 <AnimatePresence mode="wait">
                     <motion.span
                         key={displayText}
@@ -55,14 +68,14 @@ export function Header() {
                         animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
                         exit={{ opacity: 0, x: -20, filter: 'blur(8px)' }}
                         transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-                        className="text-[var(--foreground)] font-black font-sans uppercase tracking-tighter text-sm truncate"
+                        className="text-[var(--foreground)] font-black font-sans uppercase tracking-tighter text-xs md:text-sm truncate max-w-[150px] md:max-w-none"
                     >
                         {displayText}
                     </motion.span>
                 </AnimatePresence>
             </div>
 
-            {/* Center: View Switcher (Only on projects) */}
+            {/* Center: View Switcher (Only on projects, desktop only) */}
             {isProjectPage && (
                 <div className="hidden xl:flex items-center justify-center flex-1 min-w-0 px-2 overflow-x-auto no-scrollbar">
                     <ConfigProvider
@@ -105,13 +118,15 @@ export function Header() {
             )}
 
             {/* Right: Actions */}
-            <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
-                <CommandPalette />
+            <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0 ml-auto">
+                <div className="hidden sm:block">
+                    <CommandPalette />
+                </div>
                 
-                <div className="flex items-center gap-2 border-l border-[var(--header-border)] pl-3 ml-1">
+                <div className="flex items-center gap-1.5 md:gap-2 md:border-l md:border-[var(--header-border)] md:pl-3 md:ml-1">
                     <ThemeToggle />
                     <NotificationDropdown />
-                    <Button variant="ghost" size="sm" className="w-8 h-8 px-0 flex-shrink-0">
+                    <Button variant="ghost" size="sm" className="w-8 h-8 px-0 flex-shrink-0 hidden md:flex">
                         <User size={16} />
                     </Button>
                 </div>

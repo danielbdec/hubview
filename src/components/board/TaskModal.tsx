@@ -179,7 +179,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
     };
 
     const detalhesView = (
-        <div className="space-y-6 pt-2 h-[60vh] overflow-y-auto px-6 pb-6 custom-scrollbar">
+        <div className="space-y-6 pt-2 flex-1 overflow-y-auto px-4 sm:px-6 pb-6 custom-scrollbar">
             {/* Título */}
             <div className="space-y-2">
                 <label className="text-xs font-mono text-[var(--primary)] uppercase tracking-wider">Título</label>
@@ -255,7 +255,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
             />
 
             {/* Datas */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <label className="text-xs font-mono text-[var(--primary)] uppercase tracking-wider">Data Início Prevista</label>
                     <Input
@@ -362,14 +362,15 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
     );
 
     return createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[color:var(--overlay-bg)] p-4 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[color:var(--overlay-bg)] p-0 sm:p-4 backdrop-blur-sm animate-in fade-in duration-200">
             <div className={cn(
                 "relative flex max-h-[90vh] overflow-hidden rounded-none border border-[var(--card-border)] bg-[var(--sidebar)] shadow-[var(--surface-shadow)] animate-in zoom-in-95 duration-200 transition-all duration-300 ease-out",
-                isSidebarOpen ? "w-[1048px] max-w-[95vw]" : "w-[648px] max-w-full"
+                "w-full h-full sm:w-auto sm:h-auto sm:max-h-[90vh] sm:rounded-none",
+                isSidebarOpen ? "sm:w-[1048px] sm:max-w-[95vw]" : "sm:w-[648px] sm:max-w-full"
             )} onClick={(e) => e.stopPropagation()}>
 
                 {/* Main Content Area */}
-                <div className="flex flex-col w-[600px] shrink-0">
+                <div className="flex flex-col w-full sm:w-[600px] shrink-0">
                     {/* Header */}
                     <div className="flex items-start justify-between p-6 border-b border-[var(--sidebar-border)] bg-[var(--sidebar)] shrink-0">
                         <div className="flex flex-col min-w-0 flex-1 mr-4">
@@ -391,7 +392,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                     </div>
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between p-6 border-t border-[var(--sidebar-border)] bg-[var(--sidebar)] shrink-0 h-[89px]">
+                    <div className="flex flex-col-reverse sm:flex-row items-center sm:justify-between p-4 sm:p-6 gap-3 border-t border-[var(--sidebar-border)] bg-[var(--sidebar)] shrink-0">
                         <Button
                             variant="ghost"
                             className="theme-shine-rose text-[var(--muted-foreground)] hover:text-red-500 hover:bg-red-500/10 px-0 rounded-none font-mono"
@@ -400,19 +401,19 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
                             <Trash2 size={16} className="mr-2" /> EXCLUIR
                         </Button>
 
-                        <div className="flex gap-3">
-                            <Button variant="ghost" className="theme-shine-amber rounded-none font-mono tracking-widest text-[10px] hover:text-yellow-400 hover:bg-yellow-400/10 focus:ring-yellow-400" onClick={onClose}>CANCELAR</Button>
-                            <Button variant="primary" className="rounded-none font-mono tracking-widest text-[10px]" onClick={handleSave}>
+                        <div className="flex gap-3 w-full sm:w-auto">
+                            <Button variant="ghost" className="theme-shine-amber rounded-none font-mono tracking-widest text-[10px] hover:text-yellow-400 hover:bg-yellow-400/10 focus:ring-yellow-400 flex-1 sm:flex-none" onClick={onClose}>CANCELAR</Button>
+                            <Button variant="primary" className="rounded-none font-mono tracking-widest text-[10px] flex-1 sm:flex-none" onClick={handleSave}>
                                 <Save size={16} className="mr-2" /> SALVAR ALTERAÇÕES
                             </Button>
                         </div>
                     </div>
                 </div>
 
-                {/* Sidebar Toggle Pillar */}
+                {/* Sidebar Toggle Pillar (hidden on mobile) */}
                 <button
                     onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                    className="w-12 shrink-0 border-l border-[var(--sidebar-border)] flex flex-col items-center justify-center gap-8 bg-[var(--background)] hover:bg-[var(--primary)] text-[var(--muted-foreground)] hover:text-black transition-colors group cursor-pointer z-20 shadow-[-5px_0_15px_-5px_rgba(0,0,0,0.5)]"
+                    className="hidden sm:flex w-12 shrink-0 border-l border-[var(--sidebar-border)] flex-col items-center justify-center gap-8 bg-[var(--background)] hover:bg-[var(--primary)] text-[var(--muted-foreground)] hover:text-black transition-colors group cursor-pointer z-20 shadow-[-5px_0_15px_-5px_rgba(0,0,0,0.5)]"
                     title={isSidebarOpen ? "Fechar Histórico" : "Ver Histórico & Logs"}
                 >
                     <div className="flex items-center justify-center transition-transform duration-300 group-hover:scale-125">

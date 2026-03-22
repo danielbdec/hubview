@@ -757,3 +757,62 @@ body {
     clip: rect(20px, 9999px, 15px, 0);
   }
 }
+
+/* ══════════════════════════════════════════════
+   Mobile Responsiveness (< 768px)
+   ══════════════════════════════════════════════ */
+
+.board-scroll-snap {
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+}
+
+.board-scroll-snap > * {
+  scroll-snap-align: start;
+}
+
+.mobile-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+@supports (padding: max(0px)) {
+  .safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
+  }
+}
+
+@media (max-width: 767px) {
+  ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+
+  .mobile-main-content {
+    padding-bottom: 72px;
+  }
+
+  .kanban-column-mobile {
+    width: 85vw;
+    min-width: 280px;
+    flex-shrink: 0;
+  }
+}
+
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .desktop-only {
+    display: none !important;
+  }
+}
+

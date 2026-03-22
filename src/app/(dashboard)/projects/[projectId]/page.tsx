@@ -495,7 +495,7 @@ export default function KanbanBoardPage() {
                 >
                     <div className="mb-5 flex flex-col gap-3">
                         {/* Top Header */}
-                        <div className="light-page-hero flex flex-col gap-2.5 px-3 py-3 sm:px-3.5 xl:flex-row xl:items-center xl:justify-between border-b border-[var(--primary)]/15">
+                        <div className="light-page-hero flex flex-col gap-2.5 px-2 py-2.5 sm:px-3.5 sm:py-3 xl:flex-row xl:items-center xl:justify-between border-b border-[var(--primary)]/15">
                             <div className="flex min-w-0 items-start gap-4">
                                 <button
                                     onClick={() => router.push('/projects')}
@@ -523,7 +523,7 @@ export default function KanbanBoardPage() {
                                 </div>
                             </div>
 
-                            <div className="grid w-full shrink-0 grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
+                            <div className="grid w-full shrink-0 grid-cols-1 xs:grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
                                 <div className="light-page-kpi min-w-0 px-3 py-2 sm:min-w-[104px]">
                                     <span className="text-[9px] font-mono uppercase tracking-[0.22em] text-cyan-500 font-bold">Painéis</span>
                                     <div className="mt-1.5 flex items-end justify-between gap-2">
@@ -686,8 +686,8 @@ export default function KanbanBoardPage() {
                 ) : activeView === 'timeline' ? (
                     <TimelineView columns={filteredColumns} onEditTask={openEditModal} />
                 ) : (
-                    <div className="flex-1 overflow-x-auto pb-4">
-                        <div className="flex gap-6 h-full items-stretch min-w-[1220px]">
+                    <div className="flex-1 overflow-x-auto pb-4 board-scroll-snap">
+                        <div className="flex gap-3 sm:gap-6 h-full items-stretch px-1 sm:px-0">
                             <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
                                 {filteredColumns.map((col) => (
                                     <KanbanColumn

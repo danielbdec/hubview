@@ -1,20 +1,31 @@
 'use client';
 
+import { useState } from 'react';
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
+import { BottomNav } from "@/components/layout/BottomNav";
 import { ThemeProvider } from '@/components/ui/ThemeProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { FloatingParticles } from '@/components/auth/LoginEffects';
+import { useMobile } from '@/hooks/useMobile';
 
 export default function DashboardLayout({
     children,
 }: Readonly<{
     children: React.ReactNode;
 }>) {
+    const isMobile = useMobile();
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
     return (
         <ThemeProvider defaultTheme="dark">
             <div className="flex h-screen bg-[var(--background)] text-[var(--foreground)]">
-                <Sidebar />
+                {/* Desktop Sidebar (hidden on mobile via internal classes) */}
+                <Sidebar
+                    isMobile={isMobile}
+                    isMobileOpen={isMobileMenuOpen}
+                    onMobileClose={() => setIsMobileMenuOpen(false)}
+                />
 
                 {/* Main Content Area */}
                 <div className="flex-1 flex flex-col h-full overflow-hidden relative">
@@ -34,14 +45,17 @@ export default function DashboardLayout({
                         <FloatingParticles />
                     </div>
 
-                    <Header />
+                    <Header onMobileMenuToggle={() => setIsMobileMenuOpen(prev => !prev)} />
 
-                    <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 relative z-10 scrollbar-hide">
+                    <main className={`flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 relative z-10 scrollbar-hide ${isMobile ? 'pb-20' : ''}`}>
                         <ErrorBoundary>
                             {children}
                         </ErrorBoundary>
                     </main>
                 </div>
+
+                {/* Bottom Navigation (mobile only) */}
+                <BottomNav />
             </div>
         </ThemeProvider>
     );

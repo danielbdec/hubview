@@ -12,7 +12,8 @@ import {
     Users,
     Pin,
     PinOff,
-    LogOut
+    LogOut,
+    X
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -28,7 +29,13 @@ const menuItems = [
     { icon: Settings, label: 'CONFIGURAÇÕES', href: '/settings' },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+    isMobileOpen?: boolean;
+    onMobileClose?: () => void;
+    isMobile?: boolean;
+}
+
+export function Sidebar({ isMobileOpen, onMobileClose, isMobile }: SidebarProps) {
     const [isHovered, setIsHovered] = useState(false);
     const [isPinned, setIsPinned] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
@@ -59,13 +66,115 @@ export function Sidebar() {
         router.push('/login');
     };
 
-    const isExpanded = isPinned || isHovered;
+    const handleNavClick = () => {
+        // Close mobile drawer on navigation
+        if (isMobile && onMobileClose) {
+            onMobileClose();
+        }
+    };
+
+    const isExpanded = isMobile ? true : (isPinned || isHovered);
 
     if (!isMounted) {
+        if (isMobile) return null;
         // Render a basic 80px sidebar during SSR to prevent layout shift before hydration
-        return <aside className="h-screen w-[80px] bg-[var(--sidebar)] border-r border-[var(--sidebar-border)] z-50 flex-shrink-0" />;
+        return <aside className="h-screen w-[80px] bg-[var(--sidebar)] border-r border-[var(--sidebar-border)] z-50 flex-shrink-0 hidden md:block" />;
     }
 
+    // Mobile Drawer Mode
+    if (isMobile) {
+        return (
+            <AnimatePresence>
+                {isMobileOpen && (
+                    <>
+                        {/* Backdrop overlay */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="mobile-drawer-overlay"
+                            onClick={onMobileClose}
+                        />
+
+                        {/* Drawer */}
+                        <motion.aside
+                            initial={{ x: -280 }}
+                            animate={{ x: 0 }}
+                            exit={{ x: -280 }}
+                            transition={{ type: 'spring', stiffness: 350, damping: 35 }}
+                            className="fixed left-0 top-0 bottom-0 w-[260px] bg-[var(--sidebar)] border-r border-[var(--sidebar-border)] flex flex-col z-[70] text-[var(--foreground)] shadow-[var(--surface-shadow)]"
+                        >
+                            {/* Brand Header */}
+                            <div className="h-16 flex items-center justify-between px-5 border-b border-[var(--sidebar-border)] overflow-hidden">
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                    <Image src="/logo-uninova.png" alt="HubView" width={24} height={24} className="shrink-0" />
+                                    <span className="font-sans font-black tracking-tighter uppercase text-[var(--foreground)] truncate">HubView</span>
+                                </div>
+                                <button
+                                    onClick={onMobileClose}
+                                    className="p-2 text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+
+                            {/* Navigation */}
+                            <nav className="flex-1 py-6 space-y-1 px-3 overflow-hidden">
+                                {menuItems.map((item) => {
+                                    const isActive = item.href === '/'
+                                        ? pathname === '/'
+                                        : pathname.startsWith(item.href);
+                                    return (
+                                        <Link
+                                            key={item.href}
+                                            href={item.href}
+                                            onClick={handleNavClick}
+                                            className={cn(
+                                                'group flex items-center gap-3 py-3.5 px-3 rounded-none transition-all duration-200 relative overflow-hidden',
+                                                isActive
+                                                    ? 'text-[var(--sidebar-menu-active)] bg-[var(--card-hover)]'
+                                                    : 'text-[var(--sidebar-menu-inactive)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)]'
+                                            )}
+                                        >
+                                            {isActive && (
+                                                <motion.div
+                                                    layoutId="active-nav-mobile"
+                                                    className="absolute left-0 top-0 bottom-0 w-[2px] bg-[var(--primary)]"
+                                                />
+                                            )}
+                                            <item.icon size={20} className={cn('transition-colors shrink-0', isActive && 'text-[var(--primary)]')} />
+                                            <span className="font-sans text-[13px] font-bold tracking-tighter whitespace-nowrap uppercase">
+                                                {item.label}
+                                            </span>
+                                        </Link>
+                                    );
+                                })}
+                            </nav>
+
+                            {/* Footer */}
+                            <div className="p-3 border-t border-[var(--sidebar-border)] space-y-2 overflow-hidden">
+                                <button
+                                    onClick={handleLogout}
+                                    className="w-full group flex items-center gap-3 py-2.5 px-3 rounded-none transition-all duration-200 text-[var(--muted-foreground)] hover:text-red-400 hover:bg-red-500/5"
+                                >
+                                    <LogOut size={18} className="shrink-0" />
+                                    <span className="font-sans text-xs font-bold tracking-tighter uppercase whitespace-nowrap">SAIR</span>
+                                </button>
+
+                                <div className="text-[10px] text-[var(--muted-foreground)] font-sans font-semibold tracking-tighter uppercase flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-[var(--primary)] animate-pulse shrink-0" />
+                                    <span className="whitespace-nowrap">SISTEMA ONLINE</span>
+                                </div>
+                            </div>
+                        </motion.aside>
+                    </>
+                )}
+            </AnimatePresence>
+        );
+    }
+
+    // Desktop Mode (original behavior)
     return (
         <motion.aside
             initial={false}
@@ -73,7 +182,7 @@ export function Sidebar() {
             transition={{ type: 'spring', stiffness: 350, damping: 30 }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            className="relative h-screen bg-[var(--sidebar)] border-r border-[var(--sidebar-border)] flex flex-col z-50 text-[var(--foreground)] flex-shrink-0"
+            className="relative h-screen bg-[var(--sidebar)] border-r border-[var(--sidebar-border)] flex flex-col z-50 text-[var(--foreground)] flex-shrink-0 hidden md:flex"
         >
             {/* Brand Header */}
             <div className="h-16 flex items-center justify-between px-6 border-b border-[var(--sidebar-border)] overflow-hidden">
@@ -104,7 +213,7 @@ export function Sidebar() {
                     )}
                 </AnimatePresence>
 
-                {/* Pin Toggle Button (Only visible when expanded or specifically requested) */}
+                {/* Pin Toggle Button */}
                 <AnimatePresence>
                     {isExpanded && (
                         <motion.button
