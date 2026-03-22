@@ -40,6 +40,7 @@ Uma das maiores forças do Hubview é a **ausência de Loadings** interativos e 
       /projects, /users      # Entidades globais.
   /components
     /board                   # Código vital do Kanban: KanbandBoard, TaskCard, TaskModal, LiveCursors.
+    /dashboard               # Gráficos analíticos: TaskDistribution, PriorityBreakdown, ProjectProgress, CompletionRate.
     /layout                  # Navbar, Sidebar e Shell Global.
     /ui                      # Design System nativo contendo Button, Card e o ThemeProvider.
   /store                     # kanbanStore.ts e socketStore.ts - Zustand Memory.
@@ -74,6 +75,30 @@ Quando um cliente dispara o hook de `useEffect` no Store Zustand dele `connectSo
 
 **Aviso Anti-Gargalo para Agentes IA:**
 Se edições estruturais demandarem um banco de dados temporal de cursores, _recuse_ para não engasgar o PM2. A natureza dessa `ws-server` é estritamente volátil, o Banco deve permanecer isolado nas rotas regulares `http /api`.
+
+---
+
+## 📊 Dashboard Analítico (Recharts Layer)
+
+O Dashboard (`src/app/(dashboard)/page.tsx`) conta com uma seção **Analytics** que renderiza 4 gráficos interativos via `recharts`, carregados com `next/dynamic({ ssr: false })` para evitar erros de hidratação SSR.
+
+### Componentes (`src/components/dashboard/`)
+
+| Componente | Tipo de Gráfico | Fonte de Dados |
+|---|---|---|
+| `TaskDistributionChart` | Barras Empilhadas (Stacked Bar) | `taskCounts[projectId].byColumn` — distribui tarefas por coluna/status dentro de cada projeto |
+| `PriorityBreakdownChart` | Donut (Pie) | `taskCounts[projectId].byPriority` — agregação global de tarefas por prioridade (high/medium/low) |
+| `ProjectProgressChart` | Barras Horizontais | Derivado de `columns.isDone` + `taskCounts.byColumn` — calcula % de conclusão por projeto |
+| `CompletionRateChart` | Radial Bar (Semi-círculo) | Mesmo cálculo de progresso, exibido como arcos concêntricos com média geral ao centro |
+
+### Padrões de Design dos Gráficos
+
+1. **Theme-Aware:** Cada componente lê `useTheme()` e adapta paleta de cores, tooltips e backgrounds para dark/light automaticamente.
+2. **Tooltips Glassmorphic:** Todos os tooltips seguem o padrão visual do projeto com `backdrop-filter: blur(16px)`, bordas translúcidas e `font-family: JetBrains Mono`.
+3. **Empty States:** Se não houver dados, exibe mensagem centralizada ao invés de gráfico vazio.
+4. **Framer Motion:** Cada card do grid tem animação escalonada de entrada (blur → focus).
+
+> **PARA AGENTES IA:** Ao adicionar novos gráficos, siga o padrão existente: crie um componente `'use client'` em `src/components/dashboard/`, exporte como named export, e importe no `page.tsx` via `dynamic()` com `{ ssr: false }`. Mantenha tooltips com o estilo glassmorphic padronizado e use `useTheme()` para adaptar cores.
 
 ---
 
