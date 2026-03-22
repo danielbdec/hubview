@@ -41,7 +41,7 @@ Uma das maiores forças do Hubview é a **ausência de Loadings** interativos e 
   /components
     /board                   # Código vital do Kanban: KanbandBoard, TaskCard, TaskModal, LiveCursors.
     /dashboard               # Gráficos analíticos: TaskDistribution, PriorityBreakdown, ProjectProgress, CompletionRate.
-    /layout                  # Navbar, Sidebar e Shell Global.
+    /layout                  # Navbar, Sidebar, Shell Global e CommandPalette (Busca Global OS-aware).
     /ui                      # Design System nativo contendo Button, Card e o ThemeProvider.
   /store                     # kanbanStore.ts e socketStore.ts - Zustand Memory.
 ```

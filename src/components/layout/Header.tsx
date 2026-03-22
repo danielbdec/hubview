@@ -44,9 +44,9 @@ export function Header() {
     const isProjectPage = segments.length === 2 && segments[0] === 'projects' && UUID_REGEX.test(segments[1]);
 
     return (
-        <header className="h-16 flex items-center justify-between px-6 border-b border-[var(--header-border)] bg-[var(--header)] backdrop-blur-md sticky top-0 z-40 relative">
-            {/* Breadcrumbs / Page Title */}
-            <div className="flex items-center gap-2 overflow-hidden">
+        <header className="h-16 flex items-center px-6 gap-6 border-b border-[var(--header-border)] bg-[var(--header)] backdrop-blur-md sticky top-0 z-40">
+            {/* Left: Breadcrumbs / Page Title */}
+            <div className="flex items-center gap-2 overflow-hidden flex-shrink min-w-0">
                 <span className="text-[var(--muted-foreground)] font-sans text-xs uppercase tracking-tight">/</span>
                 <AnimatePresence mode="wait">
                     <motion.span
@@ -55,62 +55,63 @@ export function Header() {
                         animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
                         exit={{ opacity: 0, x: -20, filter: 'blur(8px)' }}
                         transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-                        className="text-[var(--foreground)] font-black font-sans uppercase tracking-tighter text-sm"
+                        className="text-[var(--foreground)] font-black font-sans uppercase tracking-tighter text-sm truncate"
                     >
                         {displayText}
                     </motion.span>
                 </AnimatePresence>
             </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-4">
-                {isProjectPage && (
-                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:flex">
-                        <ConfigProvider
-                            theme={{
-                                algorithm: themeMode === 'light' ? antdTheme.defaultAlgorithm : antdTheme.darkAlgorithm,
-                                token: {
-                                    colorPrimary: 'var(--primary)',
-                                    fontFamily: 'var(--font-geist-sans)',
-                                    colorText: 'var(--foreground)',
-                                    colorTextSecondary: 'var(--muted-foreground)',
-                                    colorBgElevated: 'var(--sidebar)',
-                                },
-                                components: {
-                                    Segmented: {
-                                        itemSelectedBg: 'var(--primary)',
-                                        itemSelectedColor: '#000000',
-                                        trackBg: 'var(--sidebar)',
-                                        itemHoverBg: 'var(--card-hover)',
-                                        itemHoverColor: 'var(--foreground)',
-                                        controlPaddingHorizontal: 12
-                                    }
+            {/* Center: View Switcher (Only on projects) */}
+            {isProjectPage && (
+                <div className="hidden xl:flex items-center justify-center flex-1 min-w-0 px-2 overflow-x-auto no-scrollbar">
+                    <ConfigProvider
+                        theme={{
+                            algorithm: themeMode === 'light' ? antdTheme.defaultAlgorithm : antdTheme.darkAlgorithm,
+                            token: {
+                                colorPrimary: 'var(--primary)',
+                                fontFamily: 'var(--font-geist-sans)',
+                                colorText: 'var(--foreground)',
+                                colorTextSecondary: 'var(--muted-foreground)',
+                                colorBgElevated: 'var(--sidebar)',
+                            },
+                            components: {
+                                Segmented: {
+                                    itemSelectedBg: 'var(--primary)',
+                                    itemSelectedColor: '#000000',
+                                    trackBg: 'var(--sidebar)',
+                                    itemHoverBg: 'var(--card-hover)',
+                                    itemHoverColor: 'var(--foreground)',
+                                    controlPaddingHorizontal: 12
                                 }
-                            }}
-                        >
-                            <div className="border border-[var(--input-border)] bg-[var(--sidebar)] p-0.5 flex rounded-sm overflow-hidden">
-                                <Segmented
-                                    value={activeView}
-                                    onChange={(value) => setActiveView(value as 'kanban' | 'list' | 'calendar' | 'timeline')}
-                                    className="bg-transparent font-mono text-[10px] tracking-widest uppercase [&_.ant-segmented-item-selected]:bg-[var(--primary)] [&_.ant-segmented-item-selected]:text-black [&_.ant-segmented-item-selected]:font-bold [&_.ant-segmented-item-selected]:!rounded-none [&_.ant-segmented-item]:!rounded-none [&_.ant-segmented-item]:text-[var(--muted-foreground)]"
-                                    options={[
-                                        { label: <div className="flex items-center gap-1.5 px-3 py-1"><KanbanIcon size={14} /> Kanban</div>, value: 'kanban' },
-                                        { label: <div className="flex items-center gap-1.5 px-3 py-1"><ListIcon size={14} /> Lista</div>, value: 'list' },
-                                        { label: <div className="flex items-center gap-1.5 px-3 py-1"><CalendarIcon size={14} /> Calendário</div>, value: 'calendar' },
-                                        { label: <div className="flex items-center gap-1.5 px-3 py-1"><GanttChart size={14} /> Timeline</div>, value: 'timeline' },
-                                    ]}
-                                />
-                            </div>
-                        </ConfigProvider>
-                    </div>
-                )}
+                            }
+                        }}
+                    >
+                        <div className="border border-[var(--input-border)] bg-[var(--sidebar)] p-0.5 flex rounded-sm overflow-hidden shadow-sm flex-shrink-0">
+                            <Segmented
+                                value={activeView}
+                                onChange={(value) => setActiveView(value as 'kanban' | 'list' | 'calendar' | 'timeline')}
+                                className="bg-transparent font-mono text-[10px] tracking-widest uppercase [&_.ant-segmented-item-selected]:bg-[var(--primary)] [&_.ant-segmented-item-selected]:text-black [&_.ant-segmented-item-selected]:font-bold [&_.ant-segmented-item-selected]:!rounded-none [&_.ant-segmented-item]:!rounded-none [&_.ant-segmented-item]:text-[var(--muted-foreground)]"
+                                options={[
+                                    { label: <div className="flex items-center gap-1.5 px-3 py-1"><KanbanIcon size={14} /> Kanban</div>, value: 'kanban' },
+                                    { label: <div className="flex items-center gap-1.5 px-3 py-1"><ListIcon size={14} /> Lista</div>, value: 'list' },
+                                    { label: <div className="flex items-center gap-1.5 px-3 py-1"><CalendarIcon size={14} /> Calendário</div>, value: 'calendar' },
+                                    { label: <div className="flex items-center gap-1.5 px-3 py-1"><GanttChart size={14} /> Timeline</div>, value: 'timeline' },
+                                ]}
+                            />
+                        </div>
+                    </ConfigProvider>
+                </div>
+            )}
 
+            {/* Right: Actions */}
+            <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
                 <CommandPalette />
-
-                <div className="flex items-center gap-2 border-l border-[var(--header-border)] pl-4">
+                
+                <div className="flex items-center gap-2 border-l border-[var(--header-border)] pl-3 ml-1">
                     <ThemeToggle />
                     <NotificationDropdown />
-                    <Button variant="ghost" size="sm" className="w-8 h-8 px-0">
+                    <Button variant="ghost" size="sm" className="w-8 h-8 px-0 flex-shrink-0">
                         <User size={16} />
                     </Button>
                 </div>

@@ -28,6 +28,12 @@ Plataforma de gestão de projetos Kanban com colaboração multiplayer em tempo 
 - KPIs: projetos ativos, tarefas ativas, alta prioridade, concluídas
 - Gráficos interativos com tooltips glassmorphic (`recharts`)
 
+### 🔍 Busca Global (Command Palette)
+- **Atalho Universal** — `Cmd/Ctrl + K` (OS-aware) para abrir em qualquer tela
+- **Busca Cross-Project** — resultados unificados de Projetos, Tarefas e Páginas do sistema
+- **Navegação Inteligente** — navegação full-keyboard (setas, Esc, Enter)
+- **Interface Premium** — modal com glassmorphism, blur e highlights de categorização
+
 ### 🎮 Multiplayer em Tempo Real
 - Cursores ao vivo de outros operadores (`LiveCursors`)
 - Indicadores de presença com avatares (`PresenceAvatars`)

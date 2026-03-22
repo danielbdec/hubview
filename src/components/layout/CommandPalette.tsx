@@ -41,11 +41,17 @@ export function CommandPalette() {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isMac, setIsMac] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { theme } = useTheme();
   const isLight = theme === 'light';
+
+  // Detect OS for shortcut label
+  useEffect(() => {
+    setIsMac(navigator.platform?.toLowerCase().includes('mac') ?? /mac/i.test(navigator.userAgent));
+  }, []);
 
   const { projects, fetchProjects } = useProjectStore();
 
@@ -234,7 +240,7 @@ export function CommandPalette() {
             ? 'rounded-full bg-white/60 shadow-[0_4px_12px_rgba(15,23,42,0.06)]'
             : 'bg-[var(--card)]'
         )}
-        title="Busca Global (⌘K)"
+        title={`Busca Global (${isMac ? '⌘' : 'Ctrl+'}K)`}
       >
         <Search size={14} />
         <span className="hidden sm:inline text-[10px] font-mono uppercase tracking-[0.2em]">
@@ -246,7 +252,7 @@ export function CommandPalette() {
             ? 'rounded-md border border-slate-200 bg-slate-100 text-slate-500'
             : 'border border-[var(--card-border)] bg-[var(--column-bg)] text-[var(--muted-foreground)]'
         )}>
-          <Command size={9} />K
+          {isMac ? <Command size={9} /> : <span>Ctrl+</span>}K
         </kbd>
       </button>
 
