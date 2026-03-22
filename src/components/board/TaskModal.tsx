@@ -122,8 +122,13 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
         }
     };
 
-    const handleAddComment = async (content: string) => {
+    const handleAddComment = async (content: string, mentionedUsers: string[]) => {
         await addTaskActivity(task.id, 'comment', content);
+        if (mentionedUsers && mentionedUsers.length > 0) {
+            const { useSocketStore } = await import('@/store/socketStore');
+            const currentUser = useProjectStore.getState().currentUser?.name || 'Sistema';
+            useSocketStore.getState().sendMentionNotification(mentionedUsers, task.id, task.content, currentUser);
+        }
     };
 
     const handleChecklistChange = (checklist: ChecklistItem[]) => {
@@ -405,11 +410,11 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete }: TaskModal
             <div className={cn(
                 "relative flex overflow-hidden border border-[var(--card-border)] bg-[var(--sidebar)] shadow-[var(--surface-shadow)] animate-in slide-in-from-bottom-3 sm:zoom-in-95 duration-200 transition-all ease-out",
                 "w-full h-[95dvh] sm:h-auto sm:max-h-[88vh] rounded-t-xl sm:rounded-xl",
-                isSidebarOpen ? "sm:w-[90vw] md:w-[80vw] lg:w-[65vw] xl:w-[55vw]" : "sm:w-[88vw] md:w-[65vw] lg:w-[48vw] xl:w-[40vw]"
+                isSidebarOpen ? "sm:w-[1048px] sm:max-w-[95vw]" : "sm:w-auto sm:max-w-[95vw]"
             )} onClick={(e) => e.stopPropagation()}>
 
                 {/* Main Content Area */}
-                <div className="flex flex-col w-full shrink-0">
+                <div className="flex flex-col w-full sm:w-[600px] shrink-0">
                     {/* Header */}
                     <div className="flex items-start justify-between p-6 border-b border-[var(--sidebar-border)] bg-[var(--sidebar)] shrink-0">
                         <div className="flex flex-col min-w-0 flex-1 mr-4">

@@ -11,6 +11,7 @@ O aplicativo constitui-se como um Workflow Dashboard sofisticado.
 * **Estilização UI & UX**: `TailwindCSS v4` com animações avançadas providas pelo `Framer Motion` e biblioteca gráfica do `Ant Design`. Emprego de interfaces Glassmorphism em Night/Light modes (via `ThemeProvider`).
 * **Gerenciamento de Estado**: `Zustand` (`src/store`), totalmente reativo aos hooks nativos e WebSockets.
 * **Componentização Física**: Foco na biblioteca externa de Kanban (`@dnd-kit/core` para *Drag-and-Drop* customizado em eixos X (Colunas) e Y (Tarefas)).
+* **Densidade Visual (Zoom-Out Mode)**: A arquitetura do Board foi desenvolvida evitando paddings excessivos. Interfaces secundárias (Filtros, Buscas, Acessos) ficam escondidas ou condensadas ao máximo numa única linha de cabeçalho. Qualquer futura modificação no `KanbanCard` ou `KanbanColumn` deve respeitar a premissa de **máximo número de tarefas visíveis na vertical**.
 * **Autenticação**: Própria baseada em Cookie HttpOnly + `localStorage` (`hubview_user` serializado com ID, Nome e E-mail).
 * **Motor do Banco de Dados / Proxies API**: Em grande parte baseados em tráfego roteado pelas rotinas webhooks do backend `n8n` (`n8n.uninova.ai`), ativadas por variáveis seguras em `.env` ou `.env.local`: `N8N_API_URL` e `N8N_API_KEY`.
 
@@ -73,6 +74,10 @@ Quando um cliente dispara o hook de `useEffect` no Store Zustand dele `connectSo
 #### 2. Colaboração Magnética (Cursor & Board Sync)
 * Evento `"cursor-move"` transmite as diretrizes visuais em *Milissegundos* para espelhamento em tela alheia na sala ativa.
 * Evento `"board-update"` possui Payload Livre: Funciona acionando qualquer gatilho no Store local dos seus pares, fazendo refetche imediato de cartões em movimento, nomes sendo editados, ou colunas inteiras manipuladas via *Drag-and-Drop*.
+
+#### 3. Notificações Push & @Menções (Toasts)
+* Evento `"mention-notification"` escutado no Socket propaga de forma imediata um `CustomEvent` (`window.dispatchEvent`) global no Browser.
+* O componente `<GlobalNotifications />` alojado no Top Level (`layout.tsx`) captura o evento passivamente e aciona APIs nativas de Toast, alertando o usuário mencionado instantaneamente, sem travar a navegação e sem necessidade de Polling.
 
 **Aviso Anti-Gargalo para Agentes IA:**
 Se edições estruturais demandarem um banco de dados temporal de cursores, _recuse_ para não engasgar o PM2. A natureza dessa `ws-server` é estritamente volátil, o Banco deve permanecer isolado nas rotas regulares `http /api`.

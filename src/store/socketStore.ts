@@ -25,6 +25,7 @@ interface SocketState {
     disconnect: () => void;
     sendCursorMove: (cursor: CursorPosition) => void;
     broadcastBoardUpdate: (type: string, payload: any) => void;
+    sendMentionNotification: (userIds: string[], taskId: string, taskTitle: string, authorName: string) => void;
 }
 
 // Em produção, aponte para a porta do microserviço e para a URL real
@@ -86,6 +87,10 @@ export const useSocketStore = create<SocketState>((set, get) => ({
             // We can dispatch a global event or hook this up in a useEffect inside the Board page
             window.dispatchEvent(new CustomEvent('remote-board-sync', { detail: { type, payload } }));
         });
+
+        socket.on('mention-notification', (payload: { userIds: string[], taskId: string, taskTitle: string, authorName: string }) => {
+            window.dispatchEvent(new CustomEvent('mention-notification', { detail: payload }));
+        });
     },
 
     disconnect: () => {
@@ -107,6 +112,13 @@ export const useSocketStore = create<SocketState>((set, get) => ({
         const { socket, roomId } = get();
         if (socket && roomId) {
             socket.emit('board-update', { roomId, type, payload });
+        }
+    },
+
+    sendMentionNotification: (userIds, taskId, taskTitle, authorName) => {
+        const { socket } = get();
+        if (socket) {
+            socket.emit('mention-notification', { userIds, taskId, taskTitle, authorName });
         }
     }
 }));

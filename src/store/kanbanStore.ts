@@ -532,8 +532,13 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             )
         }));
 
+        const payload: any = { id, ...updates };
+        if (updates.description !== undefined) {
+             payload.desc = updates.description;
+        }
+
         try {
-            await api.post('/api/projects/update', { id, ...updates });
+            await api.post('/api/projects/update', payload);
 
             set((state) => ({
                 projects: state.projects.map((p) =>

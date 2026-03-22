@@ -151,13 +151,13 @@ export const KanbanColumn = memo(function KanbanColumn({
                 isOverlay && "rotate-2 scale-105 shadow-2xl cursor-grabbing z-50 opacity-90"
             )}
         >
-            <div className="h-1 w-full rounded-t-md" style={{ backgroundColor: columnColor }} />
+            <div className="h-[3px] w-full rounded-t-md" style={{ backgroundColor: columnColor }} />
 
             <div
                 {...attributes}
                 {...listeners}
                 className={cn(
-                    "p-3 flex items-center justify-between cursor-grab active:cursor-grabbing border-b border-[var(--card-border)] bg-[var(--card-hover)] group/header relative",
+                    "p-1.5 px-2 flex items-center justify-between cursor-grab active:cursor-grabbing border-b border-[var(--card-border)] bg-[var(--card-hover)] group/header relative",
                     column.isDone === true && "bg-emerald-500/10"
                 )}
             >
@@ -315,12 +315,12 @@ export const KanbanColumn = memo(function KanbanColumn({
             </div>
 
             <div className={cn(
-                "flex-1 p-2 overflow-y-auto min-h-0 space-y-2 scrollbar-thin scrollbar-thumb-[var(--muted-foreground)]/20 scrollbar-track-transparent",
-                tasks.length === 0 && "flex items-center justify-center border-2 border-dashed border-[var(--card-border)]/50 rounded-sm m-2 bg-[var(--card-hover)]/30"
+                "flex-1 p-1 overflow-y-auto min-h-0 space-y-1 scrollbar-thin scrollbar-thumb-[var(--muted-foreground)]/20 scrollbar-track-transparent",
+                tasks.length === 0 && "flex items-center justify-center border-2 border-dashed border-[var(--card-border)]/50 rounded-sm m-1 bg-[var(--card-hover)]/30"
             )}>
                 {tasks.length === 0 && (
-                    <div className="text-center p-4 select-none pointer-events-none">
-                        <p className="text-[11px] font-mono uppercase tracking-widest text-[var(--muted-foreground)]">Sem Tarefas</p>
+                    <div className="text-center p-3 select-none pointer-events-none">
+                        <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted-foreground)]">Sem Tarefas</p>
                     </div>
                 )}
                 <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
@@ -337,12 +337,12 @@ export const KanbanColumn = memo(function KanbanColumn({
                 </SortableContext>
             </div>
 
-            <div className="p-2 border-t border-[var(--card-border)] bg-[var(--card)]">
+            <div className="p-1 border-t border-[var(--card-border)] bg-[var(--card)]">
                 <button
                     onClick={() => onRequestAddTask(column.id)}
-                    className="w-full py-2 border-[1px] border-[var(--col-color)] text-[var(--col-color)] font-bold bg-[var(--col-color)]/5 hover:bg-[var(--col-color)] hover:text-white transition-all text-xs font-mono uppercase tracking-wider flex items-center justify-center gap-2 rounded shadow-sm"
+                    className="w-full py-1 border-[1px] border-[var(--col-color)] text-[var(--col-color)] font-bold bg-[var(--col-color)]/5 hover:bg-[var(--col-color)] hover:text-white transition-all text-[10px] font-mono uppercase tracking-wider flex items-center justify-center gap-2 rounded-sm shadow-sm"
                 >
-                    <Plus size={14} strokeWidth={3} /> Nova Tarefa
+                    <Plus size={12} strokeWidth={3} /> Nova Tarefa
                 </button>
             </div>
             <ConfirmModal

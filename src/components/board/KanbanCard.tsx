@@ -25,9 +25,9 @@ interface KanbanCardProps {
 
 const PriorityIcon = ({ priority }: { priority: string }) => {
     switch (priority) {
-        case 'high': return <AlertCircle size={10} className="text-red-500" />;
-        case 'medium': return <AlertTriangle size={10} className="text-amber-500" />;
-        case 'low': return <ArrowDown size={10} className="text-emerald-500" />;
+        case 'high': return <AlertCircle size={9} className="text-red-500" />;
+        case 'medium': return <AlertTriangle size={9} className="text-amber-500" />;
+        case 'low': return <ArrowDown size={9} className="text-emerald-500" />;
         default: return null;
     }
 };
@@ -84,7 +84,7 @@ export function KanbanCard({ task, isOverlay, columnId, isDoneColumn, onEdit, on
             <div
                 ref={setNodeRef}
                 style={style}
-                className="opacity-30 h-[176px] bg-[var(--card)] border border-dashed border-[var(--primary)] rounded-none"
+                className="opacity-30 min-h-[85px] h-full bg-[var(--card)] border border-dashed border-[var(--primary)] rounded-none"
             />
         );
     }
@@ -122,7 +122,7 @@ export function KanbanCard({ task, isOverlay, columnId, isDoneColumn, onEdit, on
                 {...attributes}
                 {...listeners}
                 className={cn(
-                    "p-0 transition-all bg-[var(--card)] border border-[var(--card-border)] rounded-none flex flex-col gap-0 relative group/inner min-h-[176px] overflow-hidden",
+                    "p-0 transition-all bg-[var(--card)] border border-[var(--card-border)] rounded-none flex flex-col gap-0 relative group/inner overflow-hidden",
                     // Sharp geometry & active physical tension shadow
                     !isOverlay && "hover:-translate-y-1 hover:translate-x-[-2px] hover:shadow-[4px_4px_0_0_var(--primary)] cursor-grab active:cursor-grabbing hover:border-[var(--primary)]/50",
                     isOverlay && "border border-[var(--primary)] shadow-[8px_8px_0_0_var(--primary)] scale-105 z-50 cursor-grabbing bg-[var(--background)]",
@@ -137,7 +137,7 @@ export function KanbanCard({ task, isOverlay, columnId, isDoneColumn, onEdit, on
             >
                 {/* Visual Header / Priority Bar */}
                 <div className={cn(
-                    "h-1 w-full",
+                    "h-[3px] w-full",
                     task.priority === 'high' ? 'bg-red-500' :
                         task.priority === 'medium' ? 'bg-amber-500' :
                             'bg-emerald-500'
@@ -145,10 +145,10 @@ export function KanbanCard({ task, isOverlay, columnId, isDoneColumn, onEdit, on
 
                 <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.05),transparent_38%,transparent)] opacity-80 pointer-events-none" />
 
-                <div className="p-4 flex flex-col gap-3.5 min-h-[175px]">
+                <div className="p-1.5 flex flex-col gap-1 min-h-[50px]">
                     {/* Hover Actions (Absolute Top Right) */}
                     <div className={cn(
-                        "absolute top-3 right-3 flex gap-1 transform translate-x-2 opacity-0 group-hover/inner:translate-x-0 group-hover/inner:opacity-100 transition-all duration-200 z-10 bg-[var(--background)]/90 border border-[var(--card-border)] rounded-none pl-1 pr-1 py-1 backdrop-blur-sm"
+                        "absolute top-2 right-2 flex gap-1 transform translate-x-2 opacity-0 group-hover/inner:translate-x-0 group-hover/inner:opacity-100 transition-all duration-200 z-10 bg-[var(--background)]/90 border border-[var(--card-border)] rounded-none p-0.5 backdrop-blur-sm"
                     )}>
                         <button
                             onPointerDown={(e) => e.stopPropagation()}
@@ -170,10 +170,10 @@ export function KanbanCard({ task, isOverlay, columnId, isDoneColumn, onEdit, on
                         )}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2 pr-12">
+                    <div className="flex flex-wrap items-center gap-1.5 pr-10">
                         <div
                             className={cn(
-                                "inline-flex items-center gap-1.5 border px-2.5 py-1 text-[10px] font-mono font-bold uppercase tracking-[0.24em]",
+                                "inline-flex items-center gap-1 border px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-[0.2em]",
                                 priorityTone
                             )}
                             title={`Prioridade: ${priorityLabel}`}
@@ -185,7 +185,7 @@ export function KanbanCard({ task, isOverlay, columnId, isDoneColumn, onEdit, on
                         {hasChecklist && (
                             <div
                                 className={cn(
-                                    "inline-flex items-center gap-1.5 border px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.2em]",
+                                    "inline-flex items-center gap-1 border px-2 py-0.5 text-[9px] font-mono uppercase tracking-[0.16em]",
                                     isChecklistDone
                                         ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-300"
                                         : "border-[var(--card-border)] bg-[var(--input-bg)] text-[var(--muted-foreground)]"
@@ -200,13 +200,13 @@ export function KanbanCard({ task, isOverlay, columnId, isDoneColumn, onEdit, on
                         )}
                     </div>
 
-                    <div className="space-y-2">
-                        <p className="text-[16px] font-semibold leading-6 text-[var(--foreground)] break-words pr-8 line-clamp-2 tracking-[-0.01em]">
+                    <div className="space-y-1">
+                        <p className="text-[13px] font-semibold leading-tight text-[var(--foreground)] break-words pr-4 line-clamp-2 tracking-[-0.01em]">
                             {task.content}
                         </p>
 
                         {description && (
-                            <p className="text-[12px] leading-5 text-[var(--muted-foreground)] break-words pr-3 line-clamp-2">
+                            <p className="text-[11px] leading-snug text-[var(--muted-foreground)] break-words pr-2 line-clamp-2">
                                 {description}
                             </p>
                         )}
@@ -217,7 +217,7 @@ export function KanbanCard({ task, isOverlay, columnId, isDoneColumn, onEdit, on
                             {task.tags.map((tag, idx) => (
                                 <span
                                     key={`${tag.id}-${idx}`}
-                                    className="inline-flex items-center rounded-none border px-2.5 py-1 text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-white shadow-[0_0_12px_rgba(0,0,0,0.12)]"
+                                    className="inline-flex items-center rounded-none border px-2 py-0.5 text-[9px] font-mono font-bold tracking-[0.15em] uppercase text-white shadow-[0_0_5px_rgba(0,0,0,0.12)]"
                                     style={{
                                         backgroundColor: `${tag.color}33`,
                                         borderColor: `${tag.color}66`,
@@ -230,12 +230,12 @@ export function KanbanCard({ task, isOverlay, columnId, isDoneColumn, onEdit, on
                         </div>
                     )}
 
-                    <div className="mt-auto flex flex-wrap items-end justify-between gap-2 border-t border-[var(--card-border)]/60 pt-3 text-[10px] text-[var(--muted-foreground)]">
-                        <div className="flex flex-wrap items-center gap-2">
+                    <div className="mt-auto flex flex-wrap items-end justify-between gap-1 border-t border-[var(--card-border)]/60 pt-1.5 text-[9px] text-[var(--muted-foreground)]">
+                        <div className="flex flex-wrap items-center gap-1.5">
                             {hasTimeline && (
                                 <div
                                     className={cn(
-                                        "inline-flex items-center gap-1.5 border px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.18em]",
+                                        "inline-flex items-center gap-1.5 border px-2 py-0.5 text-[9px] font-mono uppercase tracking-[0.15em]",
                                         slaStatus === 'overdue' ? "border-red-500/50 bg-red-500/20 text-red-400 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.3)]" :
                                         slaStatus === 'warning' ? "border-amber-500/40 bg-amber-500/10 text-amber-500" :
                                         slaStatus === 'on-track' ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500" :
@@ -253,10 +253,10 @@ export function KanbanCard({ task, isOverlay, columnId, isDoneColumn, onEdit, on
 
                         {primaryAssignee && (
                             <div
-                                className="inline-flex items-center gap-1.5 border border-[var(--card-border)] bg-[var(--background)] px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.18em] transition-colors group-hover/inner:border-[var(--primary)]/40"
+                                className="inline-flex items-center gap-1 border border-[var(--card-border)] bg-[var(--background)] px-2 py-0.5 text-[9px] font-mono uppercase tracking-[0.15em] transition-colors group-hover/inner:border-[var(--primary)]/40"
                                 title={task.assignee}
                             >
-                                <User size={11} className="text-[var(--primary)]" />
+                                <User size={10} className="text-[var(--primary)]" />
                                 <span className="max-w-[120px] truncate text-[var(--foreground)]">
                                     {primaryAssignee}
                                 </span>

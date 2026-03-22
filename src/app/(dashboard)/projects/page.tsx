@@ -438,8 +438,8 @@ export default function ProjectsPage() {
                                                         <FolderOpen className="text-[var(--primary)]" size={20} />
                                                     </div>
                                                     <div className="flex flex-col">
-                                                        <div className="flex items-center gap-2">
-                                                            <h3 className="text-lg font-bold text-[var(--foreground)] leading-tight group-hover:text-[var(--primary)] transition-colors line-clamp-1 uppercase tracking-wide">
+                                                        <div className="flex flex-wrap items-center gap-2 pr-4">
+                                                            <h3 className="text-lg font-bold text-[var(--foreground)] leading-tight group-hover:text-[var(--primary)] transition-colors uppercase tracking-wide break-words">
                                                                 {project.title}
                                                             </h3>
                                                             {syncIndicator}
@@ -495,7 +495,7 @@ export default function ProjectsPage() {
                                             </div>
 
                                             {/* Description */}
-                                            <p className="text-[var(--muted-foreground)] text-sm mb-6 line-clamp-2 min-h-[40px]">
+                                            <p className="text-[var(--muted-foreground)] text-sm mb-6 min-h-[40px] whitespace-pre-wrap break-words">
                                                 {project.description || 'Sem descrição definida para este projeto.'}
                                             </p>
 

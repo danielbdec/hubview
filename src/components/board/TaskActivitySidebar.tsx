@@ -30,13 +30,13 @@ interface TaskActivitySidebarProps {
     activities: ActivityItem[];
     isLoading: boolean;
     users: UserOption[];
-    onAddComment: (content: string) => Promise<void>;
+    onAddComment: (content: string, mentionedUserIds: string[]) => Promise<void>;
 }
 
 export function TaskActivitySidebar({
     activities,
     isLoading,
-    users,
+    users = [],
     onAddComment,
 }: TaskActivitySidebarProps) {
     const { theme: themeMode } = useTheme();
@@ -44,8 +44,43 @@ export function TaskActivitySidebar({
 
     const handleSubmit = async () => {
         if (!newContent.trim()) return;
-        await onAddComment(newContent);
+
+        const mentionRegex = /@([a-zA-Z0-9_]+)/g;
+        const mentions = Array.from(newContent.matchAll(mentionRegex)).map(m => m[1]);
+        const validMentionedUserIds = users
+            .filter(u => mentions.includes(u.name.replace(/\s+/g, '')))
+            .map(u => u.id);
+
+        await onAddComment(newContent, validMentionedUserIds);
         setNewContent('');
+    };
+
+    const renderContentWithMentions = (content: string) => {
+        if (!content || typeof content !== 'string') return content;
+        
+        const mentionRegex = /@([a-zA-Z0-9_]+)/g;
+        const parts = content.split(mentionRegex);
+        
+        if (parts.length <= 1) return content;
+
+        return parts.map((part, index) => {
+            if (index % 2 === 1) {
+                const isKnownUser = users.some(u => u.name.replace(/\s+/g, '') === part);
+                return (
+                    <span 
+                        key={index} 
+                        className={cn(
+                            "font-bold transition-colors", 
+                            isKnownUser ? "text-[var(--primary)] hover:underline cursor-pointer" : "text-blue-400"
+                        )}
+                        title={isKnownUser ? `Mencionando ${part}` : undefined}
+                    >
+                        @{part}
+                    </span>
+                );
+            }
+            return <span key={index} className="whitespace-pre-wrap">{part}</span>;
+        });
     };
 
     return (
@@ -108,7 +143,7 @@ export function TaskActivitySidebar({
                                         ? "bg-[var(--input-bg)] border-[var(--input-border)] text-[var(--foreground)]"
                                         : "bg-transparent border-transparent text-[var(--muted-foreground)] text-xs -translate-x-3"
                                 )}>
-                                    {act.content}
+                                    {renderContentWithMentions(act.content)}
                                 </div>
                             </div>
                         </div>
