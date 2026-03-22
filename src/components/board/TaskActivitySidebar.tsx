@@ -85,17 +85,29 @@ export function TaskActivitySidebar({
 
     return (
         <div className="flex flex-col h-full bg-[var(--sidebar)] border-l border-[var(--sidebar-border)] w-[400px] shrink-0 shadow-[-10px_0_30px_-10px_rgba(0,0,0,0.5)] z-10 animate-in slide-in-from-right-8 duration-300">
-            <div className="flex items-center justify-between p-6 border-b border-[var(--sidebar-border)] h-[81px] shrink-0 bg-[var(--background)]/50">
-                <h3 className="text-sm font-bold font-mono tracking-widest text-[var(--foreground)] uppercase">
-                    Histórico & Logs
-                </h3>
+            <div className="flex items-center justify-between px-6 h-[81px] border-b border-white/5 bg-gradient-to-b from-[var(--primary)]/5 to-transparent shrink-0 relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-1 h-full bg-[var(--primary)] shadow-[0_0_15px_var(--primary)]" />
+                <div className="flex items-center gap-3">
+                    <div className="relative">
+                        <div className="w-2 h-2 bg-[var(--primary)] animate-ping absolute inset-0 opacity-50" />
+                        <div className="w-2 h-2 bg-[var(--primary)] shadow-[0_0_8px_var(--primary)]" />
+                    </div>
+                    <h3 className="text-sm font-bold font-mono tracking-[0.2em] text-[var(--primary)] uppercase drop-shadow-[0_0_12px_rgba(34,197,94,0.4)]">
+                        Histórico & Logs
+                    </h3>
+                </div>
             </div>
             <div className="flex-1 overflow-y-auto space-y-4 p-6 custom-scrollbar">
                 {isLoading ? (
                     <div className="flex justify-center items-center h-full"><Spin /></div>
                 ) : activities.length === 0 ? (
-                    <div className="text-center text-[var(--muted-foreground)] text-xs font-mono py-8 h-full flex items-center justify-center">
-                        Nenhuma atividade registrada na tarefa.
+                    <div className="text-center text-[var(--primary)] opacity-70 text-[13px] font-mono py-8 h-full flex flex-col items-center justify-center gap-4">
+                        <div className="relative">
+                            <Activity size={32} className="opacity-80 drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+                            <div className="absolute inset-0 bg-[var(--primary)] blur-xl opacity-20" />
+                        </div>
+                        <span className="tracking-[0.15em] uppercase border-b border-[var(--primary)]/30 pb-1">Nenhuma informação</span>
+                        <span className="text-[10px] text-[var(--primary)]/60 bg-[var(--primary)]/5 px-2 py-1">Aguardando inserção de logs...</span>
                     </div>
                 ) : (
                     activities.map((act) => (
@@ -150,17 +162,18 @@ export function TaskActivitySidebar({
                     ))
                 )}
             </div>
-            <div className="shrink-0 pt-4 border-t border-[var(--sidebar-border)] bg-[var(--sidebar)]">
+            <div className="shrink-0 p-5 pt-4 border-t border-[var(--primary)]/10 bg-black/60 relative backdrop-blur-md shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.8)]">
+                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[var(--primary)]/40 to-transparent" />
                 <ConfigProvider
                     theme={{
                         algorithm: themeMode === 'light' ? antdTheme.defaultAlgorithm : antdTheme.darkAlgorithm,
                         token: {
                             colorPrimary: 'var(--primary)',
-                            colorText: 'var(--foreground)',
-                            colorTextPlaceholder: 'var(--muted-foreground)',
-                            colorBgContainer: 'var(--background)',
-                            colorBorder: 'var(--input-border)',
-                            colorBgElevated: 'var(--sidebar)',
+                            colorText: 'var(--primary)',
+                            colorTextPlaceholder: 'rgba(34,197,94,0.4)',
+                            colorBgContainer: 'rgba(0,0,0,0.5)',
+                            colorBorder: 'rgba(34,197,94,0.2)',
+                            colorBgElevated: '#0a0a0a',
                             borderRadius: 0,
                         },
                     }}
@@ -168,19 +181,19 @@ export function TaskActivitySidebar({
                     <Mentions
                         value={newContent}
                         onChange={setNewContent}
-                        placeholder="Adicione um comentário para a equipe (use @ para mencionar)..."
-                        className="w-full h-20 !bg-[var(--background)] border border-[var(--input-border)] !text-[var(--foreground)] p-3 text-sm focus-within:outline-none focus-within:!border-[var(--primary)] transition-colors hover:border-[var(--primary)] resize-none font-mono rounded-none mb-3"
+                        placeholder="[ CONSOLE ] Escreva o log ou use @ p/ mencionar..."
+                        className="w-full h-24 !bg-black/60 border border-[var(--primary)]/30 !text-[var(--primary)] p-3.5 text-[13px] focus-within:outline-none focus-within:!border-[var(--primary)] transition-all hover:border-[var(--primary)]/60 resize-none font-mono rounded-none mb-4 shadow-[inset_0_0_20px_rgba(0,0,0,0.8)]"
                         options={users.map(u => ({ value: u.name.replace(/\s+/g, ''), label: u.name }))}
-                        autoSize={{ minRows: 3, maxRows: 3 }}
+                        autoSize={{ minRows: 3, maxRows: 5 }}
                     />
                 </ConfigProvider>
                 <Button
                     variant="primary"
-                    className="w-full rounded-none font-mono tracking-widest text-xs h-10"
+                    className="w-full rounded-none font-mono tracking-[0.2em] text-xs h-11 bg-[var(--primary)] text-black hover:bg-[var(--primary)]/90 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] transition-all duration-300 disabled:opacity-30 disabled:grayscale"
                     onClick={handleSubmit}
                     disabled={!newContent.trim() || isLoading}
                 >
-                    <ArrowRight size={16} className="mr-2" /> ENVIAR COMENTÁRIO
+                    <ArrowRight size={16} className="mr-3" /> ENVIAR
                 </Button>
             </div>
         </div>
