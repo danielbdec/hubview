@@ -16,11 +16,11 @@
   /* tech-green/5 */
   --card-border: rgba(255, 255, 255, 0.1);
 
-  --sidebar: #050505;
-  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar: #060f06; /* Deep dark acid green core */
+  --sidebar-border: rgba(169, 239, 47, 0.12);
 
-  --header: rgba(5, 5, 5, 0.8);
-  --header-border: rgba(255, 255, 255, 0.1);
+  --header: rgba(6, 15, 6, 0.85); /* Matching sidebar with glass */
+  --header-border: rgba(169, 239, 47, 0.12);
 
   --primary: #A9EF2F;
   --primary-hover: #D6FF86;
@@ -59,14 +59,14 @@
 
   --column-bg: rgba(232, 241, 237, 0.92);
 
-  --sidebar: rgba(248, 252, 249, 0.84);
-  --sidebar-border: rgba(91, 102, 122, 0.14);
+  --sidebar: #E0EBE4; /* Substantive Sage/Acid Green Light Tint */
+  --sidebar-border: rgba(132, 204, 22, 0.2);
 
   --sidebar-menu-active: #4D7C0F;
   --sidebar-menu-inactive: #526072;
 
-  --header: rgba(246, 250, 248, 0.82);
-  --header-border: rgba(91, 102, 122, 0.14);
+  --header: rgba(224, 235, 228, 0.88); /* Matching glass header */
+  --header-border: rgba(132, 204, 22, 0.2);
 
   --primary: #84CC16;
   --primary-hover: #65A30D;

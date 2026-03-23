@@ -110,8 +110,8 @@ export function Sidebar({ isMobileOpen, onMobileClose, isMobile }: SidebarProps)
                             {/* Brand Header */}
                             <div className="h-16 flex items-center justify-between px-5 border-b border-[var(--sidebar-border)] overflow-hidden">
                                 <div className="flex items-center gap-2.5 min-w-0">
-                                    <Image src="/logo-uninova.png" alt="HubView" width={24} height={24} className="shrink-0" />
-                                    <span className="font-sans font-black tracking-tighter uppercase text-[var(--foreground)] truncate">HubView</span>
+                                    <Image src="/logo-uninova.png" alt="HubView" width={48} height={48} className="shrink-0" />
+                                    <span className="font-sans font-black tracking-tighter uppercase text-[var(--foreground)] truncate text-lg ml-1">HubView</span>
                                 </div>
                                 <button
                                     onClick={onMobileClose}
@@ -198,8 +198,8 @@ export function Sidebar({ isMobileOpen, onMobileClose, isMobile }: SidebarProps)
                             transition={{ duration: 0.2 }}
                             className="flex items-center gap-2.5 min-w-0"
                         >
-                            <Image src="/logo-uninova.png" alt="HubView" width={24} height={24} className="shrink-0" />
-                            <span className="font-sans font-black tracking-tighter uppercase text-[var(--foreground)] truncate">HubView</span>
+                            <Image src="/logo-uninova.png" alt="HubView" width={48} height={48} className="shrink-0" />
+                            <span className="font-sans font-black tracking-tighter uppercase text-[var(--foreground)] truncate text-lg ml-1">HubView</span>
                         </motion.div>
                     ) : (
                         <motion.div
@@ -210,7 +210,7 @@ export function Sidebar({ isMobileOpen, onMobileClose, isMobile }: SidebarProps)
                             transition={{ duration: 0.2 }}
                             className="flex items-center justify-center w-full"
                         >
-                            <Image src="/logo-uninova.png" alt="HubView" width={22} height={22} className="shrink-0" />
+                            <Image src="/logo-uninova.png" alt="HubView" width={140} height={140} className="shrink-0 scale-[1.9]" />
                         </motion.div>
                     )}
                 </AnimatePresence>
