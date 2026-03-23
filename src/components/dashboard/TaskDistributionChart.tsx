@@ -66,7 +66,7 @@ export function TaskDistributionChart({ projects, taskCounts }: Props) {
     const palette = COLUMN_PALETTE[colId];
     if (palette) return isLight ? palette.light : palette.dark;
 
-    const fallback = ['#06b6d4', '#f97316', '#ec4899', '#3b82f6', '#a855f7', '#14b8a6'];
+    const fallback = ['#06b6d4', '#f97316', '#22c55e', '#3b82f6', '#a855f7', '#14b8a6'];
     const idx = projectIndex ?? columnKeys.indexOf(colId);
     return fallback[idx % fallback.length];
   }
